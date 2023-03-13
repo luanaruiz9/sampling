@@ -66,7 +66,7 @@ class GraphFilter(torch.nn.Module):
             edge_index_np = edge_index.cpu().numpy()
             aux = scipy.sparse.coo_matrix((edge_weight_np, (edge_index_np[0],edge_index_np[1])), shape=(N,N))
             u, s, vh = scipy.sparse.linalg.svds(aux, k=1)
-            S = S/s[0].to(S.device)
+            S = S/torch.tensor(s[0]).to(S.device)
 
         return LSIGF(self.weight,S.to_dense(),x)
 
