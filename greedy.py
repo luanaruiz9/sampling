@@ -27,7 +27,7 @@ def f(x, *args):
 
 def greedy(f, x0, lam, L, k, m): # m is sampling set size
     
-    alpha = 10
+    alpha = 2
     n = L.shape[0]
     s_vec = np.zeros(n)
     for i in range(m):
