@@ -154,7 +154,7 @@ print()
 
 x0 = np.ones(L.shape[0])
 lam = 0.5 
-L_aux = L
+L_aux = L.cpu()
 k = 5
 m = 500
 
