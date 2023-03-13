@@ -152,7 +152,7 @@ print()
 
 # Finding sampling set
 
-x0 = np.ones(L.shape[0])
+x0 = np.random.multivariate_normal(np.zeros(L.shape[0]),np.eye(L.shape[0]))
 lam = 0.5 
 L_aux = L.cpu()
 k = 5
