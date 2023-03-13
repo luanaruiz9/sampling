@@ -38,6 +38,7 @@ graph_og = dataset[0]
 pre_defined_kwargs = {'eigvecs': False}
 graph = Data(x=graph_og.x, edge_index=graph_og.edge_index, 
              edge_weight=graph_og.edge_weight, y=graph_og.y,**pre_defined_kwargs)
+graph = graph.to(device)
 split = T.RandomLinkSplit(
     num_val=0.05,
     num_test=0.1,
@@ -91,6 +92,7 @@ x_new = torch.cat((graph.x,V), dim=1)
 pre_defined_kwargs = {'eigvecs': False}
 graph_new = Data(x=x_new,edge_index=edge_index,edge_weight=graph.edge_index,
                  y=graph.y,**pre_defined_kwargs)
+graph_new = graph_new.to(device)
 
 split = T.RandomLinkSplit(
     num_val=0.05,
@@ -122,6 +124,7 @@ x_new = graph_og.x
 pre_defined_kwargs = {'eigvecs': V}
 graph_new = Data(x=x_new,edge_index=edge_index,edge_weight=graph.edge_index,
                  y=graph.y,**pre_defined_kwargs)
+graph_new = graph_new.to(device)
 
 split = T.RandomLinkSplit(
     num_val=0.05,
@@ -159,6 +162,7 @@ s_vec = greedy(f, x0, lam, L_aux, k, m)
 s_vec = torch.tensor(s_vec)
 
 graph_new = graph_og.subgraph(torch.argwhere(s_vec))
+graph_new = graph_new.to(device)
 
 num_nodes_new = graph_new.x.shape[0]
 edge_index_new = graph_new.edge_index
