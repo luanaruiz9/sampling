@@ -75,10 +75,9 @@ adj_sparse = torch.sparse_coo_tensor(edge_index, edge_weight, (num_nodes, num_no
 adj = adj_sparse.to_dense()
 
 # Computing degree
-degree = torch.pow(torch.matmul(adj_sparse,torch.ones(num_nodes)),-0.5)
+degree = torch.pow(torch.matmul(adj_sparse,torch.ones(num_nodes).to(device)),-0.5)
 edge_index_deg = torch.cat((torch.arange(num_nodes).unsqueeze(0),torch.arange(num_nodes).unsqueeze(0)),dim=0)
-degree_mx = torch.sparse_coo_tensor(edge_index_deg, degree, (num_nodes, num_nodes))
-degree_mx = degree_mx.to(device)
+degree_mx = torch.sparse_coo_tensor(edge_index_deg.to(device), degree, (num_nodes, num_nodes))
 
 # Computing normalized Laplacian
 
@@ -176,11 +175,10 @@ adj_sparse_new = torch.sparse_coo_tensor(edge_index_new, edge_weight_new,
 adj_new = adj_sparse_new.to_dense()
 
 # Computing degree
-degree = torch.pow(torch.matmul(adj_sparse_new,torch.ones(num_nodes_new)),-0.5)
+degree = torch.pow(torch.matmul(adj_sparse_new,torch.ones(num_nodes_new).to(device)),-0.5)
 edge_index_deg = torch.cat((torch.arange(num_nodes_new).unsqueeze(0),
                             torch.arange(num_nodes_new).unsqueeze(0)),dim=0)
-degree_mx_new = torch.sparse_coo_tensor(edge_index_deg, degree, (num_nodes_new, num_nodes_new))
-degree_mx_new = degree_mx_new.to(device)
+degree_mx_new = torch.sparse_coo_tensor(edge_index_deg.to(device), degree, (num_nodes_new, num_nodes_new))
 
 # Computing normalized Laplacian
 
