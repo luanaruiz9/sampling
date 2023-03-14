@@ -152,13 +152,12 @@ print()
 
 # Finding sampling set
 
-x0 = np.random.multivariate_normal(np.zeros(L.shape[0]),np.eye(L.shape[0]))
 lam = 0.5 
 L_aux = L.cpu()
 k = 5
 m = 500
 
-s_vec = greedy(f, x0, lam, L_aux, k, m)
+s_vec = greedy(f, lam, L_aux, k, m)
 s_vec = torch.tensor(s_vec)
 
 graph_new = graph_og.subgraph(torch.argwhere(s_vec))

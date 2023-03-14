@@ -11,31 +11,44 @@ import torch
 
 def f(x, *args):
     
-    lam, L, k, s_vec, alpha = args
-    omega = torch.tensor(x,dtype=torch.float32)
+    lam, L, k, s_vec = args
+    n = L.shape[0]
+    # Construct I_vsc from s_vec
+    Ivsc = torch.zeros((n,n-int(np.sum(s_vec))))
+    # Construct I_scv from s_vec
+    Iscv = torch.zeros((n-int(np.sum(s_vec)),n))
+    idx = np.argwhere(s_vec==0)
+    for i in range(n-int(np.sum(s_vec))):
+        Ivsc[idx[i],i] = 1
+        Iscv[i,idx[i]] = 1
+        
+    omega = torch.matmul(Ivsc,torch.tensor(x,dtype=torch.float32))
     for i in range(k):
         omega = torch.matmul(L,omega)
+    Lt = torch.t(L)
+    for i in range(k):
+        omega = torch.matmul(Lt,omega)
+    omega = torch.matmul(Iscv,omega)
+    omega = torch.matmul(torch.tensor(x,dtype=torch.float32),omega)
+     
     omega = omega.cpu().numpy()
-    omega = np.power(np.linalg.norm(omega)/np.linalg.norm(x),k)
+    omega = np.power(np.linalg.norm(omega)/np.power(np.linalg.norm(x),2),1/2*k)
     
-    diag1s = np.zeros(L.shape)
-    np.fill_diagonal(diag1s,s_vec)
-    diag_term = np.dot(x,np.matmul(diag1s,x))
-    diag_term = diag_term/np.linalg.norm(x)
-    
-    return np.abs(lam-omega) + alpha*diag_term
+    return lam-omega
 
-def greedy(f, x0, lam, L, k, m): # m is sampling set size
+def greedy(f, lam, L, k, m): # m is sampling set size
     
-    alpha = 2
     n = L.shape[0]
     s_vec = np.zeros(n)
+    idx_x = np.arange(n)
     for i in range(m):
         print(i)
-        res = opt.minimize(f, x0, args=(lam, L, k, s_vec, alpha),
+        x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i))
+        res = opt.minimize(f, x0, args=(lam, L, k, s_vec),
                            options={'disp': True,'maxiter' : 10})
         phi = np.power(res.x,2)
-        s_vec[np.argmax(phi)] = 1
-        
+        amax = idx_x[np.argmax(phi)]
+        s_vec[amax] = 1
+        idx_x = idx_x[s_vec==0]
     return s_vec
         
