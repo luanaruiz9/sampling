@@ -72,16 +72,21 @@ def greedy(f, lam, L, k, m): # m is sampling set size
     idx_x = np.arange(n)
     for i in range(m):
         print(i)
-        x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i)/(n-i))
-        #x0 = np.ones(n-i)/(n-i)
-        x0 = np.zeros(n-i)
-        x0[np.random.choice(n-i)]=1
-        #res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
-        #                   options={'disp': True,'maxiter' : 10})
-        res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),method='CG',
-                           options={'disp': True,'maxiter' : 10})
-        phi = np.power(res.x,2)
-        amax = idx_x[np.argmax(phi)]
+        if np.random.rand(1) <= np.exp(-5*i/m) and np.random.rand(1) <= 0.5:
+            amax = idx_x[np.random.choice(n-i)]
+            while s_vec[amax] == 1:
+                amax = idx_x[np.random.choice(n-i)]
+        else:
+            #x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i)/(n-i))
+            x0 = np.ones(n-i)/(n-i)
+            #x0 = np.zeros(n-i)
+            #x0[np.random.choice(n-i)]=1
+            #res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
+            #                   options={'disp': True,'maxiter' : 10})
+            res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),method='CG',
+                               options={'disp': True,'maxiter' : 10})
+            phi = np.power(res.x,2)
+            amax = idx_x[np.argmax(phi)]
         s_vec[amax] = 1
         idx_x = idx_x[s_vec[idx_x]==0]
     return s_vec
