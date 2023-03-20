@@ -35,6 +35,7 @@ else:
 
 dataset = Planetoid(root='/tmp/Cora', name='Cora')
 graph_og = dataset[0]
+#graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
 pre_defined_kwargs = {'eigvecs': False}
 graph = Data(x=graph_og.x, edge_index=graph_og.edge_index, 
              edge_weight=graph_og.edge_weight, y=graph_og.y,**pre_defined_kwargs)
@@ -83,7 +84,7 @@ degree_mx = torch.sparse_coo_tensor(edge_index_deg.to(device), degree, (num_node
 
 L = torch.matmul(degree_mx,torch.matmul(adj_sparse,degree_mx))
 
-K = 20
+K = 5
 eigvals, V = torch.lobpcg(L,k=K)
 #L, V = torch.linalg.eig(adj)
 #idx = torch.argsort(-torch.abs(L))
@@ -155,7 +156,7 @@ print()
 lam = 0.5 
 L_aux = L.cpu()
 k = 5
-m = 500
+m = 100
 
 s_vec = greedy(f, lam, L_aux, k, m)
 s_vec = torch.tensor(s_vec)
@@ -183,7 +184,7 @@ degree_mx_new = torch.sparse_coo_tensor(edge_index_deg.to(device), degree, (num_
 
 L_new = torch.matmul(degree_mx_new,torch.matmul(adj_sparse_new,degree_mx_new))
 
-K = 20
+K = 5
 eigvals_new, V_new = torch.lobpcg(L_new,k=K)
 
 """

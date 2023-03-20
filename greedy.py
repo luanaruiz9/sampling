@@ -7,6 +7,7 @@ Created on Mon Mar 13 09:47:37 2023
 
 import numpy as np
 import scipy.optimize as opt
+import scipy
 import torch
 
 def f(x, *args):
@@ -36,6 +37,33 @@ def f(x, *args):
     
     return lam-omega
 
+def f_lobpcg(x, *args):
+    
+    lam, L, k, s_vec = args
+    n = L.shape[0]
+    # Construct I_vsc from s_vec
+    Ivsc = torch.zeros((n,n-int(np.sum(s_vec))))
+    # Construct I_scv from s_vec
+    Iscv = torch.zeros((n-int(np.sum(s_vec)),n))
+    idx = np.argwhere(s_vec==0)
+    for i in range(n-int(np.sum(s_vec))):
+        Ivsc[idx[i],i] = 1
+        Iscv[i,idx[i]] = 1
+        
+    omega = Ivsc
+    for i in range(k):
+        omega = torch.matmul(L,omega)
+    Lt = torch.t(L)
+    for i in range(k):
+        omega = torch.matmul(Lt,omega)
+    omega = torch.matmul(Iscv,omega)
+     
+    omega = omega.cpu().numpy()
+    if len(x.shape) < 2:
+        x = np.expand_dims(x,axis=1)
+    omega, x = scipy.sparse.linalg.lobpcg(omega,x,largest=False)
+    return lam-omega
+
 def greedy(f, lam, L, k, m): # m is sampling set size
     
     n = L.shape[0]
@@ -44,11 +72,13 @@ def greedy(f, lam, L, k, m): # m is sampling set size
     for i in range(m):
         print(i)
         x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i))
-        res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
+        #res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
+        #                   options={'disp': True,'maxiter' : 10})
+        res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),method='CG',
                            options={'disp': True,'maxiter' : 10})
         phi = np.power(res.x,2)
         amax = idx_x[np.argmax(phi)]
         s_vec[amax] = 1
-        idx_x = idx_x[s_vec==0]
+        idx_x = idx_x[s_vec[idx_x]==0]
     return s_vec
         
