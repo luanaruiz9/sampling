@@ -58,10 +58,11 @@ def f_lobpcg(x, *args):
         omega = torch.matmul(Lt,omega)
     omega = torch.matmul(Iscv,omega)
      
-    omega = omega.cpu().numpy()
+    #omega = omega.cpu().numpy()
+    x = torch.tensor(x,device=L.device,dtype=torch.float32)
     if len(x.shape) < 2:
-        x = np.expand_dims(x,axis=1)
-    omega, x = scipy.sparse.linalg.lobpcg(omega,x,largest=False)
+        x = torch.unsqueeze(x,axis=1)
+    omega, x = torch.lobpcg(A=omega,X=x,largest=False)
     return lam-np.power(omega,1/2*k)
 
 def greedy(f, lam, L, k, m): # m is sampling set size
