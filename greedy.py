@@ -62,7 +62,7 @@ def f_lobpcg(x, *args):
     if len(x.shape) < 2:
         x = np.expand_dims(x,axis=1)
     omega, x = scipy.sparse.linalg.lobpcg(omega,x,largest=False)
-    return lam-omega
+    return lam-np.power(omega,1/2*k)
 
 def greedy(f, lam, L, k, m): # m is sampling set size
     
