@@ -44,7 +44,7 @@ def greedy(f, lam, L, k, m): # m is sampling set size
     for i in range(m):
         print(i)
         x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i))
-        res = opt.minimize(f, x0, args=(lam, L, k, s_vec),
+        res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
                            options={'disp': True,'maxiter' : 10})
         phi = np.power(res.x,2)
         amax = idx_x[np.argmax(phi)]
