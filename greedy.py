@@ -73,8 +73,9 @@ def greedy(f, lam, L, k, m): # m is sampling set size
     for i in range(m):
         print(i)
         x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i)/(n-i))
-        #x0 = np.zeros(n-i)
-        #x0[np.random.choice(n-i)]=1
+        #x0 = np.ones(n-i)/(n-i)
+        x0 = np.zeros(n-i)
+        x0[np.random.choice(n-i)]=1
         #res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
         #                   options={'disp': True,'maxiter' : 10})
         res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),method='CG',
