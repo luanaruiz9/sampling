@@ -81,10 +81,10 @@ def greedy(f, lam, L, k, m): # m is sampling set size
             #x0 = np.ones(n-i)/(n-i)
             #x0 = np.zeros(n-i)
             #x0[np.random.choice(n-i)]=1
-            #res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
-            #                   options={'disp': True,'maxiter' : 10})
-            res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),
+            res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
                                options={'disp': True,'maxiter' : 10})
+            #res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),
+            #                   options={'disp': True,'maxiter' : 10})
             phi = np.power(res.x,2)
             amax = idx_x[np.argmax(phi)]
         s_vec[amax] = 1
