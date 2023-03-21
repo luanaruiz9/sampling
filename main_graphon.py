@@ -162,8 +162,8 @@ edge_index_ind = graph_ind.edge_index
 edge_weight_ind = graph_ind.edge_weight
 adj_sparse_ind = torch.sparse_coo_tensor(edge_index_ind, edge_weight_ind,
                                          (num_nodes_ind, num_nodes_ind))
+adj_sparse_ind = adj_sparse_ind.to(device)
 adj_ind = adj_sparse_ind.to_dense()
-adj_ind = adj_ind.to(device)
 
 # Computing degree
 degree = torch.pow(torch.matmul(adj_sparse_ind,torch.ones(num_nodes_ind).to(device)),-0.5)
