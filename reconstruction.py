@@ -25,8 +25,8 @@ def f_rec(x, *args):
 
 def reconstruct(f, x, padded_eig, L, m):
     mask = padded_eig.cpu().numpy() > 0
-    constr_var = np.diag(mask)
-    constr_val = padded_eig
+    constr_var = np.diag(mask).cpu().numpy()
+    constr_val = padded_eig.cpu().numpy()
     constraint = opt.LinearConstraint(constr_var, lb=constr_val, ub=constr_val)
     
     res = opt.minimize(f, x.cpu().numpy(), args=(L, m), method='trust-constr',

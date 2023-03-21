@@ -7,8 +7,7 @@ Created on Mon Mar  6 14:37:09 2023
 
 # Check if there are any graphon normalizations I'm missing - probably in reconstruction
 # Link prediction on ER graph?
-# What is link sampling doing that I only have half the edges?
-
+# FIX SAMPLING!!!!!!!!!!!!
 
 # TO DO: recall AUC - ok
 # TO DO: train a second model on data + eigenvectors - ok
