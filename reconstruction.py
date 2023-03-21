@@ -27,8 +27,8 @@ def reconstruct(f, x, padded_eig, L, m):
     mask = padded_eig.cpu().numpy() > 0
     constr_var = np.diag(mask)
     constr_val = padded_eig
-    constraint = opt.LinearConstraint(constr_var, lb=constr_val-tol, ub=constr_val+tol)
+    constraint = opt.LinearConstraint(constr_var, lb=constr_val, ub=constr_val)
     
-    res = opt.minimize(f, x, args=(L, m), method='SLSQP',
+    res = opt.minimize(f, x.cpu().numpy(), args=(L, m), method='trust-constr',
                        constraints=(constraint,), options={'disp': True})
     return res.x
