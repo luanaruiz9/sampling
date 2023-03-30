@@ -239,7 +239,7 @@ for r in range(n_realizations):
     # Computing normalized Laplacian
     L_new = aux_functions.compute_laplacian(adj_sparse_new,num_nodes_new)
     
-    K = 5
+    K = 10
     eigvals_new, V_new = torch.lobpcg(L_new,k=K)
     V_new = V_new.type(torch.float32)
     V_rec = torch.zeros(num_nodes, K, device=device)
