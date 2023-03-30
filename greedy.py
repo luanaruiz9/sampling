@@ -84,7 +84,6 @@ def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
             #x0[np.random.choice(n-i)]=1
             lam = lam.to('cpu')
             L = L.to('cpu')
-            k = k.to('cpu')
             res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
                                options={'disp': True})
             #res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),
