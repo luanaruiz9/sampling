@@ -5,17 +5,14 @@ Created on Mon Mar  6 14:37:09 2023
 @author: Luana Ruiz
 """
 
-# Check if there are any graphon normalizations I'm missing - probably in reconstruction
-# Link prediction on ER graph?
-# FIX SAMPLING!!!!!!!!!!!!
+# TO DOS:
+# Multiple realizations
+# Consolidate things in classes/functions - more or less ok
+# Make things faster
 
-# TO DO: recall AUC - ok
-# TO DO: train a second model on data + eigenvectors - ok
-# TO DO: train a third model on data + PEs (Derek's code? or GCN/GIN + SignNet)
-# TO DO: Implement greedy sampling - ok
-# TO DO: Figure out dual frame or approximately dual frame - variational splines?  
-# other types of splines? - ok
-# TO DO: Implement reconstruction and test
+# NEXT STEPS:
+# Validate if padding normalization makes sense in reconstruction - I think it's ok
+# Link prediction on ER graph?
 
 
 import numpy as np
@@ -30,12 +27,14 @@ from train_eval import train_link_predictor, eval_link_predictor
 from greedy import greedy, f
 from graphon_sampling import generate_induced_graphon
 from reconstruction import f_rec, reconstruct
+import aux_functions
 
 if torch.cuda.is_available():
     device = 'cuda:0'
 else:
     device = 'cpu'
 
+n_realizations = 10
 dataset = Planetoid(root='/tmp/Cora', name='Cora')
 graph_og = dataset[0]
 #graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
@@ -43,6 +42,8 @@ pre_defined_kwargs = {'eigvecs': False}
 graph = Data(x=graph_og.x, edge_index=graph_og.edge_index, 
              edge_weight=graph_og.edge_weight, y=graph_og.y,**pre_defined_kwargs)
 graph = graph.to(device)
+
+#for r in range(n_realizations):
 split = T.RandomLinkSplit(
     num_val=0.05,
     num_test=0.1,
@@ -80,20 +81,15 @@ edge_weight = torch.cat((edge_weight,edge_weight))
 adj_sparse = torch.sparse_coo_tensor(edge_index, edge_weight, (num_nodes, num_nodes))
 adj = adj_sparse.to_dense()
 
-# Computing degree
-degree = torch.pow(torch.matmul(adj_sparse,torch.ones(num_nodes).to(device)),-0.5)
-edge_index_deg = torch.cat((torch.arange(num_nodes).unsqueeze(0),torch.arange(num_nodes).unsqueeze(0)),dim=0)
-degree_mx = torch.sparse_coo_tensor(edge_index_deg.to(device), degree, (num_nodes, num_nodes))
-
 # Computing normalized Laplacian
-
-L = torch.matmul(degree_mx,torch.matmul(adj_sparse,degree_mx))
+L = aux_functions.compute_laplacian(adj_sparse,num_nodes)
 
 K = 5
 #eigvals, V = torch.lobpcg(L,k=K)
 eigvals, V = torch.linalg.eig(adj)
-idx = torch.argsort(-torch.abs(eigvals))
+idx = torch.argsort(torch.abs(eigvals))
 V = V[:,idx[0:K]].type(torch.float32)
+eigvals = eigvals[idx[0:K]].type(torch.float32)
 
 pre_defined_kwargs = {'eigvecs': False}
 train_data_new = Data(x=torch.cat((train_data.x,V), dim=1), edge_index=train_data.edge_index,
@@ -168,18 +164,10 @@ adj_sparse_ind = torch.sparse_coo_tensor(edge_index_ind, edge_weight_ind,
 adj_sparse_ind = adj_sparse_ind.to(device)
 adj_ind = adj_sparse_ind.to_dense()
 
-# Computing degree
-degree = torch.pow(torch.matmul(adj_sparse_ind,torch.ones(num_nodes_ind).to(device)),-0.5)
-edge_index_deg = torch.cat((torch.arange(num_nodes_ind).unsqueeze(0),
-                            torch.arange(num_nodes_ind).unsqueeze(0)),dim=0)
-degree_mx = torch.sparse_coo_tensor(edge_index_deg.to(device), degree, 
-                                    (num_nodes_ind, num_nodes_ind))
-
 # Computing normalized Laplacian
+L_ind = aux_functions.compute_laplacian(adj_sparse_ind,num_nodes_ind)
 
-L_ind = torch.matmul(degree_mx,torch.matmul(adj_sparse_ind,degree_mx))
-
-lam = 0.5 
+lam = eigvals[-1]
 L_aux = L_ind.cpu()
 k = 5
 m2 = 50
@@ -198,6 +186,7 @@ for i in range(m):
                 m3 = n_nodes_last_int
             idx = np.random.choice(np.arange(i*n_nodes_per_int,
                                              i*n_nodes_per_int+n_nodes_last_int),m3)
+        idx = np.sort(idx)
         sampled_idx += list(idx)
 
 graph_new = train_data.subgraph(torch.tensor(sampled_idx,device=device,dtype=torch.long))
@@ -213,15 +202,8 @@ adj_sparse_new = torch.sparse_coo_tensor(edge_index_new, edge_weight_new,
                                          (num_nodes_new, num_nodes_new))
 adj_new = adj_sparse_new.to_dense()
 
-# Computing degree
-degree = torch.pow(torch.matmul(adj_sparse_new,torch.ones(num_nodes_new).to(device)),-0.5)
-edge_index_deg = torch.cat((torch.arange(num_nodes_new).unsqueeze(0),
-                            torch.arange(num_nodes_new).unsqueeze(0)),dim=0)
-degree_mx_new = torch.sparse_coo_tensor(edge_index_deg.to(device), degree, (num_nodes_new, num_nodes_new))
-
 # Computing normalized Laplacian
-
-L_new = torch.matmul(degree_mx_new,torch.matmul(adj_sparse_new,degree_mx_new))
+L_new = aux_functions.compute_laplacian(adj_sparse_new,num_nodes_new)
 
 K = 5
 eigvals_new, V_new = torch.lobpcg(L_new,k=K)
@@ -230,9 +212,13 @@ V_rec = torch.zeros(num_nodes, K, device=device)
 
 for i in range(V_new.shape[1]):
     v = V_new[:,i]
-    v_padded = torch.zeros(num_nodes, device=device)
-    v_padded[sampled_idx] = v
-    V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, v_padded, v_padded, L, k))
+    x0 = np.random.multivariate_normal(np.zeros(num_nodes),np.eye(num_nodes)/np.sqrt(num_nodes))
+    x0[sampled_idx] =v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
+    v_padded_lb = -torch.ones(num_nodes, device=device)
+    v_padded_lb[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
+    v_padded_ub = torch.ones(num_nodes, device=device)
+    v_padded_ub[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)    
+    V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
 
 pre_defined_kwargs = {'eigvecs': V_rec}
 
@@ -277,18 +263,10 @@ adj_sparse_ind = torch.sparse_coo_tensor(edge_index_ind, edge_weight_ind,
 adj_sparse_ind = adj_sparse_ind.to(device)
 adj_ind = adj_sparse_ind.to_dense()
 
-# Computing degree
-degree = torch.pow(torch.matmul(adj_sparse_ind,torch.ones(num_nodes_ind).to(device)),-0.5)
-edge_index_deg = torch.cat((torch.arange(num_nodes_ind).unsqueeze(0),
-                            torch.arange(num_nodes_ind).unsqueeze(0)),dim=0)
-degree_mx = torch.sparse_coo_tensor(edge_index_deg.to(device), degree, 
-                                    (num_nodes_ind, num_nodes_ind))
-
 # Computing normalized Laplacian
+L_ind = aux_functions.compute_laplacian(adj_sparse_ind,num_nodes_ind)
 
-L_ind = torch.matmul(degree_mx,torch.matmul(adj_sparse_ind,degree_mx))
-
-lam = 0.5 
+lam = eigvals[-1]
 L_aux = L_ind.cpu()
 k = 5
 m2 = 50
@@ -307,6 +285,7 @@ for i in range(m):
                 m3 = n_nodes_last_int
             idx = np.random.choice(np.arange(i*n_nodes_per_int,
                                              i*n_nodes_per_int+n_nodes_last_int),m3)
+        idx = np.sort(idx)
         sampled_idx += list(idx)
 
 graph_new = train_data.subgraph(torch.tensor(sampled_idx,device=device,dtype=torch.long))
@@ -322,15 +301,8 @@ adj_sparse_new = torch.sparse_coo_tensor(edge_index_new, edge_weight_new,
                                          (num_nodes_new, num_nodes_new))
 adj_new = adj_sparse_new.to_dense()
 
-# Computing degree
-degree = torch.pow(torch.matmul(adj_sparse_new,torch.ones(num_nodes_new).to(device)),-0.5)
-edge_index_deg = torch.cat((torch.arange(num_nodes_new).unsqueeze(0),
-                            torch.arange(num_nodes_new).unsqueeze(0)),dim=0)
-degree_mx_new = torch.sparse_coo_tensor(edge_index_deg.to(device), degree, (num_nodes_new, num_nodes_new))
-
 # Computing normalized Laplacian
-
-L_new = torch.matmul(degree_mx_new,torch.matmul(adj_sparse_new,degree_mx_new))
+L_new = aux_functions.compute_laplacian(adj_sparse_new,num_nodes_new)
 
 K = 5
 eigvals_new, V_new = torch.lobpcg(L_new,k=K)
@@ -339,9 +311,13 @@ V_rec = torch.zeros(num_nodes, K, device=device)
 
 for i in range(V_new.shape[1]):
     v = V_new[:,i]
-    v_padded = torch.zeros(num_nodes, device=device)
-    v_padded[sampled_idx] = v
-    V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, v_padded, v_padded, L, k))
+    x0 = np.random.multivariate_normal(np.zeros(num_nodes),np.eye(num_nodes)/np.sqrt(num_nodes))
+    x0[sampled_idx] =v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
+    v_padded_lb = -torch.ones(num_nodes, device=device)
+    v_padded_lb[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
+    v_padded_ub = torch.ones(num_nodes, device=device)
+    v_padded_ub[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
+    V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
 
 pre_defined_kwargs = {'eigvecs': V_rec}
 

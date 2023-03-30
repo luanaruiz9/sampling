@@ -77,7 +77,7 @@ def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
             while s_vec[amax] == 1:
                 amax = idx_x[np.random.choice(n-i)]
         else:
-            x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i)/(n-i))
+            x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i)/np.sqrt(n-i))
             #x0 = np.ones(n-i)/(n-i)
             #x0 = np.zeros(n-i)
             #x0[np.random.choice(n-i)]=1
