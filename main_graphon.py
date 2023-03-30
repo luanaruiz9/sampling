@@ -6,9 +6,11 @@ Created on Mon Mar  6 14:37:09 2023
 """
 
 # TO DOS:
-# Multiple realizations
+# Multiple realizations - ok
 # Consolidate things in classes/functions - more or less ok
 # Make things faster
+
+# How to handle eigs on test set? Eigs computed from both training and test set???
 
 # NEXT STEPS:
 # Validate if padding normalization makes sense in reconstruction - I think it's ok
@@ -53,7 +55,7 @@ else:
     device = 'cpu'
 
 n_realizations = 10
-K = 5
+K = 10
 
 dataset = Planetoid(root='/tmp/Cora', name='Cora')
 graph_og = dataset[0]
@@ -340,7 +342,6 @@ for r in range(n_realizations):
     # Computing normalized Laplacian
     L_new = aux_functions.compute_laplacian(adj_sparse_new,num_nodes_new)
     
-    K = 5
     eigvals_new, V_new = torch.lobpcg(L_new,k=K)
     V_new = V_new.type(torch.float32)
     V_rec = torch.zeros(num_nodes, K, device=device)
