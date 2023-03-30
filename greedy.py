@@ -13,7 +13,7 @@ import torch
 def f(x, *args):
 
     lam, L, k, s_vec = args
-    L = L.to('cpu')
+    
     n = L.shape[0]
     # Construct I_vsc from s_vec
     Ivsc = torch.zeros((n,n-int(np.sum(s_vec)))).to('cpu')
@@ -24,7 +24,7 @@ def f(x, *args):
         Ivsc[idx[i],i] = 1
         Iscv[i,idx[i]] = 1
         
-    omega = torch.matmul(Ivsc,torch.tensor(x,dtype=torch.float32)).to('cpu')
+    omega = torch.matmul(Ivsc,torch.tensor(x,dtype=torch.float32))
     for i in range(k):
         omega = torch.matmul(L,omega)
     Lt = torch.t(L)
@@ -82,7 +82,10 @@ def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
             #x0 = np.ones(n-i)/(n-i)
             #x0 = np.zeros(n-i)
             #x0[np.random.choice(n-i)]=1
-            res = opt.minimize(f, x0, args=(lam, L.to('cpu'), k, s_vec),method='CG',
+            lam = lam.to('cpu')
+            L = L.to('cpu')
+            k = k.to('cpu')
+            res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
                                options={'disp': True})
             #res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),
             #                   options={'disp': True,'maxiter' : 10})
