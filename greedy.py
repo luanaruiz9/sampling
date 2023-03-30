@@ -7,13 +7,10 @@ Created on Mon Mar 13 09:47:37 2023
 
 import numpy as np
 import scipy.optimize as opt
-import scipy
 import torch
 
 def f(x, *args):
-
     lam, L, k, s_vec = args
-    
     n = L.shape[0]
     # Construct I_vsc from s_vec
     Ivsc = np.zeros((n,n-int(np.sum(s_vec))))
@@ -34,8 +31,6 @@ def f(x, *args):
     omega = omega.numpy()
     omega = np.matmul(Iscv,omega)
     omega = np.matmul(x,omega)
-     
-    #omega = omega.numpy()
     omega = np.power(np.linalg.norm(omega)/np.power(np.linalg.norm(x),2),1/2*k)
     
     return lam-omega
@@ -67,12 +62,18 @@ def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
         idx_x = idx_x[s_vec[idx_x]==0]
     return s_vec
 
+
+
+
+
+
+# !!!!!!
+# Deprecated, fix if speedups are needed!
 def f_lobpcg(x, *args):
-    
     lam, L, k, s_vec = args
     n = L.shape[0]
     # Construct I_vsc from s_vec
-    Ivsc = torch.zeros((n,n-int(np.sum(s_vec))))
+    Ivsc = np.zeros((n,n-int(np.sum(s_vec))))
     # Construct I_scv from s_vec
     Iscv = torch.zeros((n-int(np.sum(s_vec)),n))
     idx = np.argwhere(s_vec==0)
@@ -81,16 +82,16 @@ def f_lobpcg(x, *args):
         Iscv[i,idx[i]] = 1
         
     omega = Ivsc
+    omega = torch.tensor(omega,dtype=torch.float32)
     for i in range(k):
         omega = torch.matmul(L,omega)
     Lt = torch.t(L)
     for i in range(k):
         omega = torch.matmul(Lt,omega)
     omega = torch.matmul(Iscv,omega)
-     
     #omega = omega.cpu().numpy()
-    x = torch.tensor(x,device=L.device,dtype=torch.float32)
+    x = torch.tensor(x,dtype=torch.float32)
     if len(x.shape) < 2:
         x = torch.unsqueeze(x,axis=1)
     omega, x = torch.lobpcg(A=omega,X=x,largest=False)
-    return lam-np.power(omega,1/2*k)      
+    return lam-np.power(omega.numpy(),1/2*k)      
