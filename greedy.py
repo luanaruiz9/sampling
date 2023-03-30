@@ -25,11 +25,13 @@ def f(x, *args):
         Iscv[i,idx[i]] = 1
         
     omega = np.matmul(Ivsc,x)
+    omega = torch.tensor(omega,dtype=torch.float32)
     for i in range(k):
-        omega = np.matmul(L,omega)
+        omega = torch.matmul(L,omega)
     Lt = torch.t(L)
     for i in range(k):
-        omega = np.matmul(Lt,omega)
+        omega = torch.matmul(Lt,omega)
+    omega = omega.numpy()
     omega = np.matmul(Iscv,omega)
     omega = np.matmul(x,omega)
      
@@ -55,7 +57,7 @@ def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
             #x0 = np.zeros(n-i)
             #x0[np.random.choice(n-i)]=1
             lam = lam.cpu().numpy()
-            L = L.cpu().numpy()
+            L = L.cpu()
             res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
                                options={'disp': True})
             #res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),
