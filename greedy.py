@@ -16,22 +16,22 @@ def f(x, *args):
     
     n = L.shape[0]
     # Construct I_vsc from s_vec
-    Ivsc = torch.zeros((n,n-int(np.sum(s_vec)))).to('cpu')
+    Ivsc = torch.zeros((n,n-int(np.sum(s_vec))))
     # Construct I_scv from s_vec
-    Iscv = torch.zeros((n-int(np.sum(s_vec)),n)).to('cpu')
+    Iscv = torch.zeros((n-int(np.sum(s_vec)),n))
     idx = np.argwhere(s_vec==0)
     for i in range(n-int(np.sum(s_vec))):
         Ivsc[idx[i],i] = 1
         Iscv[i,idx[i]] = 1
         
-    omega = torch.matmul(Ivsc,torch.tensor(x,dtype=torch.float32))
+    omega = torch.matmul(Ivsc,x)
     for i in range(k):
         omega = torch.matmul(L,omega)
     Lt = torch.t(L)
     for i in range(k):
         omega = torch.matmul(Lt,omega)
     omega = torch.matmul(Iscv,omega)
-    omega = torch.matmul(torch.tensor(x,dtype=torch.float32),omega)
+    omega = torch.matmul(x,omega)
      
     omega = omega.numpy()
     omega = np.power(np.linalg.norm(omega)/np.power(np.linalg.norm(x),2),1/2*k)
@@ -79,6 +79,7 @@ def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
                 amax = idx_x[np.random.choice(n-i)]
         else:
             x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i)/np.sqrt(n-i))
+            x0 = torch.tensor(x0, dtype=torch.float32)
             #x0 = np.ones(n-i)/(n-i)
             #x0 = np.zeros(n-i)
             #x0[np.random.choice(n-i)]=1
