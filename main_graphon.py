@@ -213,7 +213,7 @@ V_rec = torch.zeros(num_nodes, K, device=device)
 for i in range(V_new.shape[1]):
     v = V_new[:,i]
     x0 = np.random.multivariate_normal(np.zeros(num_nodes),np.eye(num_nodes)/np.sqrt(num_nodes))
-    x0[sampled_idx] =v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
+    x0[sampled_idx] = v.cpu().numpy()*np.sqrt(m2*m3)/np.sqrt(num_nodes)
     v_padded_lb = -torch.ones(num_nodes, device=device)
     v_padded_lb[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
     v_padded_ub = torch.ones(num_nodes, device=device)
@@ -312,7 +312,7 @@ V_rec = torch.zeros(num_nodes, K, device=device)
 for i in range(V_new.shape[1]):
     v = V_new[:,i]
     x0 = np.random.multivariate_normal(np.zeros(num_nodes),np.eye(num_nodes)/np.sqrt(num_nodes))
-    x0[sampled_idx] =v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
+    x0[sampled_idx] = v.cpu().numpy()*np.sqrt(m2*m3)/np.sqrt(num_nodes)
     v_padded_lb = -torch.ones(num_nodes, device=device)
     v_padded_lb[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
     v_padded_ub = torch.ones(num_nodes, device=device)
