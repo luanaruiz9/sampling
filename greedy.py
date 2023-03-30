@@ -41,7 +41,8 @@ def f(x, *args):
     return lam-omega
 
 def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
-    
+    lam = lam.cpu().numpy()
+    L = L.cpu()
     n = L.shape[0]
     s_vec = np.zeros(n)
     idx_x = np.arange(n)
@@ -56,8 +57,6 @@ def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
             #x0 = np.ones(n-i)/(n-i)
             #x0 = np.zeros(n-i)
             #x0[np.random.choice(n-i)]=1
-            lam = lam.cpu().numpy()
-            L = L.cpu()
             res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
                                options={'disp': True})
             #res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),
