@@ -56,6 +56,7 @@ def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
             #x0 = np.ones(n-i)/(n-i)
             #x0 = np.zeros(n-i)
             #x0[np.random.choice(n-i)]=1
+            k = torch.tensor(k)
             lam = lam.to('cpu')
             L = L.to('cpu')
             res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
