@@ -12,6 +12,7 @@ import torch
 
 def f(x, *args):
 
+    x = torch.tensor(x)
     lam, L, k, s_vec = args
     
     n = L.shape[0]
