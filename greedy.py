@@ -34,8 +34,8 @@ def f(x, *args):
     omega = torch.matmul(Iscv,omega)
     omega = torch.matmul(x,omega)
      
-    omega = omega.numpy()
-    omega = np.power(np.linalg.norm(omega)/np.power(np.linalg.norm(x),2),1/2*k)
+    #omega = omega.numpy()
+    omega = torch.power(torch.linalg.norm(omega)/torch.power(torch.linalg.norm(x),2),1/2*k)
     
     return lam-omega
 
