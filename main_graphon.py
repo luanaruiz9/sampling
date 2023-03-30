@@ -52,7 +52,7 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
 
-n_realizations = 1
+n_realizations = 10
 K = 5
 
 dataset = Planetoid(root='/tmp/Cora', name='Cora')
@@ -382,12 +382,13 @@ for r in range(n_realizations):
     print()
     
 # Pickling
+dict_results = {'results_no_eigs': results_no_eigs,
+                'results_eigs': results_eigs,
+                'results_pe': results_pe,
+                'results_w_samp_pe': results_w_samp_pe,
+                'results_random_samp_pe': results_random_samp_pe}
+pkl.dump(dict_results, open(os.path.join(saveDir,'results.p'), "wb"))
 
-pkl.dump(results_no_eigs, open(os.path.join(saveDir,'results.p'), "wb"))
-pkl.dump(results_eigs, open(os.path.join(saveDir,'results.p'), "wb"))
-pkl.dump(results_pe, open(os.path.join(saveDir,'results.p'), "wb"))
-pkl.dump(results_w_samp_pe , open(os.path.join(saveDir,'results.p'), "wb"))
-pkl.dump(results_random_samp_pe, open(os.path.join(saveDir,'results.p'), "wb"))
-
-pkl.dump(rec_error_w , open(os.path.join(saveDir,'rec_error.p'), "wb"))
-pkl.dump(rec_error_random, open(os.path.join(saveDir,'rec_error.p'), "wb"))
+dict_rec_errors = {'rec_eror_w': rec_error_w,
+                   'rec_error_random': rec_error_random}
+pkl.dump(dict_rec_errors, open(os.path.join(saveDir,'rec_error.p'), "wb"))
