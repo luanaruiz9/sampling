@@ -12,18 +12,19 @@ import torch
 
 def f(x, *args):
     
+    L = L.to('cpu')
     lam, L, k, s_vec = args
     n = L.shape[0]
     # Construct I_vsc from s_vec
-    Ivsc = torch.zeros((n,n-int(np.sum(s_vec))))
+    Ivsc = torch.zeros((n,n-int(np.sum(s_vec)))).to('cpu')
     # Construct I_scv from s_vec
-    Iscv = torch.zeros((n-int(np.sum(s_vec)),n))
+    Iscv = torch.zeros((n-int(np.sum(s_vec)),n)).to('cpu')
     idx = np.argwhere(s_vec==0)
     for i in range(n-int(np.sum(s_vec))):
         Ivsc[idx[i],i] = 1
         Iscv[i,idx[i]] = 1
         
-    omega = torch.matmul(Ivsc,torch.tensor(x,dtype=torch.float32))
+    omega = torch.matmul(Ivsc,torch.tensor(x,dtype=torch.float32)).to('cpu')
     for i in range(k):
         omega = torch.matmul(L,omega)
     Lt = torch.t(L)
@@ -32,7 +33,7 @@ def f(x, *args):
     omega = torch.matmul(Iscv,omega)
     omega = torch.matmul(torch.tensor(x,dtype=torch.float32),omega)
      
-    omega = omega.cpu().numpy()
+    omega = omega.numpy()
     omega = np.power(np.linalg.norm(omega)/np.power(np.linalg.norm(x),2),1/2*k)
     
     return lam-omega
