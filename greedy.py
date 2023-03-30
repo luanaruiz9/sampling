@@ -38,6 +38,35 @@ def f(x, *args):
     
     return lam-omega
 
+def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
+    
+    n = L.shape[0]
+    s_vec = np.zeros(n)
+    idx_x = np.arange(n)
+    for i in range(m):
+        print(i)
+        if np.random.rand(1) <= np.exp(-exponent*i/m):
+            amax = idx_x[np.random.choice(n-i)]
+            while s_vec[amax] == 1:
+                amax = idx_x[np.random.choice(n-i)]
+        else:
+            x0_array = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i)/np.sqrt(n-i))
+            x0 = torch.tensor(x0_array, dtype=torch.float32)
+            #x0 = np.ones(n-i)/(n-i)
+            #x0 = np.zeros(n-i)
+            #x0[np.random.choice(n-i)]=1
+            lam = lam.to('cpu')
+            L = L.to('cpu')
+            res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
+                               options={'disp': True})
+            #res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),
+            #                   options={'disp': True,'maxiter' : 10})
+            phi = np.power(res.x,2)
+            amax = idx_x[np.argmax(phi)]
+        s_vec[amax] = 1
+        idx_x = idx_x[s_vec[idx_x]==0]
+    return s_vec
+
 def f_lobpcg(x, *args):
     
     lam, L, k, s_vec = args
@@ -64,34 +93,4 @@ def f_lobpcg(x, *args):
     if len(x.shape) < 2:
         x = torch.unsqueeze(x,axis=1)
     omega, x = torch.lobpcg(A=omega,X=x,largest=False)
-    return lam-np.power(omega,1/2*k)
-
-def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
-    
-    n = L.shape[0]
-    s_vec = np.zeros(n)
-    idx_x = np.arange(n)
-    for i in range(m):
-        print(i)
-        if np.random.rand(1) <= np.exp(-exponent*i/m):
-            amax = idx_x[np.random.choice(n-i)]
-            while s_vec[amax] == 1:
-                amax = idx_x[np.random.choice(n-i)]
-        else:
-            x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i)/np.sqrt(n-i))
-            x0 = torch.tensor(x0, dtype=torch.float32)
-            #x0 = np.ones(n-i)/(n-i)
-            #x0 = np.zeros(n-i)
-            #x0[np.random.choice(n-i)]=1
-            lam = lam.to('cpu')
-            L = L.to('cpu')
-            res = opt.minimize(f, x0, args=(lam, L, k, s_vec),method='CG',
-                               options={'disp': True})
-            #res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),
-            #                   options={'disp': True,'maxiter' : 10})
-            phi = np.power(res.x,2)
-            amax = idx_x[np.argmax(phi)]
-        s_vec[amax] = 1
-        idx_x = idx_x[s_vec[idx_x]==0]
-    return s_vec
-        
+    return lam-np.power(omega,1/2*k)      
