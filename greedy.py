@@ -11,9 +11,9 @@ import scipy
 import torch
 
 def f(x, *args):
-    
-    L = L.to('cpu')
+
     lam, L, k, s_vec = args
+    L = L.to('cpu')
     n = L.shape[0]
     # Construct I_vsc from s_vec
     Ivsc = torch.zeros((n,n-int(np.sum(s_vec)))).to('cpu')
