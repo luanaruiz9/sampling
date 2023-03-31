@@ -16,13 +16,12 @@ def generate_induced_graphon(og_graph, n_intervals):
     n = og_graph.num_nodes
     
     n_nodes_per_int, n_nodes_last_int = np.divmod(n,n_intervals)
-    edge_index = og_graph.edge_label_index
+    edge_index = og_graph.edge_index
     
-    edge_weight = og_graph.edge_label
-    if edge_weight is None or edge_weight.shape[0] != edge_index.shape[1]:
+    if og_graph.edge_weight is not None:
+        edge_weight = og_graph.edge_weight
+    else:
         edge_weight = torch.ones(edge_index.shape[1],device=edge_index.device)
-    edge_index = torch.cat((edge_index,torch.flip(edge_index,dims=(1,0))),dim=1)
-    edge_weight = torch.cat((edge_weight,edge_weight))
         
     adj_sparse = torch.sparse_coo_tensor(edge_index, edge_weight, (n, n))
     adj = adj_sparse.to_dense()

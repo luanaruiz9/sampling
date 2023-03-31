@@ -55,7 +55,7 @@ else:
     device = 'cpu'
 
 n_realizations = 10
-K = 10
+K = 5
 
 dataset = Planetoid(root='/tmp/Cora', name='Cora')
 graph_og = dataset[0]
@@ -105,25 +105,42 @@ for r in range(n_realizations):
     print('Adding eigenvectors...')
     print()
     
+    # V from training data
     num_nodes = train_data.x.shape[0]
-    edge_index = train_data.edge_label_index
-    if train_data.edge_label is not None:
-        edge_weight = train_data.edge_label
+    edge_index = train_data.edge_index
+    if train_data.edge_weight is not None:
+        edge_weight = train_data.edge_weight
     else:
         edge_weight = torch.ones(edge_index.shape[1]).to(device)
-    edge_index = torch.cat((edge_index,torch.flip(edge_index,dims=(1,0))),dim=1)
-    edge_weight = torch.cat((edge_weight,edge_weight))
     adj_sparse = torch.sparse_coo_tensor(edge_index, edge_weight, (num_nodes, num_nodes))
     adj = adj_sparse.to_dense()
     
     # Computing normalized Laplacian
-    L = aux_functions.compute_laplacian(adj_sparse,num_nodes)
+    L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
     
     #eigvals, V = torch.lobpcg(L,k=K)
     eigvals, V = torch.linalg.eig(adj)
     idx = torch.argsort(torch.abs(eigvals))
     V = V[:,idx[0:K]].type(torch.float32)
     eigvals = eigvals[idx[0:K]].type(torch.float32)
+    
+    # V from test data
+    edge_index_test = test_data.edge_index
+    if test_data.edge_weight is not None:
+        edge_weight_test = test_data.edge_weight
+    else:
+        edge_weight_test = torch.ones(edge_index_test.shape[1]).to(device)
+    adj_sparse_test = torch.sparse_coo_tensor(edge_index_test, edge_weight_test, (num_nodes, num_nodes))
+    adj_test = adj_sparse_test.to_dense()
+    
+    # Computing normalized Laplacian
+    L_test = aux_functions.compute_laplacian(adj_sparse_test, num_nodes)
+    
+    #eigvals, V = torch.lobpcg(L,k=K)
+    eigvals_test, V_test = torch.linalg.eig(adj_test)
+    idx = torch.argsort(torch.abs(eigvals_test))
+    V_test = V_test[:,idx[0:K]].type(torch.float32)
+    eigvals_test = eigvals_test[idx[0:K]].type(torch.float32)
     
     pre_defined_kwargs = {'eigvecs': False}
     train_data_new = Data(x=torch.cat((train_data.x,V), dim=1), edge_index=train_data.edge_index,
@@ -134,7 +151,7 @@ for r in range(n_realizations):
                           edge_label=val_data.edge_label,
                           y=train_data.y,edge_label_index=val_data.edge_label_index,
                           **pre_defined_kwargs)
-    test_data_new = Data(x=torch.cat((test_data.x,V), dim=1), edge_index=test_data.edge_index,
+    test_data_new = Data(x=torch.cat((test_data.x,V_test), dim=1), edge_index=test_data.edge_index,
                           edge_label=test_data.edge_label,
                           y=test_data.y,edge_label_index=test_data.edge_label_index,
                           **pre_defined_kwargs)
@@ -158,6 +175,7 @@ for r in range(n_realizations):
     print()
     
     pre_defined_kwargs = {'eigvecs': V}
+    pre_defined_kwargs_test = {'eigvecs': V_test}
     train_data_new = Data(x=train_data.x, edge_index=train_data.edge_index,
                           edge_label=train_data.edge_label,
                           y=train_data.y,edge_label_index=train_data.edge_label_index,
@@ -169,7 +187,7 @@ for r in range(n_realizations):
     test_data_new = Data(x=test_data.x, edge_index=test_data.edge_index,
                           edge_label=test_data.edge_label,
                           y=test_data.y,edge_label_index=test_data.edge_label_index,
-                          **pre_defined_kwargs)
+                          **pre_defined_kwargs_test)
     
     model = SignNetLinkPredNet(dataset.num_features+16*K, 32, 32, True, 1, 16, 16).to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
@@ -191,7 +209,7 @@ for r in range(n_realizations):
     # Finding sampling set
     m = 100
     n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes,m)
-    graph_ind = generate_induced_graphon(train_data,m)
+    graph_ind = generate_induced_graphon(train_data, m)
     num_nodes_ind = graph_ind.x.shape[0]
     edge_index_ind = graph_ind.edge_index
     edge_weight_ind = graph_ind.edge_weight
@@ -225,6 +243,8 @@ for r in range(n_realizations):
             idx = np.sort(idx)
             sampled_idx += list(idx)
     
+    
+    # New graph for training data
     graph_new = train_data.subgraph(torch.tensor(sampled_idx,device=device,dtype=torch.long))
     graph_new = graph_new.to(device)
     
@@ -241,7 +261,6 @@ for r in range(n_realizations):
     # Computing normalized Laplacian
     L_new = aux_functions.compute_laplacian(adj_sparse_new,num_nodes_new)
     
-    K = 10
     eigvals_new, V_new = torch.lobpcg(L_new,k=K)
     V_new = V_new.type(torch.float32)
     V_rec = torch.zeros(num_nodes, K, device=device)
@@ -255,9 +274,52 @@ for r in range(n_realizations):
         v_padded_ub = torch.ones(num_nodes, device=device)
         v_padded_ub[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
         V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
-        rec_error_w[r,i] = torch.linalg.norm(V_rec[:,i]-V[:,i]/V[:,i])/torch.linalg.norm(V[:,i])
     
     pre_defined_kwargs = {'eigvecs': V_rec}
+    
+    ### Insert new graph for test data!!!!!!!!!!!!
+    
+    # New graph for training data
+    graph_new = test_data.subgraph(torch.tensor(sampled_idx,device=device,dtype=torch.long))
+    graph_new = graph_new.to(device)
+    
+    num_nodes_new = graph_new.x.shape[0]
+    edge_index_new = graph_new.edge_index
+    if graph_new.edge_weight is not None:
+        edge_weight_new = graph_new.edge_weight
+    else:
+        edge_weight_new = torch.ones(edge_index_new.shape[1]).to(device)
+    adj_sparse_new = torch.sparse_coo_tensor(edge_index_new, edge_weight_new, 
+                                             (num_nodes_new, num_nodes_new))
+    adj_new = adj_sparse_new.to_dense()
+    
+    # Computing normalized Laplacian
+    L_new = aux_functions.compute_laplacian(adj_sparse_new,num_nodes_new)
+    
+    eigvals_new, V_new = torch.lobpcg(L_new,k=K)
+    V_new = V_new.type(torch.float32)
+    V_rec = torch.zeros(num_nodes, K, device=device)
+    
+    for i in range(V_new.shape[1]):
+        v = V_new[:,i]
+        x0 = np.random.multivariate_normal(np.zeros(num_nodes),np.eye(num_nodes)/np.sqrt(num_nodes))
+        x0[sampled_idx] = v.cpu().numpy()*np.sqrt(m2*m3)/np.sqrt(num_nodes)
+        v_padded_lb = -torch.ones(num_nodes, device=device)
+        v_padded_lb[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
+        v_padded_ub = torch.ones(num_nodes, device=device)
+        v_padded_ub[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
+        V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
+        rec_error_w[r,i] = torch.linalg.norm(V_rec[:,i]-V_test[:,i])/torch.linalg.norm(V_test[:,i])
+    
+    pre_defined_kwargs_test = {'eigvecs': V_rec}
+    
+    
+    
+    
+    
+    
+    
+    
     
     train_data_new = Data(x=train_data.x, edge_index=train_data.edge_index,
                           edge_label=train_data.edge_label,
@@ -270,7 +332,7 @@ for r in range(n_realizations):
     test_data_new = Data(x=test_data.x, edge_index=test_data.edge_index,
                           edge_label=test_data.edge_label,
                           y=test_data.y,edge_label_index=test_data.edge_label_index,
-                          **pre_defined_kwargs)
+                          **pre_defined_kwargs_test)
     
     model = SignNetLinkPredNet(dataset.num_features+16*K, 32, 32, True, 1, 16, 16).to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
@@ -326,6 +388,7 @@ for r in range(n_realizations):
             idx = np.sort(idx)
             sampled_idx += list(idx)
     
+    # V for train data
     graph_new = train_data.subgraph(torch.tensor(sampled_idx,device=device,dtype=torch.long))
     graph_new = graph_new.to(device)
     
@@ -355,9 +418,48 @@ for r in range(n_realizations):
         v_padded_ub = torch.ones(num_nodes, device=device)
         v_padded_ub[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)    
         V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
-        rec_error_random[r,i] = torch.linalg.norm(V_rec[:,i]-V[:,i]/V[:,i])/torch.linalg.norm(V[:,i])
     
     pre_defined_kwargs = {'eigvecs': V_rec}
+    
+    
+    
+    ### Insert new graph for test data!!!!!!!!!!!!
+    
+    # New graph for training data
+    graph_new = test_data.subgraph(torch.tensor(sampled_idx,device=device,dtype=torch.long))
+    graph_new = graph_new.to(device)
+    
+    num_nodes_new = graph_new.x.shape[0]
+    edge_index_new = graph_new.edge_index
+    if graph_new.edge_weight is not None:
+        edge_weight_new = graph_new.edge_weight
+    else:
+        edge_weight_new = torch.ones(edge_index_new.shape[1]).to(device)
+    adj_sparse_new = torch.sparse_coo_tensor(edge_index_new, edge_weight_new, 
+                                             (num_nodes_new, num_nodes_new))
+    adj_new = adj_sparse_new.to_dense()
+    
+    # Computing normalized Laplacian
+    L_new = aux_functions.compute_laplacian(adj_sparse_new,num_nodes_new)
+    
+    eigvals_new, V_new = torch.lobpcg(L_new,k=K)
+    V_new = V_new.type(torch.float32)
+    V_rec = torch.zeros(num_nodes, K, device=device)
+    
+    for i in range(V_new.shape[1]):
+        v = V_new[:,i]
+        x0 = np.random.multivariate_normal(np.zeros(num_nodes),np.eye(num_nodes)/np.sqrt(num_nodes))
+        x0[sampled_idx] = v.cpu().numpy()*np.sqrt(m2*m3)/np.sqrt(num_nodes)
+        v_padded_lb = -torch.ones(num_nodes, device=device)
+        v_padded_lb[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
+        v_padded_ub = torch.ones(num_nodes, device=device)
+        v_padded_ub[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
+        V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
+        rec_error_w[r,i] = torch.linalg.norm(V_rec[:,i]-V_test[:,i])/torch.linalg.norm(V_test[:,i])
+    
+    pre_defined_kwargs_test = {'eigvecs': V_rec}
+    
+    
     
     train_data_new = Data(x=train_data.x, edge_index=train_data.edge_index,
                           edge_label=train_data.edge_label,
@@ -370,7 +472,7 @@ for r in range(n_realizations):
     test_data_new = Data(x=test_data.x, edge_index=test_data.edge_index,
                           edge_label=test_data.edge_label,
                           y=test_data.y,edge_label_index=test_data.edge_label_index,
-                          **pre_defined_kwargs)
+                          **pre_defined_kwargs_test)
     
     model = SignNetLinkPredNet(dataset.num_features+16*K, 32, 32, True, 1, 16, 16).to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
