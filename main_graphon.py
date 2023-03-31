@@ -55,8 +55,8 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
 
-n_realizations = 2
-K = 2
+n_realizations = 10
+K = 10
 
 dataset = Planetoid(root='/tmp/Cora', name='Cora')
 graph_og = dataset[0]
@@ -433,7 +433,7 @@ for r in range(n_realizations):
         v_padded_ub = torch.ones(num_nodes, device=device)
         v_padded_ub[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
         V_rec_test[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
-        rec_error_w[r,i] = torch.linalg.norm(V_rec_test[:,i]-V_test[:,i])/torch.linalg.norm(V_test[:,i])
+        rec_error_random[r,i] = torch.linalg.norm(V_rec_test[:,i]-V_test[:,i])/torch.linalg.norm(V_test[:,i])
     
     # Just adding eigenvectors
     
@@ -491,7 +491,7 @@ for r in range(n_realizations):
     criterion = torch.nn.BCEWithLogitsLoss()
     model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
     test_auc = eval_link_predictor(model, test_data_new)
-    results_w_samp_pe[r] = test_auc
+    results_random_samp_pe[r] = test_auc
     print(f"Test: {test_auc:.3f}")
     
     print()
