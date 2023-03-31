@@ -55,7 +55,7 @@ else:
     device = 'cpu'
 
 n_realizations = 10
-K = 5
+K = 10
 
 dataset = Planetoid(root='/tmp/Cora', name='Cora')
 graph_og = dataset[0]
