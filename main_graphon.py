@@ -10,11 +10,9 @@ Created on Mon Mar  6 14:37:09 2023
 # Consolidate things in classes/functions - more or less ok
 # Make things faster
 
-# How to handle eigs on test set? Eigs computed from both training and test set???
-
 # NEXT STEPS:
 # Validate if padding normalization makes sense in reconstruction - I think it's ok
-# Add comparison with just reconstructed eigenvectors
+# Add comparison with just reconstructed eigenvectors - ok
 # Link prediction on ER graph?
 
 import os
@@ -499,14 +497,14 @@ for r in range(n_realizations):
 print('Final results')
 print()
 
-print('Avg. AUC w/o eigenvectors:                %.4f' % np.mean(results_no_eigs))
-print('Avg. AUC w/ eigenvectors and w/ PEs:      %.4f    %.4f' % (np.mean(results_eigs), np.mean(results_pe)))
-print('Avg. AUC graphon sampling, idem above:    %.4f    %.4f' % (np.mean(results_w_samp_eigs), np.mean(results_w_samp_pe)))
-print('Avg. AUC random sampling, idem above:     %.4f    %.4f' % (np.mean(results_random_samp_eigs), np.mean(results_random_samp_pe)))
+print('Avg. AUC w/o eigenvectors:\t\t\t\t%.4f' % np.mean(results_no_eigs))
+print('Avg. AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.mean(results_eigs), np.mean(results_pe)))
+print('Avg. AUC graphon sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.mean(results_w_samp_eigs), np.mean(results_w_samp_pe)))
+print('Avg. AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.mean(results_random_samp_eigs), np.mean(results_random_samp_pe)))
 print()    
 
-print('Avg. rec. error, graphon sampling:                %.4f' % np.mean(rec_error_w))
-print('Avg. rec. error, random sampling:                 %.4f' % np.mean(rec_error_random))
+print('Avg. rec. error, graphon sampling:\t\t\t\t%.4f' % np.mean(rec_error_w))
+print('Avg. rec. error, random sampling:\t\t\t\t%.4f' % np.mean(rec_error_random))
 print()
 
 # Pickling
