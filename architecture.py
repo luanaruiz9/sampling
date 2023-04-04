@@ -103,7 +103,7 @@ class SignNetLinkPredNet(torch.nn.Module):
     def encode(self, x, edge_index, eigvecs=None):
         if eigvecs is not False:
             eigvecs = eigvecs.unsqueeze(-1)
-            pe = (eigvecs*self.conv1(torch.abs(eigvecs), edge_index, None)).relu()
+            pe = eigvecs*self.conv1(torch.abs(eigvecs), edge_index, None).relu()
             pe = self.conv2(pe,edge_index, None)
             pe = pe.reshape(pe.shape[0],-1)
             x = torch.cat((x, pe),dim=1)
