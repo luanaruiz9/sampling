@@ -183,7 +183,7 @@ for r in range(n_realizations):
                           y=test_data.y,edge_label_index=test_data.edge_label_index,
                           **pre_defined_kwargs_test)
     
-    model = SignNetLinkPredNet(dataset.num_features+16*K, 32, 32, True, 1, 16, 16).to(device)
+    model = SignNetLinkPredNet(dataset.num_features+16*K, 32, 32, True, 1, 16, 32).to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
     criterion = torch.nn.BCEWithLogitsLoss()
     model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
@@ -332,7 +332,7 @@ for r in range(n_realizations):
                           y=test_data.y,edge_label_index=test_data.edge_label_index,
                           **pre_defined_kwargs_test)
     
-    model = SignNetLinkPredNet(dataset.num_features+16*K, 32, 32, True, 1, 16, 16).to(device)
+    model = SignNetLinkPredNet(dataset.num_features+16*K, 32, 32, True, 1, 16, 32).to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
     criterion = torch.nn.BCEWithLogitsLoss()
     model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
@@ -484,7 +484,7 @@ for r in range(n_realizations):
                           y=test_data.y,edge_label_index=test_data.edge_label_index,
                           **pre_defined_kwargs_test)
     
-    model = SignNetLinkPredNet(dataset.num_features+16*K, 32, 32, True, 1, 16, 16).to(device)
+    model = SignNetLinkPredNet(dataset.num_features+16*K, 32, 32, True, 1, 16, 32).to(device)
     optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
     criterion = torch.nn.BCEWithLogitsLoss()
     model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
