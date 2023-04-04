@@ -96,14 +96,14 @@ class SignNetLinkPredNet(torch.nn.Module):
                  in_channels_sign=None, hidden_channels_sign=None, out_channels_sign=None):
         super().__init__()
         if sign:
-            self.conv1 = GraphFilter(in_channels_sign, hidden_channels_sign, 2)
-            self.conv2 = GraphFilter(hidden_channels_sign, out_channels_sign, 1)
+            self.conv1 = GraphFilter(in_channels_sign, in_channels_sign, 2)
+            self.conv2 = GraphFilter(in_channels_sign, out_channels_sign, 1)
         self.inner_model = LinkPredNet(in_channels, hidden_channels, out_channels)
         
     def encode(self, x, edge_index, eigvecs=None):
         if eigvecs is not False:
             eigvecs = eigvecs.unsqueeze(-1)
-            pe = self.conv1(eigvecs, edge_index, None).relu() + self.conv1(-eigvecs, edge_index, None).relu()
+            pe = eigvecs*self.conv1(torch.abs(eigvecs), edge_index, None)
             pe = self.conv2(pe,edge_index, None)
             pe = pe.reshape(pe.shape[0],-1)
             x = torch.cat((x, pe),dim=1)
