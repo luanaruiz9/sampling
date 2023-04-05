@@ -372,7 +372,7 @@ for r in range(n_realizations):
     s_vec = greedy(f, lam, L_aux, k, m2, exponent=0)
     s_vec = torch.tensor(s_vec)
     
-    m3 = 4
+    m3 = 8
     sampled_idx = []
     for i in range(m):
         if s_vec[i] == 1:
