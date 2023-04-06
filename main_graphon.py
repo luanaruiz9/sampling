@@ -53,7 +53,7 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
 
-n_realizations = 10
+n_realizations = 50
 K = 10
 
 dataset = Planetoid(root='/tmp/Cora', name='Cora')
@@ -497,7 +497,7 @@ for r in range(n_realizations):
 print('Final results')
 print()
 
-print('Avg. AUC w/o eigenvectors:\t\t\t\t%.4f' % np.mean(results_no_eigs))
+print('Avg. AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.mean(results_no_eigs))
 print('Avg. AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.mean(results_eigs), np.mean(results_pe)))
 print('Avg. AUC graphon sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.mean(results_w_samp_eigs), np.mean(results_w_samp_pe)))
 print('Avg. AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.mean(results_random_samp_eigs), np.mean(results_random_samp_pe)))
