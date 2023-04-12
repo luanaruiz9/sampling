@@ -23,9 +23,9 @@ def f(x, *args):
         
     omega = np.matmul(Ivsc,x)
     omega = torch.tensor(omega,dtype=torch.float32)
-    omega = omega.numpy()
     for i in range(k):
         omega = torch.matmul(L,omega)
+    omega = omega.numpy()
         
     Lt = torch.t(L)
     omega2 = Lt
