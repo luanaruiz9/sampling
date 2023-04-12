@@ -23,14 +23,19 @@ def f(x, *args):
         
     omega = np.matmul(Ivsc,x)
     omega = torch.tensor(omega,dtype=torch.float32)
+    omega = omega.numpy()
     for i in range(k):
         omega = torch.matmul(L,omega)
+        
     Lt = torch.t(L)
-    for i in range(k):
-        omega = torch.matmul(Lt,omega)
-    omega = omega.numpy()
-    omega = np.matmul(Iscv,omega)
-    omega = np.matmul(x,omega)
+    omega2 = Lt
+    for i in range(k-1):
+        omega2 = torch.matmul(Lt,omega2)
+    omega2 = omega2.numpy()
+    omega2 = np.matmul(Iscv,omega2)
+    omega2 = np.matmul(x,omega2)
+    
+    omega = np.dot(omega,omega2)
     omega = np.power(np.linalg.norm(omega)/np.power(np.linalg.norm(x),2),1/2*k)
     
     return lam-omega
