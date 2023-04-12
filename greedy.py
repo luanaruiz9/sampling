@@ -14,12 +14,9 @@ def f(x, *args):
     n = L.shape[0]
     # Construct I_vsc from s_vec
     Ivsc = np.zeros((n,n-int(np.sum(s_vec))))
-    # Construct I_scv from s_vec
-    Iscv = np.zeros((n-int(np.sum(s_vec)),n))
     idx = np.argwhere(s_vec==0)
     for i in range(n-int(np.sum(s_vec))):
         Ivsc[idx[i],i] = 1
-        Iscv[i,idx[i]] = 1
         
     omega = np.matmul(Ivsc,x)
     omega = torch.tensor(omega,dtype=torch.float32)
@@ -27,16 +24,7 @@ def f(x, *args):
         omega = torch.matmul(L,omega)
     omega = omega.numpy()
         
-    Lt = torch.t(L)
-    omega2 = Lt
-    for i in range(k-1):
-        omega2 = torch.matmul(Lt,omega2)
-    omega2 = omega2.numpy()
-    omega2 = np.matmul(Iscv,omega2)
-    omega2 = np.matmul(x,omega2)
-    
-    omega = np.dot(omega,omega2)
-    omega = np.power(np.linalg.norm(omega)/np.power(np.linalg.norm(x),2),1/2*k)
+    omega = np.power(np.dot(omega,omega)/np.dot(x,x),1/2*k)
     
     return lam-omega
 
