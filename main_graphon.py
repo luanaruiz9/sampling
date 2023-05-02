@@ -31,7 +31,7 @@ from subsampling import sample_clustering
 from graphon_sampling import generate_induced_graphon
 import aux_functions
 
-thisFilename = 'cora' # This is the general name of all related files
+thisFilename = 'pubmed' # This is the general name of all related files
 
 saveDirRoot = 'experiments' # In this case, relative location
 saveDir = os.path.join(saveDirRoot, thisFilename) 
@@ -52,7 +52,7 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
 
-n_realizations = 50
+n_realizations = 10
 K = 20
 do_no_pe = True
 do_eig = True
@@ -60,7 +60,7 @@ do_learn_pe = True
 do_w_sampl = True
 do_random_sampl = True
 
-dataset = Planetoid(root='/tmp/Cora', name='Cora')
+dataset = Planetoid(root='/tmp/pubmed', name='PubMed')
 graph_og = dataset[0]
 #graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
 pre_defined_kwargs = {'eigvecs': False}
@@ -68,7 +68,7 @@ graph = Data(x=graph_og.x, edge_index=graph_og.edge_index,
              edge_weight=graph_og.edge_weight, y=graph_og.y,**pre_defined_kwargs)
 graph = graph.to(device)
 
-m = 50 # Number of candidate intervals
+m = 100 # Number of candidate intervals
 m2 = 25 # Number of sampled intervals
 m3 = 20 #8 # How many nodes (points) to sample per sampled interval
 
