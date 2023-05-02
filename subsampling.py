@@ -49,7 +49,8 @@ def cluster_hk_pr(A, seed, cheeger, eps, sz, vol):
     
     rho = local_hk_pr(torch.matmul(deg_inv,A), t, seed, eps)
     
-    idx = torch.argsort(rho/deg_vec).cpu().numpy()
+    deg_vec= deg_vec.cpu()
+    idx = torch.argsort(rho/deg_vec).numpy()
     
     S = []
     for i, node in enumerate(list(idx)):
