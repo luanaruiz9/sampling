@@ -90,7 +90,7 @@ for r in range(n_realizations):
         num_val=0.05,
         num_test=0.1,
         is_undirected=True,
-        add_negative_train_samples=True,
+        add_negative_train_samples=False,
         neg_sampling_ratio=1,
     )
     train_data, val_data, test_data = split(graph)
