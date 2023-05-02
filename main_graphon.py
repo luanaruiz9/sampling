@@ -31,7 +31,7 @@ from subsampling import sample_clustering
 from graphon_sampling import generate_induced_graphon
 import aux_functions
 
-thisFilename = 'pubmed' # This is the general name of all related files
+thisFilename = 'cora' # This is the general name of all related files
 
 saveDirRoot = 'experiments' # In this case, relative location
 saveDir = os.path.join(saveDirRoot, thisFilename) 
@@ -60,7 +60,7 @@ do_learn_pe = True
 do_w_sampl = True
 do_random_sampl = True
 
-dataset = Planetoid(root='/tmp/pubmed', name='PubMed')
+dataset = Planetoid(root='/tmp/Cora', name='Cora')
 graph_og = dataset[0]
 #graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
 pre_defined_kwargs = {'eigvecs': False}
@@ -68,9 +68,9 @@ graph = Data(x=graph_og.x, edge_index=graph_og.edge_index,
              edge_weight=graph_og.edge_weight, y=graph_og.y,**pre_defined_kwargs)
 graph = graph.to(device)
 
-m = 100 # Number of candidate intervals
+m = 50 # Number of candidate intervals
 m2 = 25 # Number of sampled intervals
-m3 = 20 #8 # How many nodes (points) to sample per sampled interval
+m3 = 10 #8 # How many nodes (points) to sample per sampled interval
 
 # Vectors to store test results
 results_no_eigs = np.zeros(n_realizations)
@@ -90,15 +90,15 @@ for r in range(n_realizations):
         num_val=0.05,
         num_test=0.1,
         is_undirected=True,
-        add_negative_train_samples=False,
+        add_negative_train_samples=True,
         neg_sampling_ratio=1,
     )
     train_data, val_data, test_data = split(graph)
     
     if do_no_pe:
     
-        model = SignNetLinkPredNet(dataset.num_features, 32, 32).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
+        model = SignNetLinkPredNet(dataset.num_features, 128, 128).to(device)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
         criterion = torch.nn.BCEWithLogitsLoss()
         model = train_link_predictor(model, train_data, val_data, optimizer, criterion)
         
@@ -157,8 +157,8 @@ for r in range(n_realizations):
                               y=test_data.y,edge_label_index=test_data.edge_label_index,
                               **pre_defined_kwargs)
         
-        model = SignNetLinkPredNet(dataset.num_features+K, 32, 32).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
+        model = SignNetLinkPredNet(dataset.num_features+K, 128, 128).to(device)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
         criterion = torch.nn.BCEWithLogitsLoss()
         model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
         
@@ -193,8 +193,8 @@ for r in range(n_realizations):
                               y=test_data.y,edge_label_index=test_data.edge_label_index,
                               **pre_defined_kwargs_test)
         
-        model = SignNetLinkPredNet(dataset.num_features+8*K, 32, 32, True, 1, 32, 8).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
+        model = SignNetLinkPredNet(dataset.num_features+128*K, 128, 128, True, 1, 64, 128).to(device)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
         criterion = torch.nn.BCEWithLogitsLoss()
         model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
         test_auc = eval_link_predictor(model, test_data_new)
@@ -319,8 +319,8 @@ for r in range(n_realizations):
                               y=test_data.y,edge_label_index=test_data.edge_label_index,
                               **pre_defined_kwargs)
         
-        model = SignNetLinkPredNet(dataset.num_features+K, 32, 32).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
+        model = SignNetLinkPredNet(dataset.num_features+K, 128, 128).to(device)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
         criterion = torch.nn.BCEWithLogitsLoss()
         model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
         
@@ -350,8 +350,8 @@ for r in range(n_realizations):
                               y=test_data.y,edge_label_index=test_data.edge_label_index,
                               **pre_defined_kwargs_test)
         
-        model = SignNetLinkPredNet(dataset.num_features+8*K, 32, 32, True, 1, 32, 8).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
+        model = SignNetLinkPredNet(dataset.num_features+128*K, 128, 128, True, 1, 64, 128).to(device)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
         criterion = torch.nn.BCEWithLogitsLoss()
         model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
         test_auc = eval_link_predictor(model, test_data_new)
@@ -440,8 +440,8 @@ for r in range(n_realizations):
                               y=test_data.y,edge_label_index=test_data.edge_label_index,
                               **pre_defined_kwargs)
         
-        model = SignNetLinkPredNet(dataset.num_features+K, 32, 32).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
+        model = SignNetLinkPredNet(dataset.num_features+K, 128, 128).to(device)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
         criterion = torch.nn.BCEWithLogitsLoss()
         model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
         
@@ -471,8 +471,8 @@ for r in range(n_realizations):
                               y=test_data.y,edge_label_index=test_data.edge_label_index,
                               **pre_defined_kwargs_test)
         
-        model = SignNetLinkPredNet(dataset.num_features+8*K, 32, 32, True, 1, 32, 8).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
+        model = SignNetLinkPredNet(dataset.num_features+128*K, 128, 128, True, 1, 64, 128).to(device)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
         criterion = torch.nn.BCEWithLogitsLoss()
         model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
         test_auc = eval_link_predictor(model, test_data_new)

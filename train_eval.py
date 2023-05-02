@@ -47,7 +47,7 @@ def train_link_predictor(model, train_data, val_data, optimizer, criterion, n_ep
             print(f"Epoch: {epoch:03d}, Train Loss: {loss:.3f}, Val AUC: {val_auc:.3f}")
     if best_model is None:
         best_model = model
-    return best_model
+    return model
 
 
 @torch.no_grad()
