@@ -8,11 +8,11 @@ Created on Mon Mar  6 14:43:24 2023
 import torch
 from sklearn.metrics import roc_auc_score
 from torch_geometric.utils import negative_sampling
+import copy
 
-def train_link_predictor(
-    model, train_data, val_data, optimizer, criterion, n_epochs=100
-):
-
+def train_link_predictor(model, train_data, val_data, optimizer, criterion, n_epochs=500):
+    best_val_auc = 0
+    best_model = None
     for epoch in range(1, n_epochs + 1):
 
         model.train()
@@ -39,11 +39,15 @@ def train_link_predictor(
         optimizer.step()
 
         val_auc = eval_link_predictor(model, val_data)
+        if val_auc > best_val_auc:
+            best_model = copy.deepcopy(model)
+            best_val_auc = val_auc
 
         if epoch % 10 == 0:
             print(f"Epoch: {epoch:03d}, Train Loss: {loss:.3f}, Val AUC: {val_auc:.3f}")
-
-    return model
+    if best_model is None:
+        best_model = model
+    return best_model
 
 
 @torch.no_grad()
