@@ -32,7 +32,7 @@ from subsampling import sample_clustering
 from graphon_sampling import generate_induced_graphon
 import aux_functions
 
-lr = sys.argv[1]
+lr = float(sys.argv[1])
 n_epochs = int(sys.argv[2])
 ratio_train = float(sys.argv[3])
 ratio_test = float(sys.argv[4])
