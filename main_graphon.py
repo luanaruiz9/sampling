@@ -33,14 +33,15 @@ from graphon_sampling import generate_induced_graphon
 import aux_functions
 
 lr = sys.argv[1]
-n_epochs = sys.argv[2]
-ratio_train = sys.argv[3]
-ratio_test = sys.argv[4]
+n_epochs = int(sys.argv[2])
+ratio_train = float(sys.argv[3])
+ratio_test = float(sys.argv[4])
 ratio_val = 1-ratio_train-ratio_test
-n_realizations = sys.argv[5] #10
-m = sys.argv[6] #50 # Number of candidate intervals
-m2 = sys.argv[7] #25 # Number of sampled intervals
-m3 = sys.argv[8] #3 #8 # How many nodes (points) to sample per sampled interval
+n_realizations = int(sys.argv[5]) #10
+m = int(sys.argv[6]) #50 # Number of candidate intervals
+m2 = int(sys.argv[7]) #25 # Number of sampled intervals
+m3 = int(sys.argv[8]) #3 #8 # How many nodes (points) to sample per sampled interval
+nb_cuts = int(sys.argv[9])
 
 
 thisFilename = 'cora' # This is the general name of all related files
@@ -248,13 +249,13 @@ for r in range(n_realizations):
                 if i < m-1:
                     cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,
                                       i*n_nodes_per_int:(i+1)*n_nodes_per_int]
-                    idx = sample_clustering(cur_adj, m3, nb_cuts=2)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
+                    idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
                 else:
                     if m3 > n_nodes_last_int:
                         m3 = n_nodes_last_int
                     cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,
                                                 i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
-                    idx = sample_clustering(cur_adj, m3, nb_cuts=2)#np.random.choice(np.arange(i*n_nodes_per_int,
+                    idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
                                                      #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
                 idx = np.sort(idx)
                 sampled_idx += list(idx)
