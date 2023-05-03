@@ -70,7 +70,7 @@ def sample_clustering(A, m, nb_cuts=1, cheeger=0.5, eps=0.05, sz=None, vol=None)
     m_per_cluster = np.floor(m/(nb_cuts+1))
     cluster_sizes = []
     for i in range(nb_cuts-1):
-        cluster_sizes.append(m_per_cluster)
+        cluster_sizes.append(int(m_per_cluster))
     cur_sum  = np.sum(np.array(cluster_sizes))
     cluster_sizes.append(int(m-cur_sum))
     clusters = []
@@ -78,7 +78,7 @@ def sample_clustering(A, m, nb_cuts=1, cheeger=0.5, eps=0.05, sz=None, vol=None)
     for i in range(nb_cuts):
         thisA = A[S_complement,:]
         thisA = thisA[:,S_complement]
-        thisSeed = np.random.choice(A.shape[0])
+        thisSeed = np.random.choice(thisA.shape[0])
         idx = cluster_hk_pr(thisA, thisSeed, cheeger, eps, sz, vol)
         S = []
         for j in idx:

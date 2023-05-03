@@ -13,6 +13,7 @@ Created on Mon Mar  6 14:37:09 2023
 # Link prediction on synthetic graphs
 # Transferability experiments
 
+import sys
 import os
 import datetime
 import pickle as pkl
@@ -30,6 +31,17 @@ from greedy import greedy, f
 from subsampling import sample_clustering
 from graphon_sampling import generate_induced_graphon
 import aux_functions
+
+lr = sys.argv[1]
+n_epochs = sys.argv[2]
+ratio_train = sys.argv[3]
+ratio_test = sys.argv[4]
+ratio_val = 1-ratio_train-ratio_test
+n_realizations = sys.argv[5] #10
+m = sys.argv[6] #50 # Number of candidate intervals
+m2 = sys.argv[7] #25 # Number of sampled intervals
+m3 = sys.argv[8] #3 #8 # How many nodes (points) to sample per sampled interval
+
 
 thisFilename = 'cora' # This is the general name of all related files
 
@@ -51,8 +63,7 @@ if torch.cuda.is_available():
     device = 'cuda:0'
 else:
     device = 'cpu'
-
-n_realizations = 10
+    
 K = 20
 do_no_pe = True
 do_eig = True
@@ -68,10 +79,6 @@ graph = Data(x=graph_og.x, edge_index=graph_og.edge_index,
              edge_weight=graph_og.edge_weight, y=graph_og.y,**pre_defined_kwargs)
 graph = graph.to(device)
 
-m = 50 # Number of candidate intervals
-m2 = 25 # Number of sampled intervals
-m3 = 10 #8 # How many nodes (points) to sample per sampled interval
-
 # Vectors to store test results
 results_no_eigs = np.zeros(n_realizations)
 results_eigs = np.zeros(n_realizations)
@@ -80,6 +87,7 @@ results_w_samp_eigs = np.zeros(n_realizations)
 results_w_samp_pe = np.zeros(n_realizations)
 results_random_samp_eigs = np.zeros(n_realizations)
 results_random_samp_pe = np.zeros(n_realizations)
+n_iters_per_rlz = np.zeros(n_realizations)
 
 for r in range(n_realizations):
     
@@ -87,8 +95,8 @@ for r in range(n_realizations):
     print()
     
     split = T.RandomLinkSplit(
-        num_val=0.05,
-        num_test=0.1,
+        num_val=ratio_val,
+        num_test=ratio_test,
         is_undirected=True,
         add_negative_train_samples=False,
         neg_sampling_ratio=1,
@@ -98,9 +106,9 @@ for r in range(n_realizations):
     if do_no_pe:
     
         model = SignNetLinkPredNet(dataset.num_features, 128, 128).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data, val_data, optimizer, criterion)
+        model = train_link_predictor(model, train_data, val_data, optimizer, criterion, n_epochs=n_epochs)
         
         test_auc = eval_link_predictor(model, test_data)
         results_no_eigs[r] = test_auc
@@ -158,9 +166,9 @@ for r in range(n_realizations):
                               **pre_defined_kwargs)
         
         model = SignNetLinkPredNet(dataset.num_features+K, 128, 128).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
+        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion, n_epochs=n_epochs)
         
         test_auc = eval_link_predictor(model, test_data_new)
         results_eigs[r] = test_auc
@@ -194,9 +202,9 @@ for r in range(n_realizations):
                               **pre_defined_kwargs_test)
         
         model = SignNetLinkPredNet(dataset.num_features+128*K, 128, 128, True, 1, 64, 128).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
+        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion, n_epochs=n_epochs)
         test_auc = eval_link_predictor(model, test_data_new)
         results_pe[r] = test_auc
         print(f"Test: {test_auc:.3f}")
@@ -230,7 +238,8 @@ for r in range(n_realizations):
         L_aux = L_ind.cpu()
         k = 5
         
-        s_vec = greedy(f, lam, L_aux, k, m2, exponent=5)
+        s_vec, n_iters = greedy(f, lam, L_aux, k, m2, exponent=100000000)
+        n_iters_per_rlz[r] = n_iters
         s_vec = torch.tensor(s_vec)
         
         sampled_idx = []
@@ -239,13 +248,13 @@ for r in range(n_realizations):
                 if i < m-1:
                     cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,
                                       i*n_nodes_per_int:(i+1)*n_nodes_per_int]
-                    idx = sample_clustering(cur_adj, m3)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
+                    idx = sample_clustering(cur_adj, m3, nb_cuts=2)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
                 else:
                     if m3 > n_nodes_last_int:
                         m3 = n_nodes_last_int
                     cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,
                                                 i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
-                    idx = sample_clustering(cur_adj, m3)#np.random.choice(np.arange(i*n_nodes_per_int,
+                    idx = sample_clustering(cur_adj, m3, nb_cuts=2)#np.random.choice(np.arange(i*n_nodes_per_int,
                                                      #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
                 idx = np.sort(idx)
                 sampled_idx += list(idx)
@@ -320,9 +329,9 @@ for r in range(n_realizations):
                               **pre_defined_kwargs)
         
         model = SignNetLinkPredNet(dataset.num_features+K, 128, 128).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
+        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion, n_epochs=n_epochs)
         
         test_auc = eval_link_predictor(model, test_data_new)
         results_w_samp_eigs[r] = test_auc
@@ -351,9 +360,9 @@ for r in range(n_realizations):
                               **pre_defined_kwargs_test)
         
         model = SignNetLinkPredNet(dataset.num_features+128*K, 128, 128, True, 1, 64, 128).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
+        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion, n_epochs=n_epochs)
         test_auc = eval_link_predictor(model, test_data_new)
         results_w_samp_pe[r] = test_auc
         print(f"Test: {test_auc:.3f}")
@@ -441,9 +450,9 @@ for r in range(n_realizations):
                               **pre_defined_kwargs)
         
         model = SignNetLinkPredNet(dataset.num_features+K, 128, 128).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
+        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion, n_epochs=n_epochs)
         
         test_auc = eval_link_predictor(model, test_data_new)
         results_random_samp_eigs[r] = test_auc
@@ -472,9 +481,9 @@ for r in range(n_realizations):
                               **pre_defined_kwargs_test)
         
         model = SignNetLinkPredNet(dataset.num_features+128*K, 128, 128, True, 1, 64, 128).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion)
+        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion, n_epochs=n_epochs)
         test_auc = eval_link_predictor(model, test_data_new)
         results_random_samp_pe[r] = test_auc
         print(f"Test: {test_auc:.3f}")
@@ -484,10 +493,10 @@ for r in range(n_realizations):
 print('Final results')
 print()
 
-print('Avg. AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.mean(results_no_eigs))
-print('Avg. AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.mean(results_eigs), np.mean(results_pe)))
-print('Avg. AUC graphon sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.mean(results_w_samp_eigs), np.mean(results_w_samp_pe)))
-print('Avg. AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.mean(results_random_samp_eigs), np.mean(results_random_samp_pe)))
+print('Avg. AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.max(results_no_eigs))
+print('Avg. AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.max(results_eigs), np.max(results_pe)))
+print('Avg. AUC graphon sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.max(results_w_samp_eigs), np.max(results_w_samp_pe)))
+print('Avg. AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.max(results_random_samp_eigs), np.max(results_random_samp_pe)))
 print()    
 
 # Pickling
@@ -497,5 +506,6 @@ dict_results = {'results_no_eigs': results_no_eigs,
                 'results_w_samp_eigs': results_w_samp_eigs,
                 'results_w_samp_pe': results_w_samp_pe,
                 'results_random_samp_eigs': results_random_samp_eigs,
-                'results_random_samp_pe': results_random_samp_pe}
+                'results_random_samp_pe': results_random_samp_pe,
+                'n_iters': n_iters_per_rlz}
 pkl.dump(dict_results, open(os.path.join(saveDir,'results.p'), "wb"))
