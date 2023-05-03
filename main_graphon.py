@@ -61,10 +61,10 @@ if not os.path.exists(saveDir):
     os.makedirs(saveDir)
     
 # Check devices
-#if torch.cuda.is_available():
-#    device = 'cuda:0'
-#else:
-device = 'cpu'
+if torch.cuda.is_available():
+    device = 'cuda:0'
+else:
+    device = 'cpu'
     
 K = 20
 do_no_pe = True
