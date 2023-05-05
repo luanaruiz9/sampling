@@ -65,7 +65,7 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
     
-K = 20
+K = 3
 do_no_pe = True
 do_eig = False
 do_learn_pe = True
