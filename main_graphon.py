@@ -44,7 +44,6 @@ m2 = int(sys.argv[8]) #25 # Number of sampled intervals
 m3 = int(sys.argv[9]) #3 #8 # How many nodes (points) to sample per sampled interval
 nb_cuts = int(sys.argv[10])
 
-
 thisFilename = folder_name + '_cora' # This is the general name of all related files
 
 saveDirRoot = 'experiments' # In this case, relative location
