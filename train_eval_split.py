@@ -155,6 +155,8 @@ def train_link_predictor(model, train_data_og, val_data, optimizer, criterion,
                                       edge_label=train_data.edge_label,
                                       y=train_data.y,edge_label_index=train_data.edge_label_index,
                                       **pre_defined_kwargs)
+        else:
+            train_data = train_data_og
 
         model.train()
         optimizer.zero_grad()
