@@ -30,9 +30,11 @@ def train_link_predictor(model, train_data_og, val_data, optimizer, criterion,
         # Creating random 10-fold
         edge_index = train_data_og.edge_index
         device = edge_index.device
+        print(train_data_og)
         train_data_og = Data(x=train_data_og.x, edge_index=edge_index, 
                              edge_label=torch.ones(edge_index.shape[1],device=device,dtype=torch.long),
                              y=train_data_og.y)
+        print(train_data_og)
         split = T.RandomLinkSplit(
             num_val=0.1,
             num_test=0,
