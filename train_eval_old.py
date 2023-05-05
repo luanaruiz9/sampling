@@ -11,7 +11,7 @@ from torch_geometric.utils import negative_sampling
 import copy
 
 def train_link_predictor(model, train_data, val_data, optimizer, criterion, n_epochs=100):
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 5, gamma=0.5)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 30, gamma=0.1)
     
     best_val_auc = 0
     best_model = None
