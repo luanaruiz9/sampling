@@ -129,7 +129,7 @@ for r in range(n_realizations):
     L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
     
     #eigvals, V = torch.lobpcg(L,k=K)
-    eigvals, V = torch.linalg.eig(adj)
+    eigvals, V = torch.linalg.eig(L)
     idx = torch.argsort(torch.abs(eigvals))
     V = V[:,idx[0:K]].type(torch.float32)
     eigvals = eigvals[idx[0:K]].type(torch.float32)
@@ -141,7 +141,7 @@ for r in range(n_realizations):
     L_test = aux_functions.compute_laplacian(adj_sparse_test, num_nodes)
     
     #eigvals, V = torch.lobpcg(L,k=K)
-    eigvals_test, V_test = torch.linalg.eig(adj_test)
+    eigvals_test, V_test = torch.linalg.eig(L_test)
     idx = torch.argsort(torch.abs(eigvals_test))
     V_test = V_test[:,idx[0:K]].type(torch.float32)
     eigvals_test = eigvals_test[idx[0:K]].type(torch.float32)
