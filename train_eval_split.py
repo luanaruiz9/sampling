@@ -42,6 +42,7 @@ def train_link_predictor(model, train_data, val_data, optimizer, criterion,
         
         if K is not None:
             ###### Eigenvectors
+            print(train_data.edge_label)
             eig_data, train_data, _ = split(train_data)
             
             # V for train data
