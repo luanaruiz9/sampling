@@ -22,22 +22,22 @@ from subsampling import sample_clustering
 from graphon_sampling import generate_induced_graphon
 import aux_functions
 
-def train_link_predictor(model, train_data_og, val_data, optimizer, criterion,
+def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                          n_epochs=100, K=None, pe=False, m=None, m2=None, m3=None, nb_cuts=None):
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 30, gamma=0.1)
     
     if K is not None:
         # Creating random 10-fold
-        edge_index = train_data_og.edge_index
+        edge_index = train_data_og_0.edge_index
         device = edge_index.device
+        print(train_data_og_0)
+        train_data_og = Data(x=train_data_og_0.x, edge_index=edge_index, 
+                             edge_label=torch.cat((train_data_og_0.edge_label.long(),train_data_og_0.edge_label.long())),
+                             y=train_data_og_0.y)
         print(train_data_og)
-        train_data = Data(x=train_data_og.x, edge_index=edge_index, 
-                             edge_label=torch.cat((train_data_og.edge_label.long(),train_data_og.edge_label.long())),
-                             y=train_data_og.y)
-        print(train_data)
         split = T.RandomLinkSplit(
             num_val=0.1,
-            num_test=0.01,
+            num_test=0,
             is_undirected=True,
             add_negative_train_samples=False,
             neg_sampling_ratio=1,
@@ -49,8 +49,8 @@ def train_link_predictor(model, train_data_og, val_data, optimizer, criterion,
         
         if K is not None:
             ###### Eigenvectors
-            print(train_data.edge_label)
-            eig_data, train_data, _ = split(train_data)
+            print(train_data_og.edge_label)
+            eig_data, train_data, _ = split(train_data_og)
             
             # V for train data
             adj_sparse, adj = aux_functions.compute_adj_from_data(eig_data)
@@ -163,7 +163,7 @@ def train_link_predictor(model, train_data_og, val_data, optimizer, criterion,
                                       y=train_data.y,edge_label_index=train_data.edge_label_index,
                                       **pre_defined_kwargs)
         else:
-            train_data = train_data_og
+            train_data = train_data_og_0
 
         model.train()
         optimizer.zero_grad()
