@@ -361,7 +361,7 @@ for r in range(n_realizations):
                               **pre_defined_kwargs_test)
         
         model = SignNetLinkPredNet(dataset.num_features+64*K, 128, 128, True, 1, 32, 64).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=2*lr)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=0.2*lr)
         criterion = torch.nn.BCEWithLogitsLoss()
         model = train_link_predictor(model, train_data_new, val_data_new, optimizer, criterion, n_epochs=n_epochs)
         test_auc = eval_link_predictor(model, test_data_new)
