@@ -41,7 +41,7 @@ def train_link_predictor(model, train_data, val_data, optimizer, criterion, n_ep
         optimizer.step()
 
         val_auc = eval_link_predictor(model, val_data)
-        if val_auc > best_val_auc:
+        if val_auc >= best_val_auc:
             best_model = copy.deepcopy(model)
             best_val_auc = val_auc
 
