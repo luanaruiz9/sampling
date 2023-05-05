@@ -28,7 +28,10 @@ def train_link_predictor(model, train_data_og, val_data, optimizer, criterion,
     
     if K is not None:
         # Creating random 10-fold
-        train_data_og = Data(x=train_data_og.x, edge_index=train_data_og.edge_label_index, 
+        edge_index = train_data_og.edge_index
+        device = edge_index.device
+        train_data_og = Data(x=train_data_og.x, edge_index=edge_index, 
+                             edge_label=torch.ones(edge_index.shape[1],device=device,dtype=torch.long),
                              y=train_data_og.y)
         split = T.RandomLinkSplit(
             num_val=0.1,
