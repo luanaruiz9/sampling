@@ -103,7 +103,9 @@ for r in range(n_realizations):
         neg_sampling_ratio=1,
     )
     train_data, val_data, test_data = split(graph)
-    train_data.edge_label.type(torch.long())
+    train_data = Data(x=train_data.x, edge_index=train_data.edge_index,
+                          edge_label=train_data.edge_label.long(),
+                          y=train_data.y,edge_label_index=train_data.edge_label_index)
     
     if do_no_pe:
     
