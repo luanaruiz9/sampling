@@ -102,10 +102,10 @@ for r in range(n_realizations):
         add_negative_train_samples=False,
         neg_sampling_ratio=1,
     )
-    train_data, val_data, test_data = split(graph)
-    train_data = Data(x=train_data.x, edge_index=train_data.edge_label_index,
-                      y=train_data.y, **pre_defined_kwargs)
-    print(train_data)
+    train_data_og, val_data, test_data = split(graph)
+    train_data = Data(x=train_data_og.x, edge_index=train_data_og.edge_label_index,
+                      y=train_data_og.y, **pre_defined_kwargs)
+    print(train_data_og)
     
     if do_no_pe:
     
