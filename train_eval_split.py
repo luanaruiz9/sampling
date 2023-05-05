@@ -22,7 +22,7 @@ from subsampling import sample_clustering
 from graphon_sampling import generate_induced_graphon
 import aux_functions
 
-def train_link_predictor(model, train_data, val_data, optimizer, criterion,
+def train_link_predictor(model, train_data_og, val_data, optimizer, criterion,
                          n_epochs=100, K=None, pe=False, m=None, m2=None, m3=None, nb_cuts=None):
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 30, gamma=0.1)
     
@@ -42,8 +42,8 @@ def train_link_predictor(model, train_data, val_data, optimizer, criterion,
         
         if K is not None:
             ###### Eigenvectors
-            print(train_data.edge_label)
-            eig_data, train_data, _ = split(train_data)
+            print(train_data_og.edge_label)
+            eig_data, train_data, _ = split(train_data_og)
             
             # V for train data
             adj_sparse, adj = aux_functions.compute_adj_from_data(eig_data)
