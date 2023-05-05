@@ -177,7 +177,7 @@ def train_link_predictor(model, train_data_og, val_data, optimizer, criterion,
         ], dim=0)
 
         out = model.decode(z, edge_label_index).view(-1)
-        loss = criterion(out, edge_label)
+        loss = criterion(out, edge_label.float())
         loss.backward()
         optimizer.step()
 
