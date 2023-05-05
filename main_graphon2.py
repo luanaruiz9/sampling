@@ -102,6 +102,8 @@ for r in range(n_realizations):
         add_negative_train_samples=False,
         neg_sampling_ratio=1,
     )
+    print(graph.edge_label.dtype)
+    print(graph.edge_index.dtype)
     train_data, val_data, test_data = split(graph)
     
     if do_no_pe:
