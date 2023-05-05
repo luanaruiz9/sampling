@@ -28,8 +28,8 @@ def train_link_predictor(model, train_data_og, val_data, optimizer, criterion,
     
     if K is not None:
         # Creating random 10-fold
-        train_data = Data(x=train_data_og.x, edge_index=train_data_og.edge_label_index,
-                          edge_label=train_data_og.edge_label.long(), y=train_data_og.y)
+        train_data_og = Data(x=train_data_og.x, edge_index=train_data_og.edge_label_index, 
+                             y=train_data_og.y)
         split = T.RandomLinkSplit(
             num_val=0.1,
             num_test=0,
