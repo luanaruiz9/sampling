@@ -31,9 +31,8 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
         edge_index = train_data_og_0.edge_index
         device = edge_index.device
         print(train_data_og_0)
-        train_data_og = Data(x=train_data_og_0.x, edge_index=edge_index, 
-                             edge_label=torch.cat((train_data_og_0.edge_label.long(),train_data_og_0.edge_label.long())),
-                             y=train_data_og_0.y)
+        train_data_og = Data(x=train_data_og_0.x.clone(), edge_index=edge_index.clone(),
+                             y=train_data_og_0.y.clone())
         print(train_data_og)
         split = T.RandomLinkSplit(
             num_val=0.1,
@@ -50,7 +49,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
         if K is not None:
             ###### Eigenvectors
             print(train_data_og.edge_label.size(0))
-            print(train_data_og.store.edge_index.size(1))
+            print(train_data_og.edge_index.size(1))
             eig_data, train_data, _ = split(train_data_og)
             
             # V for train data
