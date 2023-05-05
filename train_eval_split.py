@@ -32,7 +32,7 @@ def train_link_predictor(model, train_data_og, val_data, optimizer, criterion,
         device = edge_index.device
         print(train_data_og)
         train_data_og = Data(x=train_data_og.x, edge_index=edge_index, 
-                             edge_label=torch.ones(edge_index.size(1),device=device,dtype=torch.long),
+                             edge_label=torch.cat((train_data_og.edge_label.long(),train_data_og.edge_label.long())),
                              y=train_data_og.y)
         print(train_data_og)
         split = T.RandomLinkSplit(
