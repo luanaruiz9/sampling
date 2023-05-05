@@ -107,6 +107,7 @@ for r in range(n_realizations):
                           edge_label=train_data.edge_label.long(),
                           y=train_data.y,edge_label_index=train_data.edge_label_index,
                           **pre_defined_kwargs)
+    print(train_data)
     
     if do_no_pe:
     
