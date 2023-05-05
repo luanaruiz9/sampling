@@ -67,7 +67,7 @@ else:
     
 K = 20
 do_no_pe = True
-do_eig = True
+do_eig = False
 do_learn_pe = True
 do_w_sampl = True
 do_random_sampl = True
