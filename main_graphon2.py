@@ -103,9 +103,8 @@ for r in range(n_realizations):
         neg_sampling_ratio=1,
     )
     train_data_og, val_data, test_data = split(graph)
-    print(train_data_og.to_dict())
-    edge_index = train_data_og.edge_index
-    edge_label_index = train_data_og.edge_label_index
+    aux_dict = train_data_og.to_dict()
+    edge_label_index = aux_dict['edge_label_index']
     train_data = Data(x=train_data_og.x, edge_index=edge_label_index,
                       y=train_data_og.y, **pre_defined_kwargs)
     
