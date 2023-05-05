@@ -37,7 +37,7 @@ def train_link_predictor(model, train_data_og, val_data, optimizer, criterion,
         print(train_data)
         split = T.RandomLinkSplit(
             num_val=0.1,
-            num_test=0,
+            num_test=0.01,
             is_undirected=True,
             add_negative_train_samples=False,
             neg_sampling_ratio=1,
