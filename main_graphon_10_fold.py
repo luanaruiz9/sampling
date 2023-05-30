@@ -554,10 +554,12 @@ with open(os.path.join(saveDir,'out.txt'), 'w') as f:
     print('Nb. realiz.:\t\t' + str(n_realizations), file=f)
     print('Partition sz.:\t\t' + str(m), file=f)
     print('Nb. intervals:\t\t' + str(m2), file=f)
-    print('Nb. nodes per int.:\t\t' + str(m3), file=f)
+    print('Nb. nodes per int.:\t' + str(m3), file=f)
     print('Nb. comms.:\t\t' + str(nb_cuts), file=f)
-    print('F_nn:\t\t' + str(F_nn), file=f)
-    print('F_pe:\t\t' + str(F_pe), file=f)
+    print('F_nn:\t\t\t' + str(F_nn), file=f)
+    print('F_pe:\t\t\t' + str(F_pe), file=f)
+    
+    print("",file=f)
     
     print('Final results - MAX', file=f)
     print("",file=f)
