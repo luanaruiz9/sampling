@@ -403,7 +403,10 @@ for r in range(n_realizations):
                 
                 return model
             
-        wandb.agent(sweep_id, function=function, count=10)
+        wandb.agent(sweep_id, function=function(dataset, K, device, train_data_new, 
+                                                val_data_new, m, m2, m3, 
+                                                nb_cuts, train_data_collection, 
+                                                V_collection), count=10)
         
         """
         
