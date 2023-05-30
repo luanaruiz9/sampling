@@ -25,7 +25,7 @@ import torch_geometric.transforms as T
 from torch_geometric.data import Data
 
 from architecture import  SignNetLinkPredNet
-from train_eval_old import train_link_predictor, eval_link_predictor
+from train_eval import train_link_predictor, eval_link_predictor
 from greedy import greedy, f
 #from reconstruction import f_rec, reconstruct
 from subsampling import sample_clustering
