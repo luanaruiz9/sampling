@@ -33,7 +33,18 @@ from subsampling import sample_clustering
 from graphon_sampling import generate_induced_graphon
 import aux_functions
 
-from wandb_config import sweep_config
+sweep_config = {
+                'method': 'random',
+                'metric': {'goal': 'maximize', 'name': 'val_auc'},
+                'parameters': {
+                    'n_epochs': {'value': 1000},
+                    'F_nn': {'values': [32, 64, 128]},
+                    'F_pe': {'values': [32, 64, 128]},
+                    'lr': {'distribution': 'uniform',
+                                      'max': 0.01,
+                                      'min': 0}
+                }
+ }
 
 sweep_id = wandb.sweep(sweep_config, project="test")
 
