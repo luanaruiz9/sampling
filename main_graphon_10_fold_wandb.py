@@ -33,18 +33,14 @@ from subsampling import sample_clustering
 from graphon_sampling import generate_induced_graphon
 import aux_functions
 
-sweep_config = {
-                'method': 'random',
+sweep_config = {'method': 'random',
                 'metric': {'goal': 'maximize', 'name': 'val_auc'},
-                'parameters': {
-                    'n_epochs': {'value': 1000},
-                    'F_nn': {'values': [32, 64, 128]},
-                    'F_pe': {'values': [32, 64, 128]},
+                'parameters': {'epochs': {'value': 1000},
+                    'Fnn': {'values': [32, 64, 128]},
+                    'Fpe': {'values': [32, 64, 128]},
                     'lr': {'distribution': 'uniform',
                                       'max': 0.01,
-                                      'min': 0}
-                }
- }
+                                      'min': 0} } }
 
 sweep_id = wandb.sweep(sweep_config, project="test")
 
@@ -397,17 +393,18 @@ for r in range(n_realizations):
                 #config = wandb.config
                 run = wandb.init()
                 config = wandb.config
+                print(wandb.config)
                 
-                model = SignNetLinkPredNet(dataset.num_features+config.F_pe*K, 
-                                           config.F_nn, config.F_nn, True, 1, 
-                                           config.F_pe, config.F_pe).to(device)
+                model = SignNetLinkPredNet(dataset.num_features + config.Fpe*K, 
+                                           config.Fnn, config.Fnn, True, 1, 
+                                           config.Fpe, config.Fpe).to(device)
                 optimizer = torch.optim.Adam(params=model.parameters(), lr=config.lr)
                 criterion = torch.nn.BCEWithLogitsLoss()
                 
                 wandb.watch(model, criterion, log="all")
                 
                 model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
-                                             criterion, n_epochs=config.n_epochs, K=K, pe=True, m=m, 
+                                             criterion, n_epochs=config.epochs, K=K, pe=True, m=m, 
                                              m2=m2, m3=m3, nb_cuts=nb_cuts, 
                                              train_data_collection=train_data_collection, 
                                              V_collection=V_collection)
@@ -415,7 +412,7 @@ for r in range(n_realizations):
                 
                 wandb.log({'val_auc': val_auc})
             
-        wandb.agent(sweep_id, function=function(), count=10)
+        wandb.agent(sweep_id, function=function, count=10)
         
         """
         
