@@ -23,7 +23,8 @@ from graphon_sampling import generate_induced_graphon
 import aux_functions
 
 def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
-                         n_epochs=100, K=None, pe=False, m=None, m2=None, m3=None, nb_cuts=None):
+                         n_epochs=100, K=None, pe=False, m=None, m2=None, m3=None, nb_cuts=None,
+                         train_data_collection=None, V_collection=None):
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 30, gamma=0.1)
     
     ########################################################################
@@ -51,28 +52,28 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
     best_val_auc = 0
     best_model = None
     
-    if K is not None:
+    if K is not None and V_collection is None:
         ###### Eigenvectors
-
-        train_data_collection = []
-        eig_data_collection = []
-        V_collection = []
-        for split in split_collection:
-            eig_data, train_data, _ = split(train_data_og)
-            train_data_collection.append(train_data)
-            eig_data_collection.append(eig_data)
+            train_data_collection = []
+            eig_data_collection = []
+            V_collection = []
         
-            # V for train data
-            adj_sparse, adj = aux_functions.compute_adj_from_data(eig_data)
-            num_nodes = adj.shape[0]
+            for split in split_collection:
+                eig_data, train_data, _ = split(train_data_og)
+                train_data_collection.append(train_data)
+                eig_data_collection.append(eig_data)
             
-            # Computing normalized Laplacian
-            L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
-            eigvals, V = torch.lobpcg(L,k=K)      
-            V_rec = V
-            V_collection.append(V_rec)
-        
-    if m is not None:
+                # V for train data
+                adj_sparse, adj = aux_functions.compute_adj_from_data(eig_data)
+                num_nodes = adj.shape[0]
+                
+                # Computing normalized Laplacian
+                L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
+                eigvals, V = torch.lobpcg(L,k=K)      
+                V_rec = V
+                V_collection.append(V_rec)
+                
+    if m is not None and V_collection is None:
         ###### Graphon sampling
         # Finding sampling set
         n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
@@ -130,7 +131,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                 V_rec[sampled_idx,i] = v
             V_collection.append(V_rec)
     
-    elif m2 is not None:
+    elif m2 is not None and V_collection is None:
         ###### Random sampling
         sampled_idx2 = list(np.random.choice(np.arange(num_nodes), m2*m3, replace=False))
         V_collection = []
@@ -234,7 +235,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
         
     if best_model is None:
         best_model = model
-    return best_model
+    return best_model, train_data_collection, V_collection
 
 
 @torch.no_grad()

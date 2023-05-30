@@ -66,8 +66,8 @@ else:
     device = 'cpu'
     
 K = 3
-do_no_pe = False
-do_eig = False
+do_no_pe = True
+do_eig = True
 do_learn_pe = True
 do_w_sampl = True
 do_random_sampl = True
@@ -110,7 +110,7 @@ for r in range(n_realizations):
         model = SignNetLinkPredNet(dataset.num_features, 128, 128).to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data, val_data, optimizer, 
+        model, _, _ = train_link_predictor(model, train_data, val_data, optimizer, 
                                      criterion, n_epochs=n_epochs)
         
         test_auc = eval_link_predictor(model, test_data)
@@ -161,7 +161,7 @@ for r in range(n_realizations):
         model = SignNetLinkPredNet(dataset.num_features+K, 128, 128).to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
+        model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
                                      criterion, n_epochs=n_epochs, K=K)
         
         test_auc = eval_link_predictor(model, test_data_new)
@@ -197,7 +197,7 @@ for r in range(n_realizations):
         model = SignNetLinkPredNet(dataset.num_features+128*K, 128, 128, True, 1, 64, 128).to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=0.2*lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
+        model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
                                      criterion, n_epochs=n_epochs, K=K, pe=True)
         test_auc = eval_link_predictor(model, test_data_new)
         results_pe[r] = test_auc
@@ -325,7 +325,7 @@ for r in range(n_realizations):
         model = SignNetLinkPredNet(dataset.num_features+K, 128, 128).to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
+        model, train_data_collection, V_collection = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
                                      criterion, n_epochs=n_epochs, K=K, m=m, m2=m2, 
                                      m3=m3, nb_cuts=nb_cuts)
         
@@ -357,9 +357,11 @@ for r in range(n_realizations):
         model = SignNetLinkPredNet(dataset.num_features+128*K, 128, 128, True, 1, 64, 128).to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=0.2*lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
+        model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
                                      criterion, n_epochs=n_epochs, K=K, pe=True, m=m, 
-                                     m2=m2, m3=m3, nb_cuts=nb_cuts)
+                                     m2=m2, m3=m3, nb_cuts=nb_cuts, 
+                                     train_data_collection=train_data_collection, 
+                                     V_collection=V_collection)
         test_auc = eval_link_predictor(model, test_data_new)
         results_w_samp_pe[r] = test_auc
         print(f"Test: {test_auc:.3f}")
@@ -449,7 +451,7 @@ for r in range(n_realizations):
         model = SignNetLinkPredNet(dataset.num_features+K, 128, 128).to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
+        model, train_data_collection, eig_collection = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
                                      criterion, n_epochs=n_epochs, K=K, m2=m2, m3=m3)
         
         test_auc = eval_link_predictor(model, test_data_new)
@@ -480,8 +482,10 @@ for r in range(n_realizations):
         model = SignNetLinkPredNet(dataset.num_features+128*K, 128, 128, True, 1, 64, 128).to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=0.2*lr)
         criterion = torch.nn.BCEWithLogitsLoss()
-        model = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
-                                     criterion, n_epochs=n_epochs, K=K, pe=True, m2=m2, m3=m3)
+        model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
+                                     criterion, n_epochs=n_epochs, K=K, pe=True, m2=m2, m3=m3,
+                                     train_data_collection=train_data_collection,
+                                     eig_data_collection=eig_collection)
         test_auc = eval_link_predictor(model, test_data_new)
         results_random_samp_pe[r] = test_auc
         print(f"Test: {test_auc:.3f}")
