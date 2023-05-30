@@ -26,31 +26,42 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                          n_epochs=100, K=None, pe=False, m=None, m2=None, m3=None, nb_cuts=None):
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 30, gamma=0.1)
     
+    ########################################################################
+    # GENERATE A 10-FOLD SPLIT OF THE DATA FOR THE ENTIRE TRAINING PROCESS #
+    ########################################################################
+    
     if K is not None:
         # Creating random 10-fold
         edge_index = train_data_og_0.edge_index
         device = edge_index.device
-        print(train_data_og_0)
         train_data_og = Data(x=train_data_og_0.x.clone(), edge_index=edge_index.clone(),
                              y=train_data_og_0.y.clone())
-        print(train_data_og)
-        split = T.RandomLinkSplit(
-            num_val=0.1,
-            num_test=0,
-            is_undirected=True,
-            add_negative_train_samples=False,
-            neg_sampling_ratio=1,
-        )
+        
+        split_collection =[]
+        for i in range(10):
+            split = T.RandomLinkSplit(
+                num_val=0.1,
+                num_test=0,
+                is_undirected=True,
+                add_negative_train_samples=False,
+                neg_sampling_ratio=1,
+            )
+            split_collection.append(split)
     
     best_val_auc = 0
     best_model = None
-    for epoch in range(1, n_epochs + 1):
-        
-        if K is not None:
-            ###### Eigenvectors
-            print(train_data_og.edge_index.size(1))
+    
+    if K is not None:
+        ###### Eigenvectors
+
+        train_data_collection = []
+        eig_data_collection = []
+        V_collection = []
+        for split in split_collection:
             eig_data, train_data, _ = split(train_data_og)
-            
+            train_data_collection.append(train_data)
+            eig_data_collection.append(eig_data)
+        
             # V for train data
             adj_sparse, adj = aux_functions.compute_adj_from_data(eig_data)
             num_nodes = adj.shape[0]
@@ -59,11 +70,16 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
             eigvals, V = torch.lobpcg(L,k=K)      
             V_rec = V
-            
-        if m is not None:
-            ###### Graphon sampling
-            # Finding sampling set
-            n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
+            V_collection.append(V_rec)
+        
+    if m is not None:
+        ###### Graphon sampling
+        # Finding sampling set
+        n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
+        k = 5 # k for Anis sampling algorithm
+        V_collection = []
+        
+        for eig_data in eig_data_collection:
             graph_ind = generate_induced_graphon(eig_data, m)
             num_nodes_ind = graph_ind.x.shape[0]
             assert num_nodes_ind == m
@@ -74,7 +90,6 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             
             lam = eigvals[-1]
             L_aux = L_ind.cpu()
-            k = 5
             
             s_vec, n_iters = greedy(f, lam, L_aux, k, m2, exponent=100000000)
             s_vec = torch.tensor(s_vec)
@@ -113,11 +128,14 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             for i in range(V_new.shape[1]):
                 v = V_new[:,i]
                 V_rec[sampled_idx,i] = v
-        
-        elif m2 is not None:
-            ###### Random sampling
-            sampled_idx2 = list(np.random.choice(np.arange(num_nodes), m2*m3, replace=False))
+            V_collection.append(V_rec)
     
+    elif m2 is not None:
+        ###### Random sampling
+        sampled_idx2 = list(np.random.choice(np.arange(num_nodes), m2*m3, replace=False))
+        V_collection = []
+
+        for eig_data in eig_data_collection:
             # V for train data
             graph_new = eig_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
             graph_new = graph_new.to(device)
@@ -141,14 +159,31 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                 #v_padded_ub[sampled_idx2] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
                 #V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
                 V_rec[sampled_idx2,i] = v
+            V_collection.append(V_rec)
+        
+        
+    ##################    
+    # START TRAINING #
+    ##################
+    
+    for epoch in range(1, n_epochs + 1):
+        
+        this_idx = np.random.choice(10)
+        
+        if m2 is not None:    
             
-            pre_defined_kwargs = {'eigvecs': V_rec}
+            pre_defined_kwargs = {'eigvecs': V_collection[this_idx]}
+            train_data = train_data_collection[this_idx]
             train_data = Data(x=train_data.x, edge_index=train_data.edge_index,
                                   edge_label=train_data.edge_label,
                                   y=train_data.y,edge_label_index=train_data.edge_label_index,
-                                  **pre_defined_kwargs)
+                                  **pre_defined_kwargs)  
         
         if K is not None:
+            
+            train_data = train_data_collection[this_idx]
+            V_rec = V_collection[this_idx]
+            
             if pe is False:
                 pre_defined_kwargs = {'eigvecs': False}
                 train_data = Data(x=torch.cat((train_data.x,V_rec), dim=1), edge_index=train_data.edge_index,
