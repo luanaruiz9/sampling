@@ -245,10 +245,13 @@ for r in range(n_realizations):
                     idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
                 else:
                     if m3 > n_nodes_last_int:
-                        m3 = n_nodes_last_int
-                    cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,
+                        #m3 = n_nodes_last_int
+                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,
                                                 i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
-                    idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
+                    else:
+                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,
+                                                i*n_nodes_per_int:i*n_nodes_per_int+m3]
+                    idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
                                                      #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
                 idx = np.sort(idx)
                 sampled_idx += list(idx)
@@ -378,7 +381,6 @@ for r in range(n_realizations):
         print()
         
         sampled_idx2 = list(np.random.choice(np.arange(num_nodes), m2*m3, replace=False))
-        print(len(sampled_idx2))
 
         # V for train data
         graph_new = train_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
