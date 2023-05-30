@@ -42,8 +42,6 @@ sweep_config = {'method': 'random',
                                       'max': 0.01,
                                       'min': 0} } }
 
-sweep_id = wandb.sweep(sweep_config, project="test")
-
 data_name = sys.argv[1]
 lr = float(sys.argv[2])
 n_epochs = int(sys.argv[3])
@@ -59,6 +57,8 @@ nb_cuts = int(sys.argv[10])
 F_nn = [128, 128]
 F_pe = [64, 64]
 
+
+sweep_id = wandb.sweep(sweep_config, project=data_name)
 
 thisFilename = data_name + '_' # This is the general name of all related files
 
