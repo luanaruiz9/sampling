@@ -391,8 +391,7 @@ for r in range(n_realizations):
         
         print(sweep_config)
         
-        def function(dataset, K, device, train_data_new, val_data_new, m, m2, m3, 
-                     nb_cuts, train_data_collection, V_collection):
+        def function():
         
             #with wandb.init(project='test', entity='luanaianararubiniruiz', config=config):
                 #config = wandb.config
@@ -415,13 +414,8 @@ for r in range(n_realizations):
                 val_auc = eval_link_predictor(model, val_data_new)
                 
                 wandb.log({'val_auc': val_auc})
-                
-                return model
             
-        wandb.agent(sweep_id, function=function(dataset, K, device, train_data_new, 
-                                                val_data_new, m, m2, m3, 
-                                                nb_cuts, train_data_collection, 
-                                                V_collection), count=10)
+        wandb.agent(sweep_id, function=function(), count=10)
         
         """
         
