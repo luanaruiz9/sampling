@@ -379,7 +379,7 @@ for r in range(n_realizations):
                               **pre_defined_kwargs_test)
         
         def function(dataset, K, device, train_data_new, val_data_new, m, m2, m3, 
-                     nb_cuts, train_data_collection, V_collection, config=None):
+                     nb_cuts, train_data_collection, V_collection, config):
         
             with wandb.init(project='test', entity='luanaianararubiniruiz', config=config):
                 config = wandb.config
@@ -406,12 +406,12 @@ for r in range(n_realizations):
         wandb.agent(sweep_id, function=function(dataset, K, device, train_data_new, 
                                                 val_data_new, m, m2, m3, 
                                                 nb_cuts, train_data_collection, 
-                                                V_collection), count=10)
+                                                V_collection,sweep_config), count=10)
         
         """
         
         model = function(dataset, K, device, train_data_new, val_data_new, m, m2, m3, 
-                     nb_cuts, train_data_collection, V_collection)
+                     nb_cuts, train_data_collection, V_collection, sweep_config)
         
         test_auc = eval_link_predictor(model, test_data_new)
         results_w_samp_pe[r] = test_auc
