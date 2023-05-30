@@ -33,7 +33,9 @@ from subsampling import sample_clustering
 from graphon_sampling import generate_induced_graphon
 import aux_functions
 
-from wandb_config import sweeo_config
+from wandb_config import sweep_config
+
+sweep_id = wandb.sweep(sweep_config, project="test")
 
 data_name = sys.argv[1]
 lr = float(sys.argv[2])
@@ -73,11 +75,11 @@ else:
     device = 'cpu'
     
 K = 20
-do_no_pe = True
-do_eig = True
-do_learn_pe = True
+do_no_pe = False
+do_eig = False
+do_learn_pe = False
 do_w_sampl = True
-do_random_sampl = True
+do_random_sampl = False
 
 if 'cora' in data_name:
     dataset = Planetoid(root='/tmp/Cora', name='Cora')
@@ -376,30 +378,45 @@ for r in range(n_realizations):
                               y=test_data.y,edge_label_index=test_data.edge_label_index,
                               **pre_defined_kwargs_test)
         
-        with wandb.init(project='test', entity='luanaianararubiniruiz'):
-            config = wandb.config
+        def function(dataset, K, device, train_data_new, val_data_new, m, m2, m3, 
+                     nb_cuts, train_data_collection, V_collection, config=None):
         
-            model = SignNetLinkPredNet(dataset.num_features+config.F_pe*K, 
-                                       config.F_nn, config.F_nn, True, 1, 
-                                       config.F_pe, config.F_pe).to(device)
-            optimizer = torch.optim.Adam(params=model.parameters(), lr=config.lr)
-            criterion = torch.nn.BCEWithLogitsLoss()
+            with wandb.init(project='test', entity='luanaianararubiniruiz', config=config):
+                config = wandb.config
             
-            wandb.watch(model, criterion, log="all")
+                model = SignNetLinkPredNet(dataset.num_features+config.F_pe*K, 
+                                           config.F_nn, config.F_nn, True, 1, 
+                                           config.F_pe, config.F_pe).to(device)
+                optimizer = torch.optim.Adam(params=model.parameters(), lr=config.lr)
+                criterion = torch.nn.BCEWithLogitsLoss()
+                
+                wandb.watch(model, criterion, log="all")
+                
+                model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
+                                             criterion, n_epochs=config.n_epochs, K=K, pe=True, m=m, 
+                                             m2=m2, m3=m3, nb_cuts=nb_cuts, 
+                                             train_data_collection=train_data_collection, 
+                                             V_collection=V_collection)
+                val_auc = eval_link_predictor(model, val_data_new)
+                
+                wandb.log({'val_auc': val_auc})
+                
+                return model
             
-            model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
-                                         criterion, n_epochs=config.n_epochs, K=K, pe=True, m=m, 
-                                         m2=m2, m3=m3, nb_cuts=nb_cuts, 
-                                         train_data_collection=train_data_collection, 
-                                         V_collection=V_collection)
-            test_auc = eval_link_predictor(model, test_data_new)
-            
-            wandb.log({'test_auc': test_auc})
-            
+        wandb.agent(sweep_id, function=function, count=10)
+        
+        """
+        
+        model = function(dataset, K, device, train_data_new, val_data_new, m, m2, m3, 
+                     nb_cuts, train_data_collection, V_collection)
+        
+        test_auc = eval_link_predictor(model, test_data_new)
         results_w_samp_pe[r] = test_auc
         print(f"Test: {test_auc:.3f}")
         
         print()
+        
+        """
     
     ##############################################################################
     ############################# Sampling! ######################################
