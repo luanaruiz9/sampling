@@ -380,12 +380,14 @@ for r in range(n_realizations):
         
         print(sweep_config)
         
-        def function(config, dataset, K, device, train_data_new, val_data_new, m, m2, m3, 
+        def function(dataset, K, device, train_data_new, val_data_new, m, m2, m3, 
                      nb_cuts, train_data_collection, V_collection):
         
-            with wandb.init(project='test', entity='luanaianararubiniruiz', config=config):
+            #with wandb.init(project='test', entity='luanaianararubiniruiz', config=config):
+                #config = wandb.config
+                run = wandb.init()
                 config = wandb.config
-            
+                
                 model = SignNetLinkPredNet(dataset.num_features+config.F_pe*K, 
                                            config.F_nn, config.F_nn, True, 1, 
                                            config.F_pe, config.F_pe).to(device)
@@ -405,7 +407,7 @@ for r in range(n_realizations):
                 
                 return model
             
-        wandb.agent(sweep_id, function=function(sweep_id.config, dataset, K, device, train_data_new, 
+        wandb.agent(sweep_id, function=function(dataset, K, device, train_data_new, 
                                                 val_data_new, m, m2, m3, 
                                                 nb_cuts, train_data_collection, 
                                                 V_collection), count=10)
