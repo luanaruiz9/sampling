@@ -378,6 +378,7 @@ for r in range(n_realizations):
         print()
         
         sampled_idx2 = list(np.random.choice(np.arange(num_nodes), m2*m3, replace=False))
+        print(len(sampled_idx2))
 
         # V for train data
         graph_new = train_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
