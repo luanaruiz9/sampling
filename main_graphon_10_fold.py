@@ -70,7 +70,7 @@ else:
     device = 'cpu'
     
 K = 20
-do_no_pe = True
+do_no_pe = False
 do_eig = True
 do_learn_pe = True
 do_w_sampl = True
