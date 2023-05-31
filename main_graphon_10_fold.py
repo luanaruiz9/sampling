@@ -91,13 +91,18 @@ elif 'twitch-ru' in data_name:
     
 graph_og = dataset[0]
 #graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
+
+adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
+num_nodes = adj.shape[0]
+D = aux_functions.compute_degree(adj_sparse, num_nodes)
+deg = torch.diagonal(D).squeeze()
+idx = torch.argsort(deg)
+graph_og = graph_og.subgraph(idx)
+
 pre_defined_kwargs = {'eigvecs': False}
 graph = Data(x=torch.ones(graph_og.x.shape[0],1), edge_index=graph_og.edge_index, 
              edge_weight=graph_og.edge_weight, y=graph_og.y,**pre_defined_kwargs)
-if len(graph.x) > 0:
-    num_feats = graph.x.shape[1]
-else:
-    num_feats = 0
+num_feats = graph.x.shape[1]
 graph = graph.to(device)
 
 # Vectors to store test results
