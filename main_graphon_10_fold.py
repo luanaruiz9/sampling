@@ -95,7 +95,7 @@ graph_og = dataset[0]
 adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
 num_nodes = adj.shape[0]
 D = aux_functions.compute_degree(adj_sparse, num_nodes)
-deg = torch.diagonal(D).squeeze()
+deg = torch.diagonal(D.to_dense()).squeeze()
 idx = torch.argsort(deg)
 graph_og = graph_og.subgraph(idx)
 
