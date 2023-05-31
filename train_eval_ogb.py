@@ -248,13 +248,11 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
 
 @torch.no_grad()
 def eval_link_predictor(model, data):
-
+    
+    evaluator = Evaluator(name="ogbl-ddi")
     model.eval()
     z = model.encode(data.x, data.edge_index, data.eigvecs)
     out = model.decode(z, data.edge_label_index).view(-1).sigmoid()
-
-    return roc_auc_score(data.edge_label.cpu().numpy(), out.cpu().numpy())
-
-evaluator = Evaluator(name="ogbl-ppa")
-print(evaluator.expected_input_format) 
-print(evaluator.expected_output_format) 
+    
+    evaluation = evaluator(out[data.edge_label],out[not data.edge_label]) 
+    return evaluation.cpu().numpy()
