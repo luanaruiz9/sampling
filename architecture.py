@@ -106,7 +106,6 @@ class SignNetLinkPredNet(torch.nn.Module):
             pe = eigvecs*self.conv1(torch.abs(eigvecs), edge_index, None).relu()
             pe = self.conv2(pe,edge_index, None)
             pe = pe.reshape(pe.shape[0],-1)
-            print(len(x))
             if len(x) == 0:
                 x = pe
             else:

@@ -7,7 +7,7 @@ Created on Thu Mar 30 09:18:48 2023
 import torch
 
 def compute_adj_from_data(data):
-    num_nodes = torch.max(data.edge_index)+1
+    num_nodes = data.x.shape[0]
     device = data.x.device
     edge_index = data.edge_index
     if data.edge_weight is not None:
