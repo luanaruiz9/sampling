@@ -405,7 +405,7 @@ for r in range(n_realizations):
                 config = wandb.config
                 print(wandb.config)
                 
-                model = SignNetLinkPredNet(dataset.num_features + config.Fpe*K, 
+                model = SignNetLinkPredNet(num_feats + config.Fpe*K, 
                                            config.Fnn, config.Fnn, True, 1, 
                                            config.Fpe, config.Fpe).to(device)
                 optimizer = torch.optim.Adam(params=model.parameters(), lr=config.lr)
