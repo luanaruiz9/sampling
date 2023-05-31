@@ -16,8 +16,6 @@ from torch_geometric.utils import negative_sampling
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
 
-from ogb.linkproppred import Evaluator
-
 from greedy import greedy, f
 #from reconstruction import f_rec, reconstruct
 from subsampling import sample_clustering
@@ -253,8 +251,4 @@ def eval_link_predictor(model, data):
     z = model.encode(data.x, data.edge_index, data.eigvecs)
     out = model.decode(z, data.edge_label_index).view(-1).sigmoid()
 
-    return roc_auc_score(data.edge_label.cpu().numpy(), out.cpu().numpy())
-
-evaluator = Evaluator(name="ogbl-ppa")
-print(evaluator.expected_input_format) 
-print(evaluator.expected_output_format) 
+    return roc_auc_score(data.edge_label.cpu().numpy(), out.cpu().numpy()) 
