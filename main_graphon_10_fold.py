@@ -96,7 +96,7 @@ elif 'twitch-ru' in data_name:
 graph_og = dataset[0]
 #graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
 pre_defined_kwargs = {'eigvecs': False}
-graph = Data(x=torch.empty(0), edge_index=graph_og.edge_index, 
+graph = Data(x=torch.ones(graph_og.x.shape[0],1), edge_index=graph_og.edge_index, 
              edge_weight=graph_og.edge_weight, y=graph_og.y,**pre_defined_kwargs)
 if len(graph.x) > 0:
     num_feats = graph.x.shape[1]
