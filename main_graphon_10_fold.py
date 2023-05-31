@@ -92,6 +92,7 @@ elif 'twitch-ru' in data_name:
 graph_og = dataset[0]
 #graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
 
+# Sorting nodes by degree
 adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
 num_nodes = adj.shape[0]
 D = aux_functions.compute_degree(adj_sparse, num_nodes)
