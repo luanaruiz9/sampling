@@ -45,7 +45,7 @@ m3 = int(sys.argv[9]) #3 #8 # How many nodes (points) to sample per sampled inte
 nb_cuts = int(sys.argv[10])
 
 F_nn = [128, 128]
-F_pe = [64, 64]
+F_pe = [32, 32]
 
 
 thisFilename = data_name + '_' # This is the general name of all related files
