@@ -44,6 +44,10 @@ m2 = int(sys.argv[8]) #25 # Number of sampled intervals
 m3 = int(sys.argv[9]) #3 #8 # How many nodes (points) to sample per sampled interval
 nb_cuts = int(sys.argv[10])
 
+print(ratio_train)
+print(ratio_test)
+print(ratio_val)
+
 F_nn = [128, 128]
 F_pe = [32, 32]
 
