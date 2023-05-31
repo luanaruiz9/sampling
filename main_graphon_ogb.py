@@ -96,7 +96,7 @@ elif 'twitch-ru' in data_name:
 dataset = PygLinkPropPredDataset(name="ogbl-ddi") 
     
 graph_og = dataset[0]
-#graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
+graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
 pre_defined_kwargs = {'eigvecs': False}
 graph = Data(x=graph_og.x, edge_index=graph_og.edge_index, 
              edge_weight=graph_og.edge_weight, y=graph_og.y,**pre_defined_kwargs)
