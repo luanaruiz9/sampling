@@ -100,8 +100,8 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                 
                 # Computing normalized Laplacian
                 L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
-                #eigvals, V = torch.lobpcg(L, k=K, largest=False)
-                eigvals, V = torch.linalg.eig(L.to_dense())
+                eigvals, V = torch.lobpcg(L, k=K, largest=False)
+                #eigvals, V = torch.linalg.eig(L.to_dense())
                 eigvals = eigvals.float()
                 V = V.float()
                 idx = torch.argsort(eigvals)

@@ -81,7 +81,7 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
     
-K = 20
+K = 50
 do_no_pe = False
 do_eig = False
 do_learn_pe = False
@@ -311,8 +311,8 @@ for r in range(n_realizations):
         # Computing normalized Laplacian
         L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
         
-        eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
-        #eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
+        #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
+        eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
         idx = torch.argsort(eigvals_new)
         eigvals_new = eigvals_new[idx[0:K]]
         V_new = V_new[:,idx[0:K]]
@@ -339,8 +339,8 @@ for r in range(n_realizations):
         # Computing normalized Laplacian
         L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
         
-        eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
-        #eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
+        #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
+        eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
         idx = torch.argsort(eigvals_new)
         eigvals_new = eigvals_new[idx[0:K]]
         V_new = V_new[:,idx[0:K]]
@@ -478,8 +478,8 @@ for r in range(n_realizations):
         # Computing normalized Laplacian
         L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
         
-        eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
-        #eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
+        #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
+        eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
         idx = torch.argsort(eigvals_new)
         eigvals_new = eigvals_new[idx[0:K]]
         V_new = V_new[:,idx[0:K]]
@@ -506,8 +506,8 @@ for r in range(n_realizations):
         # Computing normalized Laplacian
         L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
         
-        eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
-        #eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
+        #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
+        eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
         idx = torch.argsort(eigvals_new)
         eigvals_new = eigvals_new[idx[0:K]]
         V_new = V_new[:,idx[0:K]]
