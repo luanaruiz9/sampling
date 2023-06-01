@@ -8,7 +8,7 @@ Created on Tue Mar 21 07:42:16 2023
 import numpy as np
 import torch
 from torch_geometric.data import Data
-from torch_geometric.utils import dense_to_sparse
+from torch_geometric.utils import dense_to_sparse, is_undirected
 
 def generate_induced_graphon(og_graph, n_intervals):
     # Here, we are actually generating the graph associated with the induced graphon.
@@ -39,9 +39,12 @@ def generate_induced_graphon(og_graph, n_intervals):
             elif i < n_intervals-1 and j == n_intervals-1:
                 adj_ind_graphon[i,j] = torch.sum(adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,
                                              j*n_nodes_per_int:-1])/np.sqrt(n_nodes_per_int*n_nodes_last_int)
-            else:
+            elif j < n_intervals-1 and i == n_intervals-1:
                 adj_ind_graphon[i,j] = torch.sum(adj[i*n_nodes_per_int:-1,
                                              j*n_nodes_per_int:(j+1)*n_nodes_per_int])/np.sqrt(n_nodes_per_int*n_nodes_last_int)
+            else:
+                adj_ind_graphon[i,j] = torch.sum(adj[i*n_nodes_per_int:-1,
+                                             j*n_nodes_per_int:-1])/n_nodes_last_int
         # The signals below are not used, for now. Note that y is categorical.
         if i < n_intervals-1:
             x_ind_graphon[i] = torch.sum(x[i*n_nodes_per_int:(i+1)*n_nodes_per_int],axis=0)/np.sqrt(n_nodes_per_int)
@@ -50,6 +53,7 @@ def generate_induced_graphon(og_graph, n_intervals):
             x_ind_graphon[i] = torch.sum(x[i*n_nodes_per_int:-1],axis=0)/np.sqrt(n_nodes_last_int)
             y_ind_graphon[i] = torch.sum(y[i*n_nodes_per_int:-1])/n_nodes_last_int > 0.5
     edge_index_ind_graphon, edge_weight_ind_graphon = dense_to_sparse(adj_ind_graphon)
+    assert is_undirected(edge_index_ind_graphon)
 
     data = Data(x=x_ind_graphon,edge_index=edge_index_ind_graphon,
                 edge_weight=edge_weight_ind_graphon,y=y_ind_graphon)

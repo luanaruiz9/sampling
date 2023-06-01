@@ -255,7 +255,7 @@ for r in range(n_realizations):
         L_ind = aux_functions.compute_laplacian(adj_sparse_ind,num_nodes_ind)
         
         lam = eigvals[-1]
-        print('here', lam)
+        print('here', eigvals)
         L_aux = L_ind.cpu()
         k = 5
         
