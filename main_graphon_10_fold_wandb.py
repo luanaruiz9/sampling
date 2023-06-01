@@ -349,9 +349,9 @@ for r in range(n_realizations):
         
         #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
         eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-        idx = torch.argsort(eigvals_new)
         eigvals_new = eigvals_new.float()
         V_new = V_new.float()
+        idx = torch.argsort(eigvals_new)
         eigvals_new = eigvals_new[idx[0:K]]
         V_new = V_new[:,idx[0:K]]
         V_new = V_new.type(torch.float32)
@@ -490,9 +490,9 @@ for r in range(n_realizations):
         
         #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
         eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-        idx = torch.argsort(eigvals_new)
         eigvals_new = eigvals_new.float()
         V_new = V_new.float()
+        idx = torch.argsort(eigvals_new)
         eigvals_new = eigvals_new[idx[0:K]]
         V_new = V_new[:,idx[0:K]]
         V_new = V_new.type(torch.float32)
@@ -520,9 +520,9 @@ for r in range(n_realizations):
         
         #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
         eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-        idx = torch.argsort(eigvals_new)
         eigvals_new = eigvals_new.float()
         V_new = V_new.float()
+        idx = torch.argsort(eigvals_new)
         eigvals_new = eigvals_new[idx[0:K]]
         V_new = V_new[:,idx[0:K]]
         V_new = V_new.type(torch.float32)
