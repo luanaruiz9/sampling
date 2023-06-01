@@ -12,7 +12,7 @@ from sklearn.metrics import roc_auc_score
 
 import torch
 
-from torch_geometric.utils import negative_sampling
+from torch_geometric.utils import negative_sampling, dropout_edge
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
 
@@ -37,7 +37,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
     if K is not None:
         # Creating random 10-fold
         edge_index = train_data_og_0.edge_index
-        nb_edges = edge_index.shape[1]
+        nb_edges = edge_index.shape[1]/2
         num_nodes = train_data_og_0.x.shape[0]
         device = edge_index.device
         
@@ -49,13 +49,12 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             num_val = 0.1
         else:
             num_val = 0
-        print(train_data_og)
-        print(nb_edges)
         nb_data = int(num_val*nb_edges)
         nb_eig = nb_edges-nb_data
         for i in range(10):
-            permutation = np.random.permutation(nb_edges)
-            split = [permutation[0:nb_eig], permutation[nb_eig:nb_edges]]
+            eig_edge_index = dropout_edge(edge_index, p=num_val, force_undirected=True)
+            data_edge_index = dropout_edge(edge_index, p=1-num_val, force_undirected=True)
+            split = [eig_edge_index, data_edge_index]
             split_collection.append(split)
                
         neg_split = T.RandomLinkSplit(
@@ -76,11 +75,11 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             V_collection = []
         
             for split in split_collection:
-                eig_edge_index = edge_index[:,split[0]]
+                eig_edge_index = split[0]
                 eig_data = Data(x=train_data_og_0.x.clone(), edge_index=eig_edge_index,
                                      y=train_data_og_0.y.clone())
                 
-                data_edge_index = edge_index[:,split[1]]
+                data_edge_index = split[1]
                 train_data = Data(x=train_data_og_0.x.clone(), edge_index=data_edge_index,
                                      y=train_data_og_0.y.clone())
                 if not ten_fold:
