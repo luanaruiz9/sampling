@@ -55,16 +55,11 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
         nb_eig = nb_edges-nb_data
         
         for i in range(10):
-            _, eig_edge_mask = dropout_edge(edge_index, p=num_val)
-            eig_edge_index = to_undirected(edge_index[:,eig_edge_mask])
-            
-            print(edge_index.shape)
-            print(eig_edge_mask.shape)
+            eig_edge_index, eig_edge_mask = dropout_edge(edge_index, p=num_val)
+            eig_edge_index = to_undirected(eig_edge_index)
             
             data_edge_mask = torch.ones(eig_edge_mask.shape,device=device,dtype=torch.bool)
-            print(data_edge_mask.shape)
             data_edge_mask[eig_edge_mask] == 0
-            print(data_edge_mask.shape)
             data_edge_index = to_undirected(edge_index[:,data_edge_mask])
             
             split = [eig_edge_index, data_edge_index]
@@ -98,8 +93,6 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                 if not ten_fold:
                     train_data = eig_data
                     
-                print(eig_data)
-                print(train_data)
                 train_data2, _, _ = neg_split(train_data)
                 
                 train_data_collection.append(train_data2)
@@ -111,11 +104,11 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                 
                 # Computing normalized Laplacian
                 L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
-                #eigvals, V = torch.lobpcg(L, k=K, largest=False)
-                eigvals, V = torch.linalg.eig(L.to_dense())
-                idx = torch.argsort(eigvals)
-                eigvals = L[idx[0:K]]
-                V = V[:,idx[0:K]]
+                eigvals, V = torch.lobpcg(L, k=K, largest=False)
+                #eigvals, V = torch.linalg.eig(L.to_dense())
+                #idx = torch.argsort(eigvals)
+                #eigvals = L[idx[0:K]]
+                #V = V[:,idx[0:K]]
                 V_rec = V
                 V_collection.append(V_rec)
                 
