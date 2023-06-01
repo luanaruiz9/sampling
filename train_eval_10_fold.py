@@ -54,14 +54,13 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
         nb_eig = nb_edges-nb_data
         
         for i in range(10):
-            
             eig_edge_index = dropout_edge(edge_index, p=num_val, force_undirected=True)
             data_edge_index = dropout_edge(edge_index, p=1-num_val, force_undirected=True)
             split = [eig_edge_index, data_edge_index]
             split_collection.append(split)
                
         neg_split = T.RandomLinkSplit(
-             num_val=0.01,
+             num_val=0,
              num_test=0,
              is_undirected=True,
              add_negative_train_samples=False,
@@ -88,6 +87,8 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                 if not ten_fold:
                     train_data = eig_data
                     
+                print(eig_data)
+                print(train_data)
                 train_data2, _, _ = neg_split(train_data)
                 
                 train_data_collection.append(train_data2)
