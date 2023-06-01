@@ -54,22 +54,10 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
         nb_data = int(num_val*nb_edges)
         nb_eig = nb_edges-nb_data
         for i in range(10):
-            flag = False
-            while not flag:
-                print('here')
-                permutation = np.random.permutation(nb_edges)
-                split = [permutation[0:nb_eig], permutation[nb_eig:nb_edges]]
-                eig_edge_index = edge_index[:,split[0]]
-                eig_data = Data(x=train_data_og_0.x.clone(), edge_index=eig_edge_index,
-                                     y=train_data_og_0.y.clone())
-                adj,_ = aux_functions.compute_adj_from_data(eig_data)
-                deg = aux_functions.compute_degree(adj, num_nodes)
-                print(torch.sum(torch.sum(deg.to_dense(),axis=0)==0))
-                if torch.sum(torch.sum(deg.to_dense(),axis=0)==0)==0:
-                    flag = True
+            permutation = np.random.permutation(nb_edges)
+            split = [permutation[0:nb_eig], permutation[nb_eig:nb_edges]]
             split_collection.append(split)
-            
-         
+               
         neg_split = T.RandomLinkSplit(
              num_val=0,
              num_test=0,
@@ -109,11 +97,11 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                 
                 # Computing normalized Laplacian
                 L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
-                #eigvals, V = torch.lobpcg(L, k=K, largest=False)
-                eigvals, V = torch.linalg.eig(L.to_dense())
-                idx = torch.argsort(eigvals)
-                eigvals = L[idx[0:K]]
-                V = V[:,idx[0:K]]
+                eigvals, V = torch.lobpcg(L, k=K, largest=False)
+                #eigvals, V = torch.linalg.eig(L.to_dense())
+                #idx = torch.argsort(eigvals)
+                #eigvals = L[idx[0:K]]
+                #V = V[:,idx[0:K]]
                 V_rec = V
                 V_collection.append(V_rec)
                 
