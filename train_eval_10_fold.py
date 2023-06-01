@@ -102,7 +102,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                 L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
                 #eigvals, V = torch.lobpcg(L, k=K, largest=False)
                 eigvals, V = torch.linalg.eig(L.to_dense())
-                idx = torch.argsort(eigvals)
+                idx = torch.argsort(eigvals.float())
                 eigvals = L[idx[0:K]]
                 V = V[:,idx[0:K]]
                 V_rec = V
@@ -159,7 +159,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             
             #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
             eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-            idx = torch.argsort(eigvals_new)
+            idx = torch.argsort(eigvals_new.float())
             eigvals_new = eigvals_new[idx[0:K]]
             V_new = V_new[:,idx[0:K]]
             V_new = V_new.type(torch.float32)
@@ -187,7 +187,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             
             #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
             eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-            idx = torch.argsort(eigvals_new)
+            idx = torch.argsort(eigvals_new.float())
             eigvals_new = eigvals_new[idx[0:K]]
             V_new = V_new[:,idx[0:K]]
             V_new = V_new.type(torch.float32)

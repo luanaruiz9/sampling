@@ -168,7 +168,7 @@ for r in range(n_realizations):
     L_test = aux_functions.compute_laplacian(adj_sparse_test, num_nodes)
     #eigvals_test, V_test = torch.lobpcg(L_test, k=K, largest=False)
     eigvals_test, V_test = torch.linalg.eig(L_test.to_dense())
-    idx = torch.argsort(eigvals_test)
+    idx = torch.argsort(eigvals_test.float())
     eigvals_test = eigvals_test[idx[0:K]]
     V_test = V_test[:,idx[0:K]]
     
@@ -248,7 +248,7 @@ for r in range(n_realizations):
         print('Sampling with spectral proxies...')
         print()
         
-        idx = torch.argsort(eigvals_test)
+        idx = torch.argsort(eigvals_test.float())
         V_test = V_test[:,idx[0:K]].type(torch.float32)
         eigvals_test = eigvals_test[idx[0:K]].type(torch.float32)
         
@@ -302,7 +302,7 @@ for r in range(n_realizations):
         
         #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
         eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-        idx = torch.argsort(eigvals_new)
+        idx = torch.argsort(eigvals_new.float())
         eigvals_new = eigvals_new[idx[0:K]]
         V_new = V_new[:,idx[0:K]]
         V_new = V_new.type(torch.float32)
@@ -330,7 +330,7 @@ for r in range(n_realizations):
         
         #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
         eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-        idx = torch.argsort(eigvals_new)
+        idx = torch.argsort(eigvals_new.float())
         eigvals_new = eigvals_new[idx[0:K]]
         V_new = V_new[:,idx[0:K]]
         V_new = V_new.type(torch.float32)
@@ -436,7 +436,7 @@ for r in range(n_realizations):
         
         #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
         eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-        idx = torch.argsort(eigvals_new)
+        idx = torch.argsort(eigvals_new.float())
         eigvals_new = eigvals_new[idx[0:K]]
         V_new = V_new[:,idx[0:K]]
         V_new = V_new.type(torch.float32)
@@ -464,7 +464,7 @@ for r in range(n_realizations):
         
         #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
         eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-        idx = torch.argsort(eigvals_new)
+        idx = torch.argsort(eigvals_new.float())
         eigvals_new = eigvals_new[idx[0:K]]
         V_new = V_new[:,idx[0:K]]
         V_new = V_new.type(torch.float32)
