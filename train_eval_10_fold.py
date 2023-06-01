@@ -55,8 +55,12 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
         nb_eig = nb_edges-nb_data
         
         for i in range(10):
-            _, eig_edge_mask = dropout_edge(edge_index, p=num_val, force_undirected=True)
+            edge_index2 = edge_index.clone()
+            _, eig_edge_mask = dropout_edge(edge_index2, p=num_val, force_undirected=True)
             eig_edge_index = edge_index[:,eig_edge_mask]
+            
+            print(edge_index.shape)
+            print(eig_edge_mask.shape)
             
             data_edge_mask = torch.ones(eig_edge_mask.shape,device=device,dtype=torch.bool)
             print(data_edge_mask.shape)
