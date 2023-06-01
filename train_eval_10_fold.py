@@ -49,9 +49,12 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             num_val = 0.1
         else:
             num_val = 0
+            
         nb_data = int(num_val*nb_edges)
         nb_eig = nb_edges-nb_data
+        
         for i in range(10):
+            
             eig_edge_index = dropout_edge(edge_index, p=num_val, force_undirected=True)
             data_edge_index = dropout_edge(edge_index, p=1-num_val, force_undirected=True)
             split = [eig_edge_index, data_edge_index]
@@ -76,18 +79,18 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
         
             for split in split_collection:
                 eig_edge_index = split[0]
-                eig_data = Data(x=train_data_og_0.x.clone(), edge_index=eig_edge_index,
-                                     y=train_data_og_0.y.clone())
+                eig_data = Data(x=train_data_og.x.clone(), edge_index=eig_edge_index,
+                                     y=train_data_og.y.clone())
                 
                 data_edge_index = split[1]
-                train_data = Data(x=train_data_og_0.x.clone(), edge_index=data_edge_index,
-                                     y=train_data_og_0.y.clone())
+                train_data = Data(x=train_data_og.x.clone(), edge_index=data_edge_index,
+                                     y=train_data_og.y.clone())
                 if not ten_fold:
                     train_data = eig_data
                     
-                train_data, _, _ = neg_split(train_data)
+                train_data2, _, _ = neg_split(train_data)
                 
-                train_data_collection.append(train_data)
+                train_data_collection.append(train_data2)
                 eig_data_collection.append(eig_data)
             
                 # V for train data
