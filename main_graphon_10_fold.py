@@ -157,7 +157,7 @@ for r in range(n_realizations):
     L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
     #eigvals, V = torch.lobpcg(L, k=K, largest=False)
     eigvals, V = torch.linalg.eig(L.to_dense())
-    idx = torch.argsort(eigvals)
+    idx = torch.argsort(eigvals.float())
     eigvals = eigvals[idx[0:K]]
     V = V[:,idx[0:K]]
     
