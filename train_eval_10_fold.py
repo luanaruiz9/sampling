@@ -34,7 +34,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
     if K is not None:
         # Creating random 10-fold
         edge_index = train_data_og_0.edge_index
-        nb_edges = edge_index.shape[0]
+        nb_edges = edge_index.shape[1]
         device = edge_index.device
         train_data_og = Data(x=train_data_og_0.x.clone(), edge_index=edge_index.clone(),
                              y=train_data_og_0.y.clone())
@@ -71,11 +71,11 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             V_collection = []
         
             for split in split_collection:
-                eig_edge_index = edge_index[split[0]]
+                eig_edge_index = edge_index[:,split[0]]
                 eig_data = Data(x=train_data_og_0.x.clone(), edge_index=eig_edge_index,
                                      y=train_data_og_0.y.clone())
                 
-                data_edge_index = edge_index[split[1]]
+                data_edge_index = edge_index[:,split[1]]
                 train_data = Data(x=train_data_og_0.x.clone(), edge_index=data_edge_index,
                                      y=train_data_og_0.y.clone())
                 if not ten_fold:
