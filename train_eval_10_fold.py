@@ -57,7 +57,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                 eig_edge_index = edge_index[:,split[0]]
                 eig_data = Data(x=train_data_og_0.x.clone(), edge_index=eig_edge_index,
                                      y=train_data_og_0.y.clone())
-                adj = aux_functions.compute_adj_from_data(eig_data)
+                adj,_ = aux_functions.compute_adj_from_data(eig_data)
                 deg = aux_functions.compute_degree(adj, num_nodes)
                 if torch.sum(torch.sum(deg.to_dense(),axis=0)==0) == 0:
                     flag = True
