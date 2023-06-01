@@ -92,7 +92,10 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                 
                 # Computing normalized Laplacian
                 L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
-                eigvals, V = torch.lobpcg(L,k=K)      
+                eigvals, V = torch.lobpcg(L, k=K, largest=False)
+                #idx = torch.argsort(eigvals)
+                #eigvals = L[idx[0:K]]
+                #V = V[:,idx[0:K]]
                 V_rec = V
                 V_collection.append(V_rec)
                 
@@ -145,7 +148,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             # Computing normalized Laplacian
             L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
             
-            eigvals_new, V_new = torch.lobpcg(L_new, k=K)
+            eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
             V_new = V_new.type(torch.float32)
             V_rec = torch.zeros(num_nodes, K, device=device)
             
@@ -169,7 +172,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             # Computing normalized Laplacian
             L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
             
-            eigvals_new, V_new = torch.lobpcg(L_new, k=K)
+            eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
             V_new = V_new.type(torch.float32)
             V_rec = torch.zeros(num_nodes, K, device=device)
             
