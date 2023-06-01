@@ -49,7 +49,8 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             num_val = 0.1
         else:
             num_val = 0
-
+        print(train_data_og)
+        print(nb_edges)
         nb_data = int(num_val*nb_edges)
         nb_eig = nb_edges-nb_data
         for i in range(10):
@@ -63,8 +64,8 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                                      y=train_data_og_0.y.clone())
                 adj,_ = aux_functions.compute_adj_from_data(eig_data)
                 deg = aux_functions.compute_degree(adj, num_nodes)
-                print(torch.sum(torch.sum(deg.to_dense(),axis=0)<zeroTol))
-                if torch.sum(torch.sum(deg.to_dense(),axis=0)<zeroTol) < zeroTol:
+                print(torch.sum(torch.sum(deg.to_dense(),axis=0)==0))
+                if torch.sum(torch.sum(deg.to_dense(),axis=0)==0)==0:
                     flag = True
             split_collection.append(split)
             
