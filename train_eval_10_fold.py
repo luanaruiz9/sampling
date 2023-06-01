@@ -22,6 +22,9 @@ from subsampling import sample_clustering
 from graphon_sampling import generate_induced_graphon
 import aux_functions
 
+
+zeroTol = 1e-9
+
 def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion, ten_fold=True,
                          n_epochs=100, K=None, pe=False, m=None, m2=None, m3=None, nb_cuts=None,
                          train_data_collection=None, V_collection=None):
@@ -60,7 +63,8 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                                      y=train_data_og_0.y.clone())
                 adj,_ = aux_functions.compute_adj_from_data(eig_data)
                 deg = aux_functions.compute_degree(adj, num_nodes)
-                if torch.sum(torch.sum(deg.to_dense(),axis=0)==0) == 0:
+                print(torch.sum(torch.sum(deg.to_dense(),axis=0)<zeroTol))
+                if torch.sum(torch.sum(deg.to_dense(),axis=0)<zeroTol) < zeroTol:
                     flag = True
             split_collection.append(split)
             
