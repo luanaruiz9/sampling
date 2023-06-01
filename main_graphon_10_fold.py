@@ -44,8 +44,8 @@ m2 = int(sys.argv[8]) #25 # Number of sampled intervals
 m3 = int(sys.argv[9]) #3 #8 # How many nodes (points) to sample per sampled interval
 nb_cuts = int(sys.argv[10])
 
-F_nn = [128, 128]
-F_pe = [32, 32]
+F_nn = [32, 32]
+F_pe = [128, 128]
 
 
 thisFilename = data_name + '_' # This is the general name of all related files
@@ -255,6 +255,7 @@ for r in range(n_realizations):
         L_ind = aux_functions.compute_laplacian(adj_sparse_ind,num_nodes_ind)
         
         lam = eigvals[-1]
+        print('here', lam)
         L_aux = L_ind.cpu()
         k = 5
         
