@@ -57,7 +57,11 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
         for i in range(10):
             _, eig_edge_mask = dropout_edge(edge_index, p=num_val, force_undirected=True)
             eig_edge_index = edge_index[:,eig_edge_mask]
-            data_edge_index = edge_index[:,eig_edge_mask==False]
+            
+            data_edge_mask = torch.ones(eig_edge_mask.shape)
+            data_edge_mask[eig_edge_mask] == 0
+            data_edge_index = edge_index[:,data_edge_mask]
+            
             split = [eig_edge_index, data_edge_index]
             split_collection.append(split)
                
