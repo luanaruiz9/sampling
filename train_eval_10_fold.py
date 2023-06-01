@@ -59,7 +59,9 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             eig_edge_index = edge_index[:,eig_edge_mask]
             
             data_edge_mask = torch.ones(eig_edge_mask.shape,device=device,dtype=torch.bool)
+            print(data_edge_mask.shape)
             data_edge_mask[eig_edge_mask] == 0
+            print(data_edge_mask.shape)
             data_edge_index = edge_index[:,data_edge_mask]
             
             split = [eig_edge_index, data_edge_index]
