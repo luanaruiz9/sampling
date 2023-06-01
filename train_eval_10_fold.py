@@ -34,25 +34,32 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
     if K is not None:
         # Creating random 10-fold
         edge_index = train_data_og_0.edge_index
+        nb_edges = edge_index.shape[0]
         device = edge_index.device
         train_data_og = Data(x=train_data_og_0.x.clone(), edge_index=edge_index.clone(),
                              y=train_data_og_0.y.clone())
         
-        split_collection =[]
+        split_collection = []
         if ten_fold:
             num_val = 0.1
         else:
             num_val = 0
 
+        nb_data = int(num_val*nb_edges)
+        nb_eig = nb_edges-nb_data
         for i in range(10):
-            split = T.RandomLinkSplit(
-                num_val=num_val,
-                num_test=0,
-                is_undirected=True,
-                add_negative_train_samples=False,
-                neg_sampling_ratio=1,
-            )
+            permutation = np.random.permutation(nb_edges)
+            split = [permutation[0:nb_eig], permutation[nb_eig:nb_edges]]
             split_collection.append(split)
+            
+         
+        neg_split = T.RandomLinkSplit(
+             num_val=0,
+             num_test=0,
+             is_undirected=True,
+             add_negative_train_samples=False,
+             neg_sampling_ratio=1,
+        )
     
     best_val_auc = 0
     best_model = None
@@ -64,9 +71,18 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             V_collection = []
         
             for split in split_collection:
-                eig_data, train_data, _ = split(train_data_og)
+                eig_edge_index = edge_index[split[0]]
+                eig_data = Data(x=train_data_og_0.x.clone(), edge_index=eig_edge_index,
+                                     y=train_data_og_0.y.clone())
+                
+                data_edge_index = edge_index[split[1]]
+                train_data = Data(x=train_data_og_0.x.clone(), edge_index=data_edge_index,
+                                     y=train_data_og_0.y.clone())
                 if not ten_fold:
                     train_data = eig_data
+                    
+                train_data, _, _ = neg_split(train_data)
+                
                 train_data_collection.append(train_data)
                 eig_data_collection.append(eig_data)
             
