@@ -152,9 +152,9 @@ for r in range(n_realizations):
     deg = torch.diagonal(D.to_dense()).squeeze()
     idx = torch.argsort(deg)
     idx = idx.to(device)
-    train_data = train_data.subgraph(idx)
-    val_data = val_data.subgraph(idx)
-    test_data = test_data.subgraph(idx)
+    #train_data = train_data.subgraph(idx)
+    #val_data = val_data.subgraph(idx)
+    #test_data = test_data.subgraph(idx)
     
     if do_w_sampl:
     
