@@ -70,14 +70,6 @@ do_eig = True
 do_w_sampl = True
 do_random_sampl = True
 
-dataset = Planetoid(root='/tmp/Cora', name='Cora')
-graph_og = dataset[0]
-#graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
-pre_defined_kwargs = {'eigvecs': False}
-graph = Data(x=graph_og.x, edge_index=graph_og.edge_index, 
-             edge_weight=graph_og.edge_weight, y=graph_og.y,**pre_defined_kwargs)
-graph = graph.to(device)
-
 # Vectors to store test results
 results_no_sampl = np.zeros(n_realizations)
 results_no_sampl_eig = np.zeros(n_realizations)
@@ -131,9 +123,9 @@ for r in range(n_realizations):
     idx = torch.argsort(deg)
     idx = idx.to(device)
     
-    train_data = train_data.subgraph(idx)
-    val_data = val_data.subgraph(idx)
-    test_data = test_data.subgraph(idx)
+    #train_data = train_data.subgraph(idx)
+    #val_data = val_data.subgraph(idx)
+    #test_data = test_data.subgraph(idx)
         
     if do_no_sampling:
         
