@@ -90,24 +90,24 @@ for r in range(n_realizations):
     
     if 'cora' in data_name:
         dataset = Planetoid(root='/tmp/Cora', name='Cora', split='random')
-        num_train_per_class = int((ratio_train*dataset.num_nodes)/dataset.num_classes)
-        num_val = int(ratio_val*dataset.num_nodes)
+        num_train_per_class = int((ratio_train*dataset[0].num_nodes)/dataset.num_classes)
+        num_val = int(ratio_val*dataset[0].num_nodes)
         num_test = dataset.num_nodes-num_val-num_train_per_class*dataset.num_classes
         dataset = Planetoid(root='/tmp/Cora', name='Cora', split='random',
                             num_train_per_class=num_train_per_class, num_val=num_val, 
                             num_test=num_test)
     elif 'citeseer' in data_name:
         dataset = Planetoid(root='/tmp/CiteSeer', name='CiteSeer', split='random')
-        num_train_per_class = int((ratio_train*dataset.num_nodes)/dataset.num_classes)
-        num_val = int(ratio_val*dataset.num_nodes)
+        num_train_per_class = int((ratio_train*dataset[0].num_nodes)/dataset.num_classes)
+        num_val = int(ratio_val*dataset[0].num_nodes)
         num_test = dataset.num_nodes-num_val-num_train_per_class*dataset.num_classes
         dataset = Planetoid(root='/tmp/CiteSeer', name='CiteSeer', split='random',
                             num_train_per_class=num_train_per_class, num_val=num_val, 
                             num_test=num_test)
     elif 'pubmed' in data_name:
         dataset = Planetoid(root='/tmp/PubMed', name='PubMed', split='random')
-        num_train_per_class = int((ratio_train*dataset.num_nodes)/dataset.num_classes)
-        num_val = int(ratio_val*dataset.num_nodes)
+        num_train_per_class = int((ratio_train*dataset[0].num_nodes)/dataset.num_classes)
+        num_val = int(ratio_val*dataset[0].num_nodes)
         num_test = dataset.num_nodes-num_val-num_train_per_class*dataset.num_classes
         dataset = Planetoid(root='/tmp/PubMed', name='PubMed', split='random',
                             num_train_per_class=num_train_per_class, num_val=num_val, 
