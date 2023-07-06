@@ -14,7 +14,7 @@ from torch_geometric.loader import DataLoader
 import copy
 import numpy as np
 
-def train(model, train_data, val_data, optimizer, criterion, batch_size, n_epochs, args):
+def train(model, train_data, val_data, optimizer, criterion, batch_size, n_epochs):
 
     loader = DataLoader([train_data], batch_size=batch_size)  
 
