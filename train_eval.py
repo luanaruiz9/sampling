@@ -22,7 +22,7 @@ def train(model, train_data, val_data, optimizer, criterion, batch_size, n_epoch
     losses = []
     val_accs = []
     best_acc = 0
-    best_model = None
+    best_model = model.deepcopy()
     start = time.time()
     for epoch in trange(n_epochs, desc="Training", unit="Epochs"):
         total_loss = 0
@@ -56,7 +56,7 @@ def train(model, train_data, val_data, optimizer, criterion, batch_size, n_epoch
 def test(test_model, data, is_validation=False, save_model_preds=False):
     
     loader = DataLoader([data])
-    #test_model.eval()
+    test_model.eval()
     correct = 0
     # Note that Cora is only one graph!
     for data in loader:
