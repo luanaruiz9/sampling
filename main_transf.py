@@ -34,11 +34,14 @@ data_name = sys.argv[1]
 folder_name = data_name
 lr = float(sys.argv[2])
 n_epochs = int(sys.argv[3])
-n_realizations = int(sys.argv[4]) #10
-m = int(sys.argv[5]) #100 # Number of candidate intervals
-m2 = int(sys.argv[6]) #10 # Number of sampled intervals
-m3 = int(sys.argv[7]) #10 # How many nodes (points) to sample per sampled interval
-nb_cuts = int(sys.argv[8])
+ratio_train = float(sys.argv[4])
+ratio_test = float(sys.argv[5])
+ratio_val = 1-ratio_train-ratio_test
+n_realizations = int(sys.argv[6]) #10
+m = int(sys.argv[7]) #50 # Number of candidate intervals
+m2 = int(sys.argv[8]) #25 # Number of sampled intervals
+m3 = int(sys.argv[9]) #3 #8 # How many nodes (points) to sample per sampled interval
+nb_cuts = int(sys.argv[10])
 
 thisFilename = folder_name + '_cora' # This is the general name of all related files
 
@@ -87,10 +90,28 @@ for r in range(n_realizations):
     
     if 'cora' in data_name:
         dataset = Planetoid(root='/tmp/Cora', name='Cora', split='random')
+        num_train_per_class = int((ratio_train*dataset.num_nodes)/dataset.num_classes)
+        num_val = int(ratio_val*dataset.num_nodes)
+        num_test = dataset.num_nodes-num_val-num_train_per_class*dataset.num_classes
+        dataset = Planetoid(root='/tmp/Cora', name='Cora', split='random',
+                            num_train_per_class=num_train_per_class, num_val=num_val, 
+                            num_test=num_test)
     elif 'citeseer' in data_name:
         dataset = Planetoid(root='/tmp/CiteSeer', name='CiteSeer', split='random')
+        num_train_per_class = int((ratio_train*dataset.num_nodes)/dataset.num_classes)
+        num_val = int(ratio_val*dataset.num_nodes)
+        num_test = dataset.num_nodes-num_val-num_train_per_class*dataset.num_classes
+        dataset = Planetoid(root='/tmp/CiteSeer', name='CiteSeer', split='random',
+                            num_train_per_class=num_train_per_class, num_val=num_val, 
+                            num_test=num_test)
     elif 'pubmed' in data_name:
         dataset = Planetoid(root='/tmp/PubMed', name='PubMed', split='random')
+        num_train_per_class = int((ratio_train*dataset.num_nodes)/dataset.num_classes)
+        num_val = int(ratio_val*dataset.num_nodes)
+        num_test = dataset.num_nodes-num_val-num_train_per_class*dataset.num_classes
+        dataset = Planetoid(root='/tmp/PubMed', name='PubMed', split='random',
+                            num_train_per_class=num_train_per_class, num_val=num_val, 
+                            num_test=num_test)
     
     # Computing normalized Laplacian
     graph_og = dataset[0]

@@ -51,7 +51,7 @@ def train(model, train_data, val_data, optimizer, criterion, batch_size, n_epoch
         end = time.time()
     final_model = model
     training_time = end-start
-    return val_accs, losses, final_model, final_model, best_acc, loader, training_time
+    return val_accs, losses, best_model, final_model, best_acc, loader, training_time
 
 def test(test_model, data, is_validation=False, save_model_preds=False):
     
