@@ -111,6 +111,7 @@ for r in range(n_realizations):
     if do_no_sampling:
     
         model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
+        model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
         _,_,model,_,_,_,_ = train(model, train_data, val_data, optimizer, criterion, 
@@ -174,6 +175,7 @@ for r in range(n_realizations):
         val_data_new = val_data_new.to(device)
         
         model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
+        model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
         _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
@@ -204,6 +206,7 @@ for r in range(n_realizations):
         val_data_new = val_data_new.to(device)
         
         model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
+        model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
         _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
