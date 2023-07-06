@@ -33,10 +33,10 @@ import aux_functions
 data_name = 'cora'#sys.argv[1]
 folder_name = data_name
 lr = 0.0001#float(sys.argv[2])
-n_epochs = 1000#int(sys.argv[3])
+n_epochs = 500#int(sys.argv[3])
 n_realizations = 1 #int(sys.argv[4]) #10
 m = 100#int(sys.argv[5]) #100 # Number of candidate intervals
-m2 = 10#int(sys.argv[6]) #10 # Number of sampled intervals
+m2 = 20#int(sys.argv[6]) #10 # Number of sampled intervals
 m3 = 20#int(sys.argv[7]) #10 # How many nodes (points) to sample per sampled interval
 nb_cuts = 4#int(sys.argv[8])
 
