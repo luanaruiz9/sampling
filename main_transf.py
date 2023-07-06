@@ -118,6 +118,8 @@ graph = graph_og.subgraph(idx)
 print(graph.edge_index)
 print(graph.y)
 
+print(torch.sum(graph.edge_index!=graph_og.edge_index))
+
 for r in range(n_realizations):
     
     print('Realization ' + str(r))
