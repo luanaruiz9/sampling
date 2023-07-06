@@ -30,15 +30,15 @@ from subsampling import sample_clustering
 from graphon_sampling import generate_induced_graphon
 import aux_functions
 
-data_name = 'cora'#sys.argv[1]
+data_name = sys.argv[1]
 folder_name = data_name
-lr = 0.0001#float(sys.argv[2])
-n_epochs = 500#int(sys.argv[3])
-n_realizations = 1 #int(sys.argv[4]) #10
-m = 100#int(sys.argv[5]) #100 # Number of candidate intervals
-m2 = 20#int(sys.argv[6]) #10 # Number of sampled intervals
-m3 = 20#int(sys.argv[7]) #10 # How many nodes (points) to sample per sampled interval
-nb_cuts = 4#int(sys.argv[8])
+lr = float(sys.argv[2])
+n_epochs = int(sys.argv[3])
+n_realizations = int(sys.argv[4]) #10
+m = int(sys.argv[5]) #100 # Number of candidate intervals
+m2 = int(sys.argv[6]) #10 # Number of sampled intervals
+m3 = int(sys.argv[7]) #10 # How many nodes (points) to sample per sampled interval
+nb_cuts = int(sys.argv[8])
 
 thisFilename = folder_name + '_cora' # This is the general name of all related files
 
