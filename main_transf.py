@@ -117,7 +117,7 @@ for r in range(n_realizations):
     # Sorting nodes by degree
     graph_og = dataset[0]
     adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
-    num_nodes = adj.shape[0]
+    num_nodes = graph_og.num_nodes
     D = aux_functions.compute_degree(adj_sparse, num_nodes)
     deg = torch.diagonal(D.to_dense()).squeeze()
     idx = torch.argsort(deg)
@@ -126,13 +126,13 @@ for r in range(n_realizations):
     #train_data = train_data.subgraph(idx)
     #val_data = val_data.subgraph(idx)
     #test_data = test_data.subgraph(idx)
-    train_data = Data(x=train_data.x[idx], edge_index=idx[train_data.edge_index],
+    train_data2 = Data(x=train_data.x[idx], edge_index=idx[train_data.edge_index],
                                       y=train_data.y[idx], train_mask=train_data.train_mask[idx],
                                       val_mask=train_data.val_mask[idx], test_mask=train_data.test_mask[idx])
-    val_data = Data(x=val_data.x[idx], edge_index=idx[val_data.edge_index],
+    val_data2 = Data(x=val_data.x[idx], edge_index=idx[val_data.edge_index],
                                       y=val_data.y[idx], train_mask=val_data.train_mask[idx],
                                       val_mask=val_data.val_mask[idx], test_mask=val_data.test_mask[idx])
-    test_data = Data(x=test_data.x[idx], edge_index=idx[test_data.edge_index],
+    test_data2 = Data(x=test_data.x[idx], edge_index=idx[test_data.edge_index],
                                       y=test_data.y[idx], train_mask=test_data.train_mask[idx],
                                       val_mask=test_data.val_mask[idx], test_mask=test_data.test_mask[idx])
         
@@ -142,19 +142,16 @@ for r in range(n_realizations):
             model = model.to(device)
             optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
             criterion = torch.nn.NLLLoss()
-            _,_,model,_,_,_,_ = train(model, train_data, val_data, optimizer, criterion, 
+            _,_,model,_,_,_,_ = train(model, train_data2, val_data2, optimizer, criterion, 
                           batch_size=1, n_epochs=n_epochs)
             
-            test_auc = test(model, test_data)
+            test_auc = test(model, test_data2)
             results_no_sampl[r] = test_auc
             print(f"Test: {test_auc:.3f}")
             
             print()
             
             if do_eig:
-                # V for train data
-                adj_sparse, adj = aux_functions.compute_adj_from_data(dataset[0])
-                num_nodes = adj.shape[0]
                 
                 # Computing normalized Laplacian
                 L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
@@ -170,15 +167,15 @@ for r in range(n_realizations):
                 print('Adding eigenvectors...')
                 print()
 
-                train_data_new = Data(x=torch.cat((train_data.x,V), dim=1), edge_index=train_data.edge_index,
-                                      y=train_data.y, train_mask=train_data.train_mask,
-                                      val_mask=train_data.val_mask, test_mask=train_data.test_mask)
-                val_data_new = Data(x=torch.cat((val_data.x,V), dim=1), edge_index=val_data.edge_index,
-                                      y=val_data.y, train_mask=val_data.train_mask,
-                                      val_mask=val_data.val_mask, test_mask=val_data.test_mask)
-                test_data_new = Data(x=torch.cat((test_data.x,V), dim=1), edge_index=test_data.edge_index,
-                                      y=test_data.y, train_mask=test_data.train_mask,
-                                      val_mask=test_data.val_mask, test_mask=test_data.test_mask)
+                train_data_new = Data(x=torch.cat((train_data2.x,V), dim=1), edge_index=train_data2.edge_index,
+                                      y=train_data2.y, train_mask=train_data2.train_mask,
+                                      val_mask=train_data2.val_mask, test_mask=train_data2.test_mask)
+                val_data_new = Data(x=torch.cat((val_data2.x,V), dim=1), edge_index=val_data2.edge_index,
+                                      y=val_data2.y, train_mask=val_data2.train_mask,
+                                      val_mask=val_data2.val_mask, test_mask=val_data2.test_mask)
+                test_data_new = Data(x=torch.cat((test_data2.x,V), dim=1), edge_index=test_data2.edge_index,
+                                      y=test_data2.y, train_mask=test_data2.train_mask,
+                                      val_mask=test_data2.val_mask, test_mask=test_data2.test_mask)
                 
                 model = GNN('gcn', [dataset.num_features+K,64,32], [32,dataset.num_classes], softmax=True)
                 model = model.to(device)
@@ -237,10 +234,10 @@ for r in range(n_realizations):
                 idx = np.sort(idx)
                 sampled_idx += list(idx)
         
-        train_data_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+        train_data_new = train_data2.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         train_data_new = train_data_new.to(device)
         num_nodes_new = train_data_new.x.shape[0]
-        val_data_new = val_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+        val_data_new = val_data2.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         val_data_new = val_data_new.to(device)
         
         model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
@@ -250,7 +247,7 @@ for r in range(n_realizations):
         _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
                       batch_size=1, n_epochs=n_epochs)
         
-        test_auc = test(model, test_data)
+        test_auc = test(model, test_data2)
         results_w_samp[r] = test_auc
         print(f"Test: {test_auc:.3f}")
         
@@ -268,10 +265,10 @@ for r in range(n_realizations):
         sampled_idx2 = list(np.random.choice(np.arange(num_nodes), m2*m3, replace=False))
 
          # V for train data
-        train_data_new = train_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
+        train_data_new = train_data2.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
         train_data_new = train_data_new.to(device)
         num_nodes_new = train_data_new.x.shape[0]
-        val_data_new = val_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
+        val_data_new = val_data2.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
         val_data_new = val_data_new.to(device)
         
         model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
@@ -281,7 +278,7 @@ for r in range(n_realizations):
         _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
                       batch_size=1, n_epochs=n_epochs)
         
-        test_auc = test(model, test_data)
+        test_auc = test(model, test_data2)
         results_random_samp[r] = test_auc
         print(f"Test: {test_auc:.3f}")
         
