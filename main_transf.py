@@ -36,9 +36,9 @@ lr = 0.001#float(sys.argv[2])
 n_epochs = 100#int(sys.argv[3])
 n_realizations = 1 #int(sys.argv[4]) #10
 m = 100#int(sys.argv[5]) #100 # Number of candidate intervals
-m2 = 20#int(sys.argv[6]) #10 # Number of sampled intervals
-m3 = 10#int(sys.argv[7]) #10 # How many nodes (points) to sample per sampled interval
-nb_cuts = 2#int(sys.argv[8])
+m2 = 10#int(sys.argv[6]) #10 # Number of sampled intervals
+m3 = 20#int(sys.argv[7]) #10 # How many nodes (points) to sample per sampled interval
+nb_cuts = 4#int(sys.argv[8])
 
 thisFilename = folder_name + '_cora' # This is the general name of all related files
 
@@ -221,7 +221,7 @@ for r in range(n_realizations):
                       batch_size=1, n_epochs=n_epochs)
         
         test_auc = test(model, test_data)
-        results_w_samp[r] = test_auc
+        results_random_samp[r] = test_auc
         print(f"Test: {test_auc:.3f}")
         
         print()
