@@ -66,6 +66,7 @@ else:
     
 K = 10
 do_no_sampling = True
+do_eig = True
 do_w_sampl = True
 do_random_sampl = True
 
@@ -113,16 +114,6 @@ for r in range(n_realizations):
                             num_train_per_class=num_train_per_class, num_val=num_val, 
                             num_test=num_test)
     
-    # Computing normalized Laplacian
-    graph_og = dataset[0]
-
-    # Sorting nodes by degree
-    adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
-    num_nodes = adj.shape[0]
-
-    L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
-    eigvals, V = torch.lobpcg(L, k=K, largest=False)
-    
     train_data = dataset.get('train')
     train_data = train_data.to(device)
     val_data = dataset.get('val')
@@ -130,31 +121,79 @@ for r in range(n_realizations):
     test_data = dataset.get('test')
     test_data = test_data.to(device)
     
-    if do_no_sampling:
-    
-        model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
-        model = model.to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
-        criterion = torch.nn.NLLLoss()
-        _,_,model,_,_,_,_ = train(model, train_data, val_data, optimizer, criterion, 
-                      batch_size=1, n_epochs=n_epochs)
-        
-        test_auc = test(model, test_data)
-        results_no_sampl[r] = test_auc
-        print(f"Test: {test_auc:.3f}")
-        
-        print()
-    
-    ##############################################################################
-    ############################# Sampling! ######################################
-    ##############################################################################
+    # Sorting nodes by degree
+    graph_og = dataset[0]
+    adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
+    num_nodes = adj.shape[0]
     D = aux_functions.compute_degree(adj_sparse, num_nodes)
     deg = torch.diagonal(D.to_dense()).squeeze()
     idx = torch.argsort(deg)
     idx = idx.to(device)
+    
     train_data = train_data.subgraph(idx)
     val_data = val_data.subgraph(idx)
     test_data = test_data.subgraph(idx)
+        
+    if do_no_sampling:
+        
+            model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
+            model = model.to(device)
+            optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
+            criterion = torch.nn.NLLLoss()
+            _,_,model,_,_,_,_ = train(model, train_data, val_data, optimizer, criterion, 
+                          batch_size=1, n_epochs=n_epochs)
+            
+            test_auc = test(model, test_data)
+            results_no_sampl[r] = test_auc
+            print(f"Test: {test_auc:.3f}")
+            
+            print()
+            
+            if do_eig:
+                # V for train data
+                adj_sparse, adj = aux_functions.compute_adj_from_data(dataset[0])
+                num_nodes = adj.shape[0]
+                
+                # Computing normalized Laplacian
+                L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
+                eigvals, V = torch.lobpcg(L, k=K, largest=False)
+                #eigvals, V = torch.linalg.eig(L.to_dense())
+                eigvals = eigvals.float()
+                V = V.float()
+                idx = torch.argsort(eigvals)
+                eigvals = eigvals[idx[0:K]]
+                V = V[:,idx[0:K]]
+                
+                print('Adding eigenvectors...')
+                print()
+
+                train_data_new = Data(x=torch.cat((train_data.x,V), dim=1), edge_index=train_data.edge_index,
+                                      y=train_data.y, train_mask=train_data.train_mask,
+                                      val_mask=train_data.val_mask, test_mask=train_data.test_mask)
+                val_data_new = Data(x=torch.cat((val_data.x,V), dim=1), edge_index=val_data.edge_index,
+                                      y=val_data.y, train_mask=val_data.train_mask,
+                                      val_mask=val_data.val_mask, test_mask=val_data.test_mask)
+                test_data_new = Data(x=torch.cat((test_data.x,V), dim=1), edge_index=test_data.edge_index,
+                                      y=test_data.y, train_mask=test_data.train_mask,
+                                      val_mask=test_data.val_mask, test_mask=test_data.test_mask)
+                
+                model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
+                model = model.to(device)
+                optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
+                criterion = torch.nn.NLLLoss()
+                _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
+                              batch_size=1, n_epochs=n_epochs)
+                
+                test_auc = test(model, test_data_new)
+                results_no_sampl[r] = test_auc
+                print(f"Test: {test_auc:.3f}")
+                
+                print()
+    
+    ##############################################################################
+    ############################# Sampling! ######################################
+    ##############################################################################
+    
     
     if do_w_sampl:
     
@@ -185,18 +224,16 @@ for r in range(n_realizations):
                 if i < m-1:
                     cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,
                                       i*n_nodes_per_int:(i+1)*n_nodes_per_int]
-                    idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
+                    idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)
                 else:
                     if m3 > n_nodes_last_int:
                         m3 = n_nodes_last_int
                     cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,
                                                 i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
-                    idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
-                                                     #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
+                    idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)
                 idx = np.sort(idx)
                 sampled_idx += list(idx)
         
-        # V for train data
         train_data_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         train_data_new = train_data_new.to(device)
         num_nodes_new = train_data_new.x.shape[0]
