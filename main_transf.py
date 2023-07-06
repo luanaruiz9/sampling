@@ -64,7 +64,7 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
     
-K = 20
+K = 10
 do_no_sampling = True
 do_w_sampl = True
 do_random_sampl = True
@@ -228,10 +228,10 @@ for r in range(n_realizations):
         sampled_idx2 = list(np.random.choice(np.arange(num_nodes), m2*m3, replace=False))
 
          # V for train data
-        train_data_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+        train_data_new = train_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
         train_data_new = train_data_new.to(device)
         num_nodes_new = train_data_new.x.shape[0]
-        val_data_new = val_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+        val_data_new = val_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
         val_data_new = val_data_new.to(device)
         
         model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
