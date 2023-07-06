@@ -80,6 +80,7 @@ graph = graph.to(device)
 
 # Vectors to store test results
 results_no_sampl = np.zeros(n_realizations)
+results_no_sampl_eig = np.zeros(n_realizations)
 results_w_samp = np.zeros(n_realizations)
 results_random_samp = np.zeros(n_realizations)
 n_iters_per_rlz = np.zeros(n_realizations)
@@ -186,7 +187,7 @@ for r in range(n_realizations):
                               batch_size=1, n_epochs=n_epochs)
                 
                 test_auc = test(model, test_data_new)
-                results_no_sampl[r] = test_auc
+                results_no_sampl_eig[r] = test_auc
                 print(f"Test: {test_auc:.3f}")
                 
                 print()
@@ -289,12 +290,14 @@ print('Final results')
 print()
 
 print('Avg. acc. w/o sampling:\t\t\t\t\t%.4f' % np.mean(results_no_sampl))
+print('Avg. acc. w/ eigenvectors:\t\t\t\t%.4f' % np.mean(results_no_sampl_eig))
 print('Avg. acc. graphon sampling:\t\t\t\t%.4f' % np.mean(results_w_samp))
 print('Avg. acc. random sampling:\t\t\t\t%.4f' % np.mean(results_random_samp))
 print()    
 
 # Pickling
 dict_results = {'results_no_sampl': results_no_sampl,
+                'results_no_sampl_eig': results_no_sampl_eig,
                 'results_w_samp': results_w_samp,
                 'results_random_samp': results_random_samp,
                 'n_iters': n_iters_per_rlz}
