@@ -132,6 +132,7 @@ for r in range(n_realizations):
     )
 
     train_data = split(graph)
+    train_data = train_data.to(device)
     val_data = train_data
     test_data = train_data
         

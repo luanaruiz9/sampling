@@ -47,7 +47,6 @@ nb_cuts = int(sys.argv[10])
 F_nn = [32, 32]
 F_pe = [128, 128]
 
-
 thisFilename = data_name + '_' # This is the general name of all related files
 
 saveDirRoot = 'experiments' # In this case, relative location
