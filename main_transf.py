@@ -107,7 +107,7 @@ for r in range(n_realizations):
     
     if do_no_sampling:
     
-        model = GNN([dataset.num_features,64,32], [32,dataset.num_classes], True)
+        model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
         _,_,model,_,_,_,_ = train(model, train_data, val_data, optimizer, criterion, 
@@ -170,7 +170,7 @@ for r in range(n_realizations):
         val_data_new = val_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         val_data_new = val_data_new.to(device)
         
-        model = GNN([dataset.num_features,64,32], [32,dataset.num_classes], True)
+        model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
         _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
@@ -200,7 +200,7 @@ for r in range(n_realizations):
         val_data_new = val_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         val_data_new = val_data_new.to(device)
         
-        model = GNN([dataset.num_features,64,32], [32,dataset.num_classes], True)
+        model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
         _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
