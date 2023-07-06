@@ -163,6 +163,7 @@ for r in range(n_realizations):
                 idx = torch.argsort(eigvals)
                 eigvals = eigvals[idx[0:K]]
                 V = V[:,idx[0:K]]
+                V = V.to(device)
                 
                 print('Adding eigenvectors...')
                 print()
