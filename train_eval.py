@@ -22,7 +22,7 @@ def train(model, train_data, val_data, optimizer, criterion, batch_size, n_epoch
     losses = []
     val_accs = []
     best_acc = 0
-    best_model = model.deepcopy()
+    best_model = copy.deepcopy(model)
     start = time.time()
     for epoch in trange(n_epochs, desc="Training", unit="Epochs"):
         total_loss = 0
