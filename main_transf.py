@@ -105,6 +105,7 @@ elif 'pubmed' in data_name:
 
 # Sorting nodes by degree
 graph_og = dataset[0]
+graph_og = graph_og.to(device)
 adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
 num_nodes = graph_og.num_nodes
 D = aux_functions.compute_degree(adj_sparse, num_nodes)
