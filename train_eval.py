@@ -18,9 +18,6 @@ def train(model, train_data, val_data, optimizer, criterion, batch_size, n_epoch
 
     loader = DataLoader([train_data], batch_size=batch_size)  
 
-    print("Node task. training set size:", np.sum(loader.dataset[0]['train_mask'].numpy()))
-    print()
-
     # train
     losses = []
     val_accs = []
