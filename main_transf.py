@@ -86,11 +86,11 @@ for r in range(n_realizations):
     print()
     
     if 'cora' in data_name:
-        dataset = Planetoid(root='/tmp/Cora', name='Cora', split='random')
+        dataset = Planetoid(root='/tmp/Cora', name='Cora', split='full')
     elif 'citeseer' in data_name:
-        dataset = Planetoid(root='/tmp/CiteSeer', name='CiteSeer', split='random')
+        dataset = Planetoid(root='/tmp/CiteSeer', name='CiteSeer', split='full')
     elif 'pubmed' in data_name:
-        dataset = Planetoid(root='/tmp/PubMed', name='PubMed', split='random')
+        dataset = Planetoid(root='/tmp/PubMed', name='PubMed', split='full')
     
     # Computing normalized Laplacian
     graph_og = dataset[0]
