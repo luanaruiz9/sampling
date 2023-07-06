@@ -127,7 +127,9 @@ for r in range(n_realizations):
         num_test=num_test
     )
 
-    train_data, val_data, test_data = split(graph)
+    train_data = split(graph)
+    val_data = train_data
+    test_data = train_data
         
     if do_no_sampling:
         
