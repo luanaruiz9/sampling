@@ -5,11 +5,13 @@ Created on Mon Mar  6 14:34:08 2023
 @author: Luana Ruiz
 """
 
-from torch_geometric.nn import GCNConv
+from torch_geometric.nn import SAGEConv, GCNConv
 import torch
 import scipy
 import torch.nn as nn
 import math
+
+import torch.nn.functional as F
 
 def LSIGF(weights, S, x):
     '''
@@ -70,6 +72,52 @@ class GraphFilter(torch.nn.Module):
 
         return LSIGF(self.weight,S.to_dense(),x)
 
+
+class GNN(torch.nn.Module):
+
+    def __init__(self, GNNtype, Flist, MLPlist, softmax=False, Klist = None):
+
+        super(GNN, self).__init__()
+        self.type = GNNtype
+        self.Flist = Flist
+        self.L = len(Flist)
+        self.MLPlist = MLPlist 
+        self.Lmlp = len(MLPlist)
+        self.softmax = softmax
+        self.Klist = Klist
+
+        self.layers = nn.ModuleList()
+        self.MLPlayers = nn.ModuleList()
+
+        for i in range(self.L-1):
+            if self.type == 'sage':
+                self.layers.append(SAGEConv(Flist[i],Flist[i+1]))
+            elif self.type == 'gcn':
+                self.layers.append(GCNConv(Flist[i],Flist[i+1]))
+            elif self.type =='gnn':
+                self.layers.append(GraphFilter(Flist[i],Flist[i+1],Klist[i]))
+
+        for i in range(self.Lmlp-1):
+            self.MLPlayers.append(nn.Linear(MLPlist[i],MLPlist[i+1]))
+            
+    def forward(self, data):
+
+        y, edge_index, edge_weight = data.x, data.edge_index, data.edge_weight
+
+        for i, layer in enumerate(self.layers):
+            if self.type == 'gnn':
+                y = layer(y, edge_index=edge_index, edge_weight=edge_weight)
+            else:
+                y = layer(y, edge_index=edge_index)
+            y = F.relu(y)
+
+        for i, layer in enumerate(self.MLPlayers):
+            y = layer(y)
+        
+        if self.softmax == True:
+            y = F.log_softmax(y, dim=1)
+
+        return y
 
 class LinkPredNet(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
