@@ -102,8 +102,11 @@ for r in range(n_realizations):
     eigvals, V = torch.lobpcg(L, k=K, largest=False)
     
     train_data = dataset.get('train')
+    train_data = train_data.to(device)
     val_data = dataset.get('val')
+    val_data = val_data.to(device)
     test_data = dataset.get('test')
+    test_data = test_data.to(device)
     
     if do_no_sampling:
     
