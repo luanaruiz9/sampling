@@ -268,10 +268,8 @@ for r in range(n_realizations):
             val_data_new = Data(x=torch.cat((val_data_new.x,V_new), dim=1), edge_index=val_data_new.edge_index,
                                   y=val_data_new.y, train_mask=val_data_new.train_mask,
                                   val_mask=val_data_new.val_mask, test_mask=val_data_new.test_mask)
-            test_data_new = Data(x=torch.cat((test_data_new.x,V), dim=1), edge_index=test_data_new.edge_index,
-                                  y=test_data_new.y, train_mask=test_data_new.train_mask,
-                                  val_mask=test_data_new.val_mask, test_mask=test_data_new.test_mask)
             in_feats += K
+            test_data = test_data_new
         
         model = GNN('gcn', [in_feats,64,32], [32,dataset.num_classes], softmax=True)
         model = model.to(device)
@@ -333,10 +331,8 @@ for r in range(n_realizations):
             val_data_new = Data(x=torch.cat((val_data_new.x,V_new), dim=1), edge_index=val_data_new.edge_index,
                                   y=val_data_new.y, train_mask=val_data_new.train_mask,
                                   val_mask=val_data_new.val_mask, test_mask=val_data_new.test_mask)
-            test_data_new = Data(x=torch.cat((test_data_new.x,V), dim=1), edge_index=test_data_new.edge_index,
-                                  y=test_data_new.y, train_mask=test_data_new.train_mask,
-                                  val_mask=test_data_new.val_mask, test_mask=test_data_new.test_mask)
             in_feats += K
+            test_data = test_data_new
         
         model = GNN('gcn', [in_feats,64,32], [32,dataset.num_classes], softmax=True)
         model = model.to(device)
