@@ -36,7 +36,7 @@ lr = 0.001#float(sys.argv[2])
 n_epochs = 100#int(sys.argv[3])
 n_realizations = 1 #int(sys.argv[4]) #10
 m = 100#int(sys.argv[5]) #100 # Number of candidate intervals
-m2 = 10#int(sys.argv[6]) #10 # Number of sampled intervals
+m2 = 20#int(sys.argv[6]) #10 # Number of sampled intervals
 m3 = 10#int(sys.argv[7]) #10 # How many nodes (points) to sample per sampled interval
 nb_cuts = 2#int(sys.argv[8])
 
@@ -98,6 +98,7 @@ for r in range(n_realizations):
     # Sorting nodes by degree
     adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
     num_nodes = adj.shape[0]
+
     L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
     eigvals, V = torch.lobpcg(L, k=K, largest=False)
     
@@ -126,6 +127,12 @@ for r in range(n_realizations):
     ##############################################################################
     ############################# Sampling! ######################################
     ##############################################################################
+    D = aux_functions.compute_degree(adj_sparse, num_nodes)
+    deg = torch.diagonal(D.to_dense()).squeeze()
+    idx = torch.argsort(deg)
+    train_data = train_data.subgraph(idx)
+    val_data = val_data.subgraph(idx)
+    test_data = test_data.subgraph(idx)
     
     if do_w_sampl:
     
