@@ -113,7 +113,7 @@ deg = torch.diagonal(D.to_dense()).squeeze()
 idx = torch.argsort(deg)
 idx = idx.to(device)
 edge_index = graph_og.edge_index
-new_edge_index = torch.zeros(edge_index.shape)
+new_edge_index = torch.zeros(edge_index.shape,dtype=torch.long)
 for i in range(2):
     for j in range(edge_index.shape[1]):
         new_edge_index[i,j] = torch.argwhere(edge_index[i,j]==idx)
