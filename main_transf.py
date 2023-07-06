@@ -233,16 +233,19 @@ for r in range(n_realizations):
                 idx = np.sort(idx)
                 sampled_idx += list(idx)
         
-        train_data_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+        train_data_new = train_data.clone()
+        train_data_new = train_data_new.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         train_data_new = train_data_new.to(device)
         num_nodes_new = train_data_new.x.shape[0]
-        val_data_new = val_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+        val_data_new = val_data.clone()
+        val_data_new = val_data_new.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         val_data_new = val_data_new.to(device)
         
         in_feats = dataset.num_features
         if do_eig:
             # V
-            graph_new = graph.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+            graph_new = graph.clone()
+            graph_new = graph_new.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
             graph_new = graph_new.to(device)
             num_nodes_new = graph_new.x.shape[0]
             adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
@@ -296,16 +299,19 @@ for r in range(n_realizations):
         sampled_idx2 = list(np.random.choice(np.arange(num_nodes), m2*m3, replace=False))
 
          # V for train data
-        train_data_new = train_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
+        train_data_new = train_data.clone()
+        train_data_new = train_data_new.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
         train_data_new = train_data_new.to(device)
         num_nodes_new = train_data_new.x.shape[0]
-        val_data_new = val_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
+        val_data_new = val_data.clone()
+        val_data_new = val_data_new.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
         val_data_new = val_data_new.to(device)
         
         in_feats = dataset.num_features
         if do_eig:
             # V
-            graph_new = graph.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
+            graph_new = graph.clone()
+            graph_new = graph_new.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
             graph_new = graph_new.to(device)
             num_nodes_new = graph_new.x.shape[0]
             adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
