@@ -123,17 +123,17 @@ for r in range(n_realizations):
     idx = torch.argsort(deg)
     idx = idx.to(device)
     
-    train_data = train_data.subgraph(idx)
-    val_data = val_data.subgraph(idx)
-    test_data = test_data.subgraph(idx)
-    train_data = Data(x=train_data.x, edge_index=train_data.edge_index,
-                                      y=train_data.y, train_mask=train_data.train_mask[idx],
+    #train_data = train_data.subgraph(idx)
+    #val_data = val_data.subgraph(idx)
+    #test_data = test_data.subgraph(idx)
+    train_data = Data(x=train_data.x[idx], edge_index=idx[train_data.edge_index],
+                                      y=train_data.y[idx], train_mask=train_data.train_mask[idx],
                                       val_mask=train_data.val_mask[idx], test_mask=train_data.test_mask[idx])
-    val_data = Data(x=val_data.x, edge_index=val_data.edge_index,
-                                      y=val_data.y, train_mask=val_data.train_mask[idx],
+    val_data = Data(x=val_data.x[idx], edge_index=idx[val_data.edge_index],
+                                      y=val_data.y[idx], train_mask=val_data.train_mask[idx],
                                       val_mask=val_data.val_mask[idx], test_mask=val_data.test_mask[idx])
-    test_data = Data(x=test_data.x, edge_index=test_data.edge_index,
-                                      y=test_data.y, train_mask=test_data.train_mask[idx],
+    test_data = Data(x=test_data.x[idx], edge_index=idx[test_data.edge_index],
+                                      y=test_data.y[idx], train_mask=test_data.train_mask[idx],
                                       val_mask=test_data.val_mask[idx], test_mask=test_data.test_mask[idx])
         
     if do_no_sampling:
