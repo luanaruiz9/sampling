@@ -111,7 +111,7 @@ D = aux_functions.compute_degree(adj_sparse, num_nodes)
 deg = torch.diagonal(D.to_dense()).squeeze()
 idx = torch.argsort(deg)
 idx = idx.to(device)
-graph = graph_og.sugraph(idx)
+graph = graph_og.subgraph(idx)
 
 
 for r in range(n_realizations):
