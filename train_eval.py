@@ -56,7 +56,7 @@ def train(model, train_data, val_data, optimizer, criterion, batch_size, n_epoch
 def test(test_model, data, is_validation=False, save_model_preds=False):
     
     loader = DataLoader([data])
-    test_model.eval()
+    #test_model.eval()
     correct = 0
     # Note that Cora is only one graph!
     for data in loader:
