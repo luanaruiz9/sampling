@@ -112,14 +112,12 @@ D = aux_functions.compute_degree(adj_sparse, num_nodes)
 deg = torch.diagonal(D.to_dense()).squeeze()
 idx = torch.argsort(deg)
 idx = idx.to(device)
-print(graph_og.edge_index)
-print(graph_og.y)
-graph = graph_og.subgraph(idx)
-print(idx[graph.edge_index])
-print(idx[graph.edge_index].shape)
-print(graph.y)
-
-print(torch.sum(graph.edge_index!=graph_og.edge_index))
+edge_index = graph_og.edge_index
+new_edge_index = torch.zeros(edge_index.shape)
+for i in range(2):
+    for j in range(edge_index.shape[1]):
+        new_edge_index[i,j] = torch.argwhere(edge_index[i,j]==idx)
+graph = Data(x=graph_og.x[idx],edge_index=new_edge_index,y=graph_og.y[idx])
 
 for r in range(n_realizations):
     
