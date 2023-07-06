@@ -130,6 +130,7 @@ for r in range(n_realizations):
     D = aux_functions.compute_degree(adj_sparse, num_nodes)
     deg = torch.diagonal(D.to_dense()).squeeze()
     idx = torch.argsort(deg)
+    idx = idx.to(device)
     train_data = train_data.subgraph(idx)
     val_data = val_data.subgraph(idx)
     test_data = test_data.subgraph(idx)
