@@ -238,7 +238,41 @@ for r in range(n_realizations):
         val_data_new = val_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         val_data_new = val_data_new.to(device)
         
-        model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
+        in_feats = dataset.num_features
+        if do_eig:
+            # V
+            graph_new = graph.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+            graph_new = graph_new.to(device)
+            num_nodes_new = graph_new.x.shape[0]
+            adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
+            
+            # Computing normalized Laplacian
+            L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
+            
+            #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
+            eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
+            eigvals_new = eigvals_new.float()
+            V_new = V_new.float()
+            idx = torch.argsort(eigvals_new)
+            eigvals_new = eigvals_new.float()
+            V_new = V_new.float()
+            eigvals_new = eigvals_new[idx[0:K]]
+            V_new = V_new[:,idx[0:K]]
+            V_new = V_new.type(torch.float32)
+            V_new = V_new.to(device)
+            
+            train_data_new = Data(x=torch.cat((train_data_new.x,V_new), dim=1), edge_index=train_data_new.edge_index,
+                                  y=train_data_new.y, train_mask=train_data_new.train_mask,
+                                  val_mask=train_data_new.val_mask, test_mask=train_data_new.test_mask)
+            val_data_new = Data(x=torch.cat((val_data_new.x,V_new), dim=1), edge_index=val_data_new.edge_index,
+                                  y=val_data_new.y, train_mask=val_data_new.train_mask,
+                                  val_mask=val_data_new.val_mask, test_mask=val_data_new.test_mask)
+            test_data_new = Data(x=torch.cat((test_data_new.x,V_new), dim=1), edge_index=test_data_new.edge_index,
+                                  y=test_data_new.y, train_mask=test_data_new.train_mask,
+                                  val_mask=test_data_new.val_mask, test_mask=test_data_new.test_mask)
+            in_feats += K
+        
+        model = GNN('gcn', [in_feats,64,32], [32,dataset.num_classes], softmax=True)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
@@ -269,7 +303,41 @@ for r in range(n_realizations):
         val_data_new = val_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
         val_data_new = val_data_new.to(device)
         
-        model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
+        in_feats = dataset.num_features
+        if do_eig:
+            # V
+            graph_new = graph.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
+            graph_new = graph_new.to(device)
+            num_nodes_new = graph_new.x.shape[0]
+            adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
+            
+            # Computing normalized Laplacian
+            L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
+            
+            #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
+            eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
+            eigvals_new = eigvals_new.float()
+            V_new = V_new.float()
+            idx = torch.argsort(eigvals_new)
+            eigvals_new = eigvals_new.float()
+            V_new = V_new.float()
+            eigvals_new = eigvals_new[idx[0:K]]
+            V_new = V_new[:,idx[0:K]]
+            V_new = V_new.type(torch.float32)
+            V_new = V_new.to(device)
+            
+            train_data_new = Data(x=torch.cat((train_data_new.x,V_new), dim=1), edge_index=train_data_new.edge_index,
+                                  y=train_data_new.y, train_mask=train_data_new.train_mask,
+                                  val_mask=train_data_new.val_mask, test_mask=train_data_new.test_mask)
+            val_data_new = Data(x=torch.cat((val_data_new.x,V_new), dim=1), edge_index=val_data_new.edge_index,
+                                  y=val_data_new.y, train_mask=val_data_new.train_mask,
+                                  val_mask=val_data_new.val_mask, test_mask=val_data_new.test_mask)
+            test_data_new = Data(x=torch.cat((test_data_new.x,V_new), dim=1), edge_index=test_data_new.edge_index,
+                                  y=test_data_new.y, train_mask=test_data_new.train_mask,
+                                  val_mask=test_data_new.val_mask, test_mask=test_data_new.test_mask)
+            in_feats += K
+        
+        model = GNN('gcn', [in_feats,64,32], [32,dataset.num_classes], softmax=True)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
