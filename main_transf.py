@@ -113,8 +113,10 @@ deg = torch.diagonal(D.to_dense()).squeeze()
 idx = torch.argsort(deg)
 idx = idx.to(device)
 print(graph_og.edge_index)
+print(graph_og.y)
 graph = graph_og.subgraph(idx)
 print(graph.edge_index)
+print(graph.y)
 
 for r in range(n_realizations):
     
