@@ -21,6 +21,7 @@ import numpy as np
 
 import torch
 from torch_geometric.datasets import Planetoid
+import torch_geometric.transforms as T
 from torch_geometric.data import Data
 
 from architecture import GNN
@@ -77,108 +78,108 @@ results_w_samp = np.zeros(n_realizations)
 results_random_samp = np.zeros(n_realizations)
 n_iters_per_rlz = np.zeros(n_realizations)
 
+if 'cora' in data_name:
+    dataset = Planetoid(root='/tmp/Cora', name='Cora', split='random')
+    num_train_per_class = int((ratio_train*dataset[0].num_nodes)/dataset.num_classes)
+    num_val = int(ratio_val*dataset[0].num_nodes)
+    num_test = dataset[0].num_nodes-num_val-num_train_per_class*dataset.num_classes
+    dataset = Planetoid(root='/tmp/Cora', name='Cora', split='random',
+                        num_train_per_class=num_train_per_class, num_val=num_val, 
+                        num_test=num_test)
+elif 'citeseer' in data_name:
+    dataset = Planetoid(root='/tmp/CiteSeer', name='CiteSeer', split='random')
+    num_train_per_class = int((ratio_train*dataset[0].num_nodes)/dataset.num_classes)
+    num_val = int(ratio_val*dataset[0].num_nodes)
+    num_test = dataset[0].num_nodes-num_val-num_train_per_class*dataset.num_classes
+    dataset = Planetoid(root='/tmp/CiteSeer', name='CiteSeer', split='random',
+                        num_train_per_class=num_train_per_class, num_val=num_val, 
+                        num_test=num_test)
+elif 'pubmed' in data_name:
+    dataset = Planetoid(root='/tmp/PubMed', name='PubMed', split='random')
+    num_train_per_class = int((ratio_train*dataset[0].num_nodes)/dataset.num_classes)
+    num_val = int(ratio_val*dataset[0].num_nodes)
+    num_test = dataset[0].num_nodes-num_val-num_train_per_class*dataset.num_classes
+    dataset = Planetoid(root='/tmp/PubMed', name='PubMed', split='random',
+                        num_train_per_class=num_train_per_class, num_val=num_val, 
+                        num_test=num_test)
+
+# Sorting nodes by degree
+graph_og = dataset[0]
+adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
+num_nodes = graph_og.num_nodes
+D = aux_functions.compute_degree(adj_sparse, num_nodes)
+deg = torch.diagonal(D.to_dense()).squeeze()
+idx = torch.argsort(deg)
+idx = idx.to(device)
+graph = graph_og.sugraph(idx)
+
+
 for r in range(n_realizations):
     
     print('Realization ' + str(r))
     print()
     
-    if 'cora' in data_name:
-        dataset = Planetoid(root='/tmp/Cora', name='Cora', split='random')
-        num_train_per_class = int((ratio_train*dataset[0].num_nodes)/dataset.num_classes)
-        num_val = int(ratio_val*dataset[0].num_nodes)
-        num_test = dataset[0].num_nodes-num_val-num_train_per_class*dataset.num_classes
-        dataset = Planetoid(root='/tmp/Cora', name='Cora', split='random',
-                            num_train_per_class=num_train_per_class, num_val=num_val, 
-                            num_test=num_test)
-    elif 'citeseer' in data_name:
-        dataset = Planetoid(root='/tmp/CiteSeer', name='CiteSeer', split='random')
-        num_train_per_class = int((ratio_train*dataset[0].num_nodes)/dataset.num_classes)
-        num_val = int(ratio_val*dataset[0].num_nodes)
-        num_test = dataset[0].num_nodes-num_val-num_train_per_class*dataset.num_classes
-        dataset = Planetoid(root='/tmp/CiteSeer', name='CiteSeer', split='random',
-                            num_train_per_class=num_train_per_class, num_val=num_val, 
-                            num_test=num_test)
-    elif 'pubmed' in data_name:
-        dataset = Planetoid(root='/tmp/PubMed', name='PubMed', split='random')
-        num_train_per_class = int((ratio_train*dataset[0].num_nodes)/dataset.num_classes)
-        num_val = int(ratio_val*dataset[0].num_nodes)
-        num_test = dataset[0].num_nodes-num_val-num_train_per_class*dataset.num_classes
-        dataset = Planetoid(root='/tmp/PubMed', name='PubMed', split='random',
-                            num_train_per_class=num_train_per_class, num_val=num_val, 
-                            num_test=num_test)
-    
-    train_data = dataset.get('train')
-    train_data = train_data.to(device)
-    val_data = dataset.get('val')
-    val_data = val_data.to(device)
-    test_data = dataset.get('test')
-    test_data = test_data.to(device)
-    
-    # Sorting nodes by degree
-    graph_og = dataset[0]
-    adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
-    num_nodes = graph_og.num_nodes
-    D = aux_functions.compute_degree(adj_sparse, num_nodes)
-    deg = torch.diagonal(D.to_dense()).squeeze()
-    idx = torch.argsort(deg)
-    idx = idx.to(device)
-    
-    #train_data = train_data.subgraph(idx)
-    #val_data = val_data.subgraph(idx)
-    #test_data = test_data.subgraph(idx)
+    split = T.RandomNodeSplit(
+        'random',
+        num_train_per_class=num_train_per_class,
+        num_val=num_val,
+        num_test=num_test
+    )
+
+    train_data, val_data, test_data = split(graph)
         
     if do_no_sampling:
         
-            model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
+        model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
+        model = model.to(device)
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
+        criterion = torch.nn.NLLLoss()
+        _,_,model,_,_,_,_ = train(model, train_data, val_data, optimizer, criterion, 
+                      batch_size=1, n_epochs=n_epochs)
+        
+        test_auc = test(model, test_data)
+        results_no_sampl[r] = test_auc
+        print(f"Test: {test_auc:.3f}")
+        
+        print()
+        
+        if do_eig:
+            # Computing normalized Laplacian
+            L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
+            eigvals, V = torch.lobpcg(L, k=K, largest=False)
+            #eigvals, V = torch.linalg.eig(L.to_dense())
+            eigvals = eigvals.float()
+            V = V.float()
+            idx = torch.argsort(eigvals)
+            eigvals = eigvals[idx[0:K]]
+            V = V[:,idx[0:K]]
+            V = V.to(device)
+            
+            print('Adding eigenvectors...')
+            print()
+
+            train_data_new = Data(x=torch.cat((train_data.x,V), dim=1), edge_index=train_data.edge_index,
+                                  y=train_data.y, train_mask=train_data.train_mask,
+                                  val_mask=train_data.val_mask, test_mask=train_data.test_mask)
+            val_data_new = Data(x=torch.cat((val_data.x,V), dim=1), edge_index=val_data.edge_index,
+                                  y=val_data.y, train_mask=val_data.train_mask,
+                                  val_mask=val_data.val_mask, test_mask=val_data.test_mask)
+            test_data_new = Data(x=torch.cat((test_data.x,V), dim=1), edge_index=test_data.edge_index,
+                                  y=test_data.y, train_mask=test_data.train_mask,
+                                  val_mask=test_data.val_mask, test_mask=test_data.test_mask)
+            
+            model = GNN('gcn', [dataset.num_features+K,64,32], [32,dataset.num_classes], softmax=True)
             model = model.to(device)
             optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
             criterion = torch.nn.NLLLoss()
-            _,_,model,_,_,_,_ = train(model, train_data, val_data, optimizer, criterion, 
+            _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
                           batch_size=1, n_epochs=n_epochs)
             
-            test_auc = test(model, test_data)
-            results_no_sampl[r] = test_auc
+            test_auc = test(model, test_data_new)
+            results_no_sampl_eig[r] = test_auc
             print(f"Test: {test_auc:.3f}")
             
             print()
-            
-            if do_eig:
-                # Computing normalized Laplacian
-                L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
-                eigvals, V = torch.lobpcg(L, k=K, largest=False)
-                #eigvals, V = torch.linalg.eig(L.to_dense())
-                eigvals = eigvals.float()
-                V = V.float()
-                idx = torch.argsort(eigvals)
-                eigvals = eigvals[idx[0:K]]
-                V = V[:,idx[0:K]]
-                V = V.to(device)
-                
-                print('Adding eigenvectors...')
-                print()
-
-                train_data_new = Data(x=torch.cat((train_data.x,V), dim=1), edge_index=train_data.edge_index,
-                                      y=train_data.y, train_mask=train_data.train_mask,
-                                      val_mask=train_data.val_mask, test_mask=train_data.test_mask)
-                val_data_new = Data(x=torch.cat((val_data.x,V), dim=1), edge_index=val_data.edge_index,
-                                      y=val_data.y, train_mask=val_data.train_mask,
-                                      val_mask=val_data.val_mask, test_mask=val_data.test_mask)
-                test_data_new = Data(x=torch.cat((test_data.x,V), dim=1), edge_index=test_data.edge_index,
-                                      y=test_data.y, train_mask=test_data.train_mask,
-                                      val_mask=test_data.val_mask, test_mask=test_data.test_mask)
-                
-                model = GNN('gcn', [dataset.num_features+K,64,32], [32,dataset.num_classes], softmax=True)
-                model = model.to(device)
-                optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
-                criterion = torch.nn.NLLLoss()
-                _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
-                              batch_size=1, n_epochs=n_epochs)
-                
-                test_auc = test(model, test_data_new)
-                results_no_sampl_eig[r] = test_auc
-                print(f"Test: {test_auc:.3f}")
-                
-                print()
     
     ##############################################################################
     ############################# Sampling! ######################################
