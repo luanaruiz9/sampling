@@ -23,24 +23,14 @@ import torch
 from torch_geometric.datasets import Planetoid, WikipediaNetwork, Twitch
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
-import wandb
 
 from architecture import  SignNetLinkPredNet
-from train_eval_10_fold import train_link_predictor, eval_link_predictor
+from train_eval import train_link_predictor, eval_link_predictor
 from greedy import greedy, f
 #from reconstruction import f_rec, reconstruct
 from subsampling import sample_clustering
 from graphon_sampling import generate_induced_graphon
 import aux_functions
-
-sweep_config = {'method': 'random',
-                'metric': {'goal': 'maximize', 'name': 'val_auc'},
-                'parameters': {'epochs': {'value': 100},
-                    'Fnn': {'values': [32, 64, 128]},
-                    'Fpe': {'values': [32, 64, 128]},
-                    'lr': {'distribution': 'uniform',
-                                      'max': 0.005,
-                                      'min': 0} } }
 
 data_name = sys.argv[1]
 lr = float(sys.argv[2])
@@ -54,11 +44,8 @@ m2 = int(sys.argv[8]) #25 # Number of sampled intervals
 m3 = int(sys.argv[9]) #3 #8 # How many nodes (points) to sample per sampled interval
 nb_cuts = int(sys.argv[10])
 
-F_nn = [128, 128]
-F_pe = [64, 64]
-
-
-sweep_id = wandb.sweep(sweep_config, project=data_name)
+F_nn = [32, 32]
+F_pe = [32, 32]
 
 thisFilename = data_name + '_' # This is the general name of all related files
 
@@ -82,11 +69,11 @@ else:
     device = 'cpu'
     
 K = 50
-do_no_pe = False
-do_eig = False
-do_learn_pe = False
+do_no_pe = True
+do_eig = True
+do_learn_pe = True
 do_w_sampl = True
-do_random_sampl = False
+do_random_sampl = True
 
 if 'cora' in data_name:
     dataset = Planetoid(root='/tmp/Cora', name='Cora')
@@ -110,7 +97,6 @@ num_nodes = adj.shape[0]
 D = aux_functions.compute_degree(adj_sparse, num_nodes)
 deg = torch.diagonal(D.to_dense()).squeeze()
 idx = torch.argsort(deg)
-graph_og = graph_og.subgraph(idx)
 edge_index = graph_og.edge_index
 new_edge_index = torch.zeros(edge_index.shape,dtype=torch.long,device=device)
 for i in range(2):
@@ -270,7 +256,7 @@ for r in range(n_realizations):
         print('Sampling with spectral proxies...')
         print()
         
-        idx = torch.argsort(eigvals_test)
+        idx = torch.argsort(eigvals_test.float())
         V_test = V_test[:,idx[0:K]].type(torch.float32)
         eigvals_test = eigvals_test[idx[0:K]].type(torch.float32)
         
@@ -311,6 +297,8 @@ for r in range(n_realizations):
                                                      #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
                 idx = np.sort(idx)
                 sampled_idx += list(idx)
+        sampled_idx = list(set(sampled_idx))    
+        
         
         # V for train data
         graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
@@ -326,8 +314,6 @@ for r in range(n_realizations):
         eigvals_new = eigvals_new.float()
         V_new = V_new.float()
         idx = torch.argsort(eigvals_new)
-        eigvals_new = eigvals_new.float()
-        V_new = V_new.float()
         eigvals_new = eigvals_new[idx[0:K]]
         V_new = V_new[:,idx[0:K]]
         V_new = V_new.type(torch.float32)
@@ -427,37 +413,6 @@ for r in range(n_realizations):
                               y=test_data.y,edge_label_index=test_data.edge_label_index,
                               **pre_defined_kwargs_test)
         
-        print(sweep_config)
-        
-        def function():
-        
-            #with wandb.init(project='test', entity='luanaianararubiniruiz', config=config):
-                #config = wandb.config
-                run = wandb.init()
-                config = wandb.config
-                print(wandb.config)
-                
-                model = SignNetLinkPredNet(num_feats + config.Fpe*K, 
-                                           config.Fnn, config.Fnn, True, 1, 
-                                           config.Fpe, config.Fpe).to(device)
-                optimizer = torch.optim.Adam(params=model.parameters(), lr=config.lr)
-                criterion = torch.nn.BCEWithLogitsLoss()
-                
-                wandb.watch(model, criterion, log="all")
-                
-                model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
-                                             criterion, n_epochs=config.epochs, K=K, pe=True, m=m, 
-                                             m2=m2, m3=m3, nb_cuts=nb_cuts, 
-                                             train_data_collection=train_data_collection, 
-                                             V_collection=V_collection)
-                val_auc = eval_link_predictor(model, val_data_new)
-                
-                wandb.log({'val_auc': val_auc})
-            
-        wandb.agent(sweep_id, function=function, count=10)
-        
-        """
-        
         model = SignNetLinkPredNet(num_feats+F_pe[-1]*K, F_nn[0], F_nn[1], True, 1, F_pe[0], F_pe[1]).to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
@@ -471,8 +426,6 @@ for r in range(n_realizations):
         print(f"Test: {test_auc:.3f}")
         
         print()
-        
-        """
     
     ##############################################################################
     ############################# Sampling! ######################################
