@@ -216,7 +216,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
     # START TRAINING #
     ##################
     
-    for epoch in range(1, n_epochs + 1):
+    for epoch in range(n_epochs):
         
         this_idx = np.random.choice(10)
         
