@@ -110,14 +110,12 @@ num_nodes = adj.shape[0]
 D = aux_functions.compute_degree(adj_sparse, num_nodes)
 deg = torch.diagonal(D.to_dense()).squeeze()
 idx = torch.argsort(deg)
-idx = torch.arange(graph_og.num_nodes)
 graph_og = graph_og.subgraph(idx)
 edge_index = graph_og.edge_index
 new_edge_index = torch.zeros(edge_index.shape,dtype=torch.long,device=device)
 for i in range(2):
     for j in range(edge_index.shape[1]):
         new_edge_index[i,j] = torch.argwhere(edge_index[i,j]==idx)
-new_edge_index = edge_index
 graph_og = Data(x=graph_og.x[idx],edge_index=new_edge_index,y=graph_og.y[idx])
 
 pre_defined_kwargs = {'eigvecs': False}
