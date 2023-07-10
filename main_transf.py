@@ -13,6 +13,10 @@ Created on Mon Mar  6 14:37:09 2023
 # Link prediction on synthetic graphs
 # Transferability experiments
 
+
+# MAKE V TEST BASED ON SAMPLING
+# ONLY SAMPLE FOR V????
+
 import sys
 import os
 import datetime
