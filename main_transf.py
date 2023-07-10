@@ -30,9 +30,7 @@ from torch_geometric.data import Data
 
 from architecture import GNN
 from train_eval import train, test
-from greedy import greedy, f
-from subsampling import sample_clustering
-from graphon_sampling import generate_induced_graphon
+from sampling import generate_induced_graphon, greedy, f, sample_clustering
 import aux_functions
 
 data_name = sys.argv[1]

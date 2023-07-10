@@ -27,10 +27,8 @@ import wandb
 
 from architecture import  SignNetLinkPredNet
 from train_eval import train_link_predictor, eval_link_predictor
-from greedy import greedy, f
+from sampling import generate_induced_graphon, greedy, f, sample_clustering
 #from reconstruction import f_rec, reconstruct
-from subsampling import sample_clustering
-from graphon_sampling import generate_induced_graphon
 import aux_functions
 
 sweep_config = {'method': 'random',
