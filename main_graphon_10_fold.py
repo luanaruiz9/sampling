@@ -97,7 +97,6 @@ num_nodes = adj.shape[0]
 D = aux_functions.compute_degree(adj_sparse, num_nodes)
 deg = torch.diagonal(D.to_dense()).squeeze()
 idx = torch.argsort(deg)
-#idx = idx.to(device)
 edge_index = graph_og.edge_index
 new_edge_index = torch.zeros(edge_index.shape,dtype=torch.long,device=device)
 for i in range(2):
