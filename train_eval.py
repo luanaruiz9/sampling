@@ -20,10 +20,8 @@ from torch_geometric.utils import dropout_edge, to_undirected
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
 
-from greedy import greedy, f
+from sampling import generate_induced_graphon, greedy, f, sample_clustering
 #from reconstruction import f_rec, reconstruct
-from subsampling import sample_clustering
-from graphon_sampling import generate_induced_graphon
 import aux_functions
 
 
