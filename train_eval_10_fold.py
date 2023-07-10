@@ -273,11 +273,15 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
         optimizer.step()
 
         val_auc = eval_link_predictor(model, val_data)
+        
+        flag = False
         if val_auc >= best_val_auc:
             best_model = copy.deepcopy(model)
             best_val_auc = val_auc
+            print(f"Epoch: {epoch:03d}, Train Loss: {loss:.3f}, Val AUC: {val_auc:.3f}")
+            flag = True
 
-        if epoch % 10 == 0:
+        if epoch % 10 == 0 and not flag:
             print(f"Epoch: {epoch:03d}, Train Loss: {loss:.3f}, Val AUC: {val_auc:.3f}")
             
         scheduler.step()
