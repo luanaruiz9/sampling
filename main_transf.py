@@ -13,8 +13,8 @@ Created on Mon Mar  6 14:37:09 2023
 # Link prediction on synthetic graphs
 # Transferability experiments
 
-# MAKE V TEST BASED ON SAMPLING
-# ONLY SAMPLE FOR V????
+# Save params and results in .txt
+# Implement PEs
 
 import sys
 import os

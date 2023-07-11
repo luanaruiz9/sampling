@@ -85,7 +85,7 @@ def f(x, *args):
         omega = torch.matmul(L,omega)
     omega = omega.numpy()
         
-    omega = np.power(np.dot(omega,omega)/np.dot(x,x),1/2*k)
+    omega = np.power(np.dot(omega,omega)/np.dot(x,x),1/(2*k))
     
     return lam-omega
 
