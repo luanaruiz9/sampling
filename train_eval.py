@@ -16,7 +16,7 @@ from tqdm import trange
 from torch_geometric.utils import negative_sampling
 from torch_geometric.loader import DataLoader
 
-from torch_geometric_utils import dropout_edge, to_undirected
+from torch_geometric.utils import dropout_edge, to_undirected
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
 
