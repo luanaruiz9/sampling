@@ -16,9 +16,6 @@ Created on Mon Mar  6 14:37:09 2023
 # Link prediction on synthetic graphs
 # Transferability experiments
 
-
-# FIX DEVICES IN SAMPLING (LOOK AT WANDB)
-
 import sys
 import os
 import datetime
@@ -75,6 +72,7 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
     
+K = 50
 do_no_pe = True
 do_eig = True
 do_learn_pe = True
@@ -127,7 +125,7 @@ results_random_samp_pe = np.zeros(n_realizations)
 n_iters_per_rlz = np.zeros(n_realizations)
 
 for r in range(n_realizations):
-    K = 50
+    
     print('Realization ' + str(r))
     print()
     
@@ -310,15 +308,6 @@ for r in range(n_realizations):
         # V for train data
         graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         
-        # Removing isolated nodes
-        sampled_idx_og = sampled_idx
-        edge_index_new = graph_new.edge_index
-        edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-        sampled_idx = torch.tensor(sampled_idx_og)[mask==True]
-        graph_new = train_data.subgraph(sampled_idx)
-        if K > len(sampled_idx):
-            K = len(sampled_idx)
-        
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
         adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
@@ -349,15 +338,6 @@ for r in range(n_realizations):
         
         # V for test data
         graph_new = test_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
-        
-        # Removing isolated nodes
-        edge_index_new = graph_new.edge_index
-        edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-        sampled_idx = torch.tensor(sampled_idx_og)[mask==True]
-        graph_new = test_data.subgraph(sampled_idx)
-        if K > len(sampled_idx):
-            K = len(sampled_idx)
-        
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
         adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
@@ -466,16 +446,6 @@ for r in range(n_realizations):
 
         # V for train data
         graph_new = train_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
-        
-        # Removing isolated nodes
-        sampled_idx2_og = sampled_idx2
-        edge_index_new = graph_new.edge_index
-        edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
-        sampled_idx2 = torch.tensor(sampled_idx2_og)[mask==True]
-        graph_new = train_data.subgraph(sampled_idx2)
-        if K > len(sampled_idx2):
-            K = len(sampled_idx2)
-        
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
         adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
@@ -506,15 +476,6 @@ for r in range(n_realizations):
             
         # V for test data
         graph_new = test_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
-        
-        # Removing isolated nodes
-        edge_index_new = graph_new.edge_index
-        edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
-        sampled_idx2 = torch.tensor(sampled_idx2_og)[mask==True]
-        graph_new = test_data.subgraph(sampled_idx2)
-        if K > len(sampled_idx2):
-            K = len(sampled_idx2)
-        
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
         adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
