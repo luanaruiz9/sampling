@@ -305,6 +305,7 @@ for r in range(n_realizations):
                 for j in range(idx.shape[0]):
                     idx[j] += i*n_nodes_per_int
                 sampled_idx += list(idx)
+        print(len(sampled_idx))
         sampled_idx = list(set(sampled_idx))   
         
         # V for train data
@@ -312,7 +313,7 @@ for r in range(n_realizations):
         
         # Removing isolated nodes
         sampled_idx_og = sampled_idx
-        edge_index_new = graph_new.edge_index
+        edge_index_new = graph_new.edge_index.clone()
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu()
         sampled_idx = torch.tensor(sampled_idx_og, device=device, dtype=torch.long)[mask==True]
@@ -354,7 +355,7 @@ for r in range(n_realizations):
         graph_new = test_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         
         # Removing isolated nodes
-        edge_index_new = graph_new.edge_index
+        edge_index_new = graph_new.edge_index.clone()
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu()
         sampled_idx = torch.tensor(sampled_idx_og, device=device, dtype=torch.long)[mask==True]
@@ -475,7 +476,7 @@ for r in range(n_realizations):
         
         # Removing isolated nodes
         sampled_idx2_og = sampled_idx2
-        edge_index_new = graph_new.edge_index
+        edge_index_new = graph_new.edge_index.clone()
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
         mask = mask.cpu()
         sampled_idx2 = torch.tensor(sampled_idx2_og, device=device, dtype=torch.long)[mask==True]
@@ -517,7 +518,7 @@ for r in range(n_realizations):
         graph_new = test_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
         
         # Removing isolated nodes
-        edge_index_new = graph_new.edge_index
+        edge_index_new = graph_new.edge_index.clone()
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
         mask = mask.cpu()
         sampled_idx2 = torch.tensor(sampled_idx2_og, device=device, dtype=torch.long)[mask==True]
