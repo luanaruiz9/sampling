@@ -16,7 +16,7 @@ from tqdm import trange
 from torch_geometric.utils import negative_sampling
 from torch_geometric.loader import DataLoader
 
-from torch_geometric.utils import dropout_edge, to_undirected
+from torch_geometric_utils import dropout_edge, to_undirected
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
 
@@ -138,18 +138,24 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             for i in range(m):
                 if s_vec[i] == 1:
                     if i < m-1:
-                        cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,
-                                          i*n_nodes_per_int:(i+1)*n_nodes_per_int]
+                        cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,:]
+                        cur_adj = cur_adj[:,i*n_nodes_per_int:(i+1)*n_nodes_per_int]
                         idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
                     else:
                         if m3 > n_nodes_last_int:
-                            m3 = n_nodes_last_int
-                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,
-                                                    i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
-                        idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
+                            #m3 = n_nodes_last_int
+                            cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                            cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
+                        else:
+                            cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                            cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+m3]
+                        idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
                                                          #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
                     idx = np.sort(idx)
+                    for j in range(idx.shape[0]):
+                        idx[j] += i*n_nodes_per_int
                     sampled_idx += list(idx)
+            sampled_idx = list(set(sampled_idx))   
             
             # V for train data
             device = train_data.x.device

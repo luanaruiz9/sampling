@@ -5,6 +5,9 @@ Created on Mon Mar  6 14:37:09 2023
 @author: Luana Ruiz
 """
 
+# Restrict eigenvector calculation to connected component!!!!!!
+# Make sure K is at most size of this component (for link pred)
+
 # TO DOS:
 # Consolidate things in classes/functions - more or less ok
 # Make things faster
@@ -23,6 +26,7 @@ import torch
 from torch_geometric.datasets import Planetoid, WikipediaNetwork, Twitch
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
+from torch_geometric.utils import remove_isolated_nodes
 
 from architecture import  SignNetLinkPredNet
 from train_eval import train_link_predictor, eval_link_predictor
@@ -282,26 +286,28 @@ for r in range(n_realizations):
         for i in range(m):
             if s_vec[i] == 1:
                 if i < m-1:
-                    cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,
-                                      i*n_nodes_per_int:(i+1)*n_nodes_per_int]
+                    cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,:]
+                    cur_adj = cur_adj[:,i*n_nodes_per_int:(i+1)*n_nodes_per_int]
                     idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
                 else:
                     if m3 > n_nodes_last_int:
                         #m3 = n_nodes_last_int
-                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,
-                                                i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
+                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                        cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
                     else:
-                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,
-                                                i*n_nodes_per_int:i*n_nodes_per_int+m3]
+                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                        cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+m3]
                     idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
                                                      #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
                 idx = np.sort(idx)
+                for j in range(idx.shape[0]):
+                    idx[j] += i*n_nodes_per_int
                 sampled_idx += list(idx)
-        sampled_idx = list(set(sampled_idx))    
-        
+        sampled_idx = list(set(sampled_idx))   
         
         # V for train data
         graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+        
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
         adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)

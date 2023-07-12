@@ -26,24 +26,25 @@ import torch
 from torch_geometric.datasets import Planetoid
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
+from torch_geometric.utils import remove_isolated_nodes
 
 from architecture import GNN
 from train_eval import train, test
 from sampling import generate_induced_graphon, greedy, f, sample_clustering
 import aux_functions
 
-data_name = sys.argv[1]
+data_name = 'cora'#sys.argv[1]
 folder_name = data_name
-lr = float(sys.argv[2])
-n_epochs = int(sys.argv[3])
-ratio_train = float(sys.argv[4])
-ratio_test = float(sys.argv[5])
+lr = 0.001#float(sys.argv[2])
+n_epochs = 100#int(sys.argv[3])
+ratio_train = 0.6#float(sys.argv[4])
+ratio_test = 0.2#float(sys.argv[5])
 ratio_val = 1-ratio_train-ratio_test
-n_realizations = int(sys.argv[6]) #10
-m = int(sys.argv[7]) #50 # Number of candidate intervals
-m2 = int(sys.argv[8]) #25 # Number of sampled intervals
-m3 = int(sys.argv[9]) #3 #8 # How many nodes (points) to sample per sampled interval
-nb_cuts = int(sys.argv[10])
+n_realizations = 1#int(sys.argv[6]) #10
+m = 100#int(sys.argv[7]) #50 # Number of candidate intervals
+m2 = 50#int(sys.argv[8]) #25 # Number of sampled intervals
+m3 = 10#int(sys.argv[9]) #3 #8 # How many nodes (points) to sample per sampled interval
+nb_cuts = 1#int(sys.argv[10])
 
 thisFilename = folder_name + '_cora' # This is the general name of all related files
 
@@ -223,21 +224,37 @@ for r in range(n_realizations):
         for i in range(m):
             if s_vec[i] == 1:
                 if i < m-1:
-                    cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,
-                                      i*n_nodes_per_int:(i+1)*n_nodes_per_int]
-                    idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)
+                    cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,:]
+                    cur_adj = cur_adj[:,i*n_nodes_per_int:(i+1)*n_nodes_per_int]
+                    idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
                 else:
                     if m3 > n_nodes_last_int:
-                        m3 = n_nodes_last_int
-                    cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,
-                                                i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
-                    idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)
+                        #m3 = n_nodes_last_int
+                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                        cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
+                    else:
+                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                        cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+m3]
+                    idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
+                                                     #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
                 idx = np.sort(idx)
+                for j in range(idx.shape[0]):
+                    idx[j] += i*n_nodes_per_int
                 sampled_idx += list(idx)
-        sampled_idx = list(set(sampled_idx))
+        sampled_idx = list(set(sampled_idx)) 
         
         # V for train data
         graph_new = graph.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+        
+        # Removing isolated nodes
+        edge_index_new = graph_new.edge_index
+        edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, 
+                                                                      num_nodes = len(sampled_idx))
+        sampled_idx = torch.tensor(sampled_idx)[mask==True]
+        graph_new = graph.subgraph(sampled_idx)
+        if K > len(sampled_idx):
+            K = len(sampled_idx)
+        
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
         adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
@@ -311,6 +328,16 @@ for r in range(n_realizations):
 
         # V for train data
         graph_new = graph.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
+        
+        # Removing isolated nodes
+        edge_index_new = graph_new.edge_index
+        edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, 
+                                                                      num_nodes = len(sampled_idx2))
+        sampled_idx2 = torch.tensor(sampled_idx2)[mask==True]
+        graph_new = graph.subgraph(sampled_idx2)
+        if K > len(sampled_idx2):
+            K = len(sampled_idx2)
+        
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
         adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)

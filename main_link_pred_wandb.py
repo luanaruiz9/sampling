@@ -23,6 +23,7 @@ import torch
 from torch_geometric.datasets import Planetoid, WikipediaNetwork, Twitch
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
+from torch.geometric.utils import remove_isolated_nodes
 import wandb
 
 from architecture import  SignNetLinkPredNet
@@ -294,21 +295,24 @@ for r in range(n_realizations):
         for i in range(m):
             if s_vec[i] == 1:
                 if i < m-1:
-                    cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,
-                                      i*n_nodes_per_int:(i+1)*n_nodes_per_int]
+                    cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,:]
+                    cur_adj = cur_adj[:,i*n_nodes_per_int:(i+1)*n_nodes_per_int]
                     idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
                 else:
                     if m3 > n_nodes_last_int:
                         #m3 = n_nodes_last_int
-                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,
-                                                i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
+                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                        cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
                     else:
-                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,
-                                                i*n_nodes_per_int:i*n_nodes_per_int+m3]
+                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                        cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+m3]
                     idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
                                                      #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
                 idx = np.sort(idx)
+                for j in range(idx.shape[0]):
+                    idx[j] += i*n_nodes_per_int
                 sampled_idx += list(idx)
+        sampled_idx = list(set(sampled_idx)) 
         
         # V for train data
         graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))

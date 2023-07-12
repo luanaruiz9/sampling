@@ -4,7 +4,15 @@ Created on Thu Mar 30 09:18:48 2023
 
 @author: Luana Ruiz
 """
+
+from typing import Optional, Tuple
+
 import torch
+from torch import Tensor
+
+from torch_geometric.utils import remove_self_loops, segregate_self_loops
+from torch_geometric.utils.num_nodes import maybe_num_nodes
+
 
 def compute_adj_from_data(data):
     num_nodes = data.x.shape[0]
@@ -37,3 +45,4 @@ def compute_laplacian(adj_sparse, num_nodes):
     degree_mx = compute_inv_degree(adj_sparse,num_nodes)
     L = torch.eye(num_nodes,device=adj_sparse.device).to_sparse_coo()-torch.matmul(degree_mx,torch.matmul(adj_sparse,degree_mx))
     return L
+
