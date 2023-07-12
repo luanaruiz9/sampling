@@ -195,7 +195,7 @@ def sample_clustering(A, m, nb_cuts=1, cheeger=0.5, eps=0.05, sz=None, vol=None)
         thisA = A[S_complement,:]
         thisA = thisA[:,S_complement]
         thisSeed = np.random.choice(thisA.shape[0])
-        idx = cluster_hk_pr(thisA, thisSeed, cheeger, eps, sz, vol)
+        idx = cluster_hk_pr(thisA, thisSeed, cheeger, eps, cluster_sizes[i], vol)
         S = []
         for j in idx:
             S.append(S_complement[j])
