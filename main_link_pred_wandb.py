@@ -323,7 +323,7 @@ for r in range(n_realizations):
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu()
         sampled_idx = torch.tensor(sampled_idx_og)[mask==True]
-        graph_new = train_data.subgraph(sampled_idx)
+        graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         if K > len(sampled_idx):
             K = len(sampled_idx)
         
@@ -365,7 +365,7 @@ for r in range(n_realizations):
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu()
         sampled_idx = torch.tensor(sampled_idx_og)[mask==True]
-        graph_new = test_data.subgraph(sampled_idx)
+        graph_new = test_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         if K > len(sampled_idx):
             K = len(sampled_idx)
         
@@ -517,7 +517,7 @@ for r in range(n_realizations):
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
         mask = mask.cpu()
         sampled_idx2 = torch.tensor(sampled_idx2_og)[mask==True]
-        graph_new = train_data.subgraph(sampled_idx2)
+        graph_new = train_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
         
@@ -557,7 +557,7 @@ for r in range(n_realizations):
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
         mask = mask.cpu()
         sampled_idx2 = torch.tensor(sampled_idx2_og)[mask==True]
-        graph_new = test_data.subgraph(sampled_idx2)
+        graph_new = test_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
         
