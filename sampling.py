@@ -187,8 +187,9 @@ def cluster_hk_pr(A, seed, cheeger, eps, sz, vol_den):
             print(len(S))
             return S
         
-def sample_clustering(A, m, nb_cuts=1, cheeger=0.5, eps=0.05, sz=None, vol=None):  
-    
+def sample_clustering(A, m, nb_cuts=1, cheeger=0.5, eps=0.05, sz=None, vol_den=4):  
+    if nb_cuts > 3:
+        vol_den = nb_cuts + 1
     m_per_cluster = np.floor(m/(nb_cuts+1))
     cluster_sizes = []
     for i in range(nb_cuts):
@@ -201,7 +202,7 @@ def sample_clustering(A, m, nb_cuts=1, cheeger=0.5, eps=0.05, sz=None, vol=None)
         thisA = A[S_complement,:]
         thisA = thisA[:,S_complement]
         thisSeed = np.random.choice(thisA.shape[0])
-        idx = cluster_hk_pr(thisA, thisSeed, cheeger, eps, cluster_sizes[i], np.power(2,nb_cuts+1))
+        idx = cluster_hk_pr(thisA, thisSeed, cheeger, eps, cluster_sizes[i],vol_den)
         S = []
         for j in idx:
             S.append(S_complement[j])
