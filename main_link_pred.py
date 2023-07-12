@@ -77,9 +77,9 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
     
-do_no_pe = True
-do_eig = True
-do_learn_pe = True
+do_no_pe = False
+do_eig = False
+do_learn_pe = False
 do_w_sampl = True
 do_random_sampl = True
 
@@ -324,6 +324,7 @@ for r in range(n_realizations):
         mask = mask.cpu()
         sampled_idx = torch.tensor(sampled_idx_og, device=device, dtype=torch.long)[mask==True]
         graph_new = train_data.subgraph(sampled_idx)
+        print(graph_new.edge_index)
         print('nb conn: ', nx.number_connected_components(to_networkx(graph_new).to_undirected()))
         print('adj: ', nx.adjacency_matrix(to_networkx(graph_new)))
         if K > len(sampled_idx):
