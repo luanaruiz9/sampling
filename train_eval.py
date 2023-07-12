@@ -13,7 +13,7 @@ from sklearn.metrics import roc_auc_score
 import torch
 import time
 from tqdm import trange
-from torch_geometric.utils import negative_sampling
+from torch_geometric.utils import negative_sampling, remove_isolated_nodes
 from torch_geometric.loader import DataLoader
 
 from torch_geometric.utils import dropout_edge, to_undirected
@@ -160,6 +160,17 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             # V for train data
             device = train_data.x.device
             graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+            
+            # Removing isolated nodes
+            sampled_idx_og = sampled_idx
+            edge_index_new = graph_new.edge_index
+            edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
+            mask = mask.cpu()
+            sampled_idx = torch.tensor(sampled_idx_og)[mask==True]
+            graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+            if K > len(sampled_idx):
+                K = len(sampled_idx)
+            
             graph_new = graph_new.to(device)
             num_nodes_new = graph_new.x.shape[0]
             adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
@@ -190,6 +201,17 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
         for eig_data in eig_data_collection:
             # V for train data
             graph_new = eig_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
+            
+            # Removing isolated nodes
+            sampled_idx2_og = sampled_idx2
+            edge_index_new = graph_new.edge_index
+            edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
+            mask = mask.cpu()
+            sampled_idx2 = torch.tensor(sampled_idx2_og)[mask==True]
+            graph_new = train_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
+            if K > len(sampled_idx2):
+                K = len(sampled_idx2)
+            
             graph_new = graph_new.to(device)
             num_nodes_new = graph_new.x.shape[0]
             adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
