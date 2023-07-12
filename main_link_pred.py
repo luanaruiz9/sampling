@@ -313,6 +313,8 @@ for r in range(n_realizations):
         
         # V for train data
         graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+        print('nb conn: ', nx.number_connected_components(to_networkx(graph_new).to_undirected()))
+        print('adj: ', nx.adjacency_matrix(to_networkx(graph_new)))
         
         # Removing isolated nodes
         sampled_idx_og = sampled_idx
