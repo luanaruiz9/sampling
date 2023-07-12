@@ -317,7 +317,7 @@ for r in range(n_realizations):
         # Removing isolated nodes
         sampled_idx_og = sampled_idx
         edge_index_new = graph_new.edge_index.clone()
-        edge_index_new[0] = add_self_loops(edge_index_new, num_nodes = len(sampled_idx_og))
+        edge_index_new = add_self_loops(edge_index_new, num_nodes = len(sampled_idx_og))[0]
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu()
         sampled_idx = torch.tensor(sampled_idx_og, device=device, dtype=torch.long)[mask==True]
