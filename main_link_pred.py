@@ -314,7 +314,8 @@ for r in range(n_realizations):
         sampled_idx_og = sampled_idx
         edge_index_new = graph_new.edge_index
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-        sampled_idx = torch.tensor(sampled_idx_og)[mask==True]
+        mask = mask.cpu()
+        sampled_idx = torch.tensor(sampled_idx_og, device=device, dtype=torch.long)[mask==True]
         graph_new = train_data.subgraph(sampled_idx)
         if K > len(sampled_idx):
             K = len(sampled_idx)
@@ -353,7 +354,8 @@ for r in range(n_realizations):
         # Removing isolated nodes
         edge_index_new = graph_new.edge_index
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-        sampled_idx = torch.tensor(sampled_idx_og)[mask==True]
+        mask = mask.cpu()
+        sampled_idx = torch.tensor(sampled_idx_og, device=device, dtype=torch.long)[mask==True]
         graph_new = test_data.subgraph(sampled_idx)
         if K > len(sampled_idx):
             K = len(sampled_idx)
@@ -471,7 +473,8 @@ for r in range(n_realizations):
         sampled_idx2_og = sampled_idx2
         edge_index_new = graph_new.edge_index
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
-        sampled_idx2 = torch.tensor(sampled_idx2_og)[mask==True]
+        mask = mask.cpu()
+        sampled_idx2 = torch.tensor(sampled_idx2_og, device=device, dtype=torch.long)[mask==True]
         graph_new = train_data.subgraph(sampled_idx2)
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
@@ -510,7 +513,8 @@ for r in range(n_realizations):
         # Removing isolated nodes
         edge_index_new = graph_new.edge_index
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
-        sampled_idx2 = torch.tensor(sampled_idx2_og)[mask==True]
+        mask = mask.cpu()
+        sampled_idx2 = torch.tensor(sampled_idx2_og, device=device, dtype=torch.long)[mask==True]
         graph_new = test_data.subgraph(sampled_idx2)
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
