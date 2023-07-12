@@ -29,7 +29,7 @@ import torch
 from torch_geometric.datasets import Planetoid, WikipediaNetwork, Twitch
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
-from torch_geometric.utils import remove_isolated_nodes, to_networkx
+from torch_geometric.utils import remove_isolated_nodes, to_networkx, add_self_loops
 import networkx as nx
 
 from architecture import  SignNetLinkPredNet
@@ -317,10 +317,12 @@ for r in range(n_realizations):
         # Removing isolated nodes
         sampled_idx_og = sampled_idx
         edge_index_new = graph_new.edge_index.clone()
+        edge_index_new = add_self_loops(edge_index_new)
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu()
         sampled_idx = torch.tensor(sampled_idx_og, device=device, dtype=torch.long)[mask==True]
         graph_new = train_data.subgraph(sampled_idx)
+        print('nb conn: ', nx.number_connected_components(to_networkx(graph_new)))
         print('adj: ', nx.adjacency_matrix(to_networkx(graph_new)))
         if K > len(sampled_idx):
             K = len(sampled_idx)
