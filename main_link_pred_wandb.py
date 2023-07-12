@@ -41,16 +41,16 @@ sweep_config = {'method': 'random',
                                       'min': 0} } }
 
 data_name = sys.argv[1]
-lr = float(sys.argv[2])
-n_epochs = int(sys.argv[3])
-ratio_train = float(sys.argv[4])
-ratio_test = float(sys.argv[5])
+lr = 0.001
+n_epochs = 100
+ratio_train = 0.8
+ratio_test = 0.1
 ratio_val = 1-ratio_train-ratio_test
-n_realizations = int(sys.argv[6]) #10
-m = int(sys.argv[7]) #50 # Number of candidate intervals
-m2 = int(sys.argv[8]) #25 # Number of sampled intervals
-m3 = int(sys.argv[9]) #3 #8 # How many nodes (points) to sample per sampled interval
-nb_cuts = int(sys.argv[10])
+n_realizations = 1 #10
+m = int(sys.argv[2]) #50 # Number of candidate intervals
+m2 = int(sys.argv[3]) #25 # Number of sampled intervals
+m3 = int(sys.argv[4]) #3 #8 # How many nodes (points) to sample per sampled interval
+nb_cuts = int(sys.argv[5])
 
 F_nn = [128, 128]
 F_pe = [64, 64]
