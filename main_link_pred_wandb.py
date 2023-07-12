@@ -23,7 +23,7 @@ import torch
 from torch_geometric.datasets import Planetoid, WikipediaNetwork, Twitch
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
-from torch.geometric.utils import remove_isolated_nodes
+from torch_geometric.utils import remove_isolated_nodes
 import wandb
 
 from architecture import  SignNetLinkPredNet
