@@ -67,7 +67,6 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
     
-K = 50
 do_no_sampling = True
 do_eig = True
 do_w_sampl = True
@@ -122,7 +121,7 @@ for i in range(2):
 graph = Data(x=graph_og.x[idx],edge_index=new_edge_index,y=graph_og.y[idx])
 
 for r in range(n_realizations):
-    
+    K = 50
     print('Realization ' + str(r))
     print()
     

@@ -80,7 +80,6 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
     
-K = 50
 do_no_pe = False
 do_eig = False
 do_learn_pe = False
@@ -134,7 +133,7 @@ results_random_samp_pe = np.zeros(n_realizations)
 n_iters_per_rlz = np.zeros(n_realizations)
 
 for r in range(n_realizations):
-    
+    K = 50
     print('Realization ' + str(r))
     print()
     

@@ -16,6 +16,9 @@ Created on Mon Mar  6 14:37:09 2023
 # Link prediction on synthetic graphs
 # Transferability experiments
 
+
+# FIX DEVICES IN SAMPLING (LOOK AT WANDB)
+
 import sys
 import os
 import datetime
@@ -72,7 +75,6 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
     
-K = 50
 do_no_pe = True
 do_eig = True
 do_learn_pe = True
@@ -125,7 +127,7 @@ results_random_samp_pe = np.zeros(n_realizations)
 n_iters_per_rlz = np.zeros(n_realizations)
 
 for r in range(n_realizations):
-    
+    K = 50
     print('Realization ' + str(r))
     print()
     

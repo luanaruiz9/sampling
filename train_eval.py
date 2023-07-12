@@ -156,7 +156,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                         idx[j] += i*n_nodes_per_int
                     sampled_idx += list(idx)
             sampled_idx = list(set(sampled_idx)) 
-            
+            print(len(sampled_idx))
             # V for train data
             graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
             
@@ -166,6 +166,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
             sampled_idx = torch.tensor(sampled_idx_og)[mask==True]
             graph_new = train_data.subgraph(sampled_idx)
+            print(len(sampled_idx))
             if K > len(sampled_idx):
                 K = len(sampled_idx)
             
