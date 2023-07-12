@@ -176,7 +176,8 @@ def cluster_hk_pr(A, seed, cheeger, eps, sz, vol):
         denominator = min(volS,vol_G-volS)
         cheegerS = len(bS)/denominator
         if volS > 2*vol:
-            return []
+            return list(np.random.choice(np.arange(n),sz)) # return a random 
+                                                           # equipartition if nodes cannot be clustered
         elif volS >= vol/2 and volS <= 2*vol and cheegerS <= np.sqrt(8*cheeger):
             return S
         
