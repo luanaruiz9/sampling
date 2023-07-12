@@ -318,10 +318,10 @@ for r in range(n_realizations):
         sampled_idx_og = sampled_idx
         edge_index_new = graph_new.edge_index.clone()
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-        print('nb connected: ', nx.number_connected_components(to_networkx(edge_index_new)))
         mask = mask.cpu()
         sampled_idx = torch.tensor(sampled_idx_og, device=device, dtype=torch.long)[mask==True]
         graph_new = train_data.subgraph(sampled_idx)
+        print('nb connected: ', nx.number_connected_components(to_networkx(graph_new)))
         if K > len(sampled_idx):
             K = len(sampled_idx)
         print(len(sampled_idx_og))
