@@ -145,7 +145,7 @@ def local_hk_pr(A, t, seed, eps):
         
     return rho/r
 
-def cluster_hk_pr(A, seed, cheeger, eps, sz, vol):
+def cluster_hk_pr(A, seed, cheeger, eps, sz, vol_den):
 
     n = A.shape[0]
     A[0:n,0:n] = torch.ones(n)
@@ -153,8 +153,10 @@ def cluster_hk_pr(A, seed, cheeger, eps, sz, vol):
     
     if sz is None:
         sz = int(n/2)
-    if vol is None:
-        vol = np.floor(vol_G)/4
+    if vol_den is None:
+        vol = np.floor(vol_G/4)
+    else:
+        vol = np.floor(vol_G/vol_den)
         
     t = (1/cheeger)*np.log(2*np.sqrt(vol)/(1-eps) + 2*eps*sz)
     
@@ -199,7 +201,7 @@ def sample_clustering(A, m, nb_cuts=1, cheeger=0.5, eps=0.05, sz=None, vol=None)
         thisA = A[S_complement,:]
         thisA = thisA[:,S_complement]
         thisSeed = np.random.choice(thisA.shape[0])
-        idx = cluster_hk_pr(thisA, thisSeed, cheeger, eps, cluster_sizes[i], vol)
+        idx = cluster_hk_pr(thisA, thisSeed, cheeger, eps, cluster_sizes[i], np.power(2,nb_cuts))
         S = []
         for j in idx:
             S.append(S_complement[j])

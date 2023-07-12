@@ -47,6 +47,7 @@ n_realizations = int(sys.argv[4]) #10
 m = int(sys.argv[5]) #50 # Number of candidate intervals
 m2 = int(sys.argv[6]) #25 # Number of sampled intervals
 m3 = int(sys.argv[7]) #3 #8 # How many nodes (points) to sample per sampled interval
+updated_sz = m2*m3
 nb_cuts = int(sys.argv[8])
 fnn = int(sys.argv[9])
 fpe = int(sys.argv[10])
@@ -307,6 +308,7 @@ for r in range(n_realizations):
                 sampled_idx += list(idx)
         print(len(sampled_idx))
         sampled_idx = list(set(sampled_idx))   
+        updated_sz = len(sampled_idx)
         
         # V for train data
         graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
@@ -469,7 +471,7 @@ for r in range(n_realizations):
         print('Sampling at random...')
         print()
         
-        sampled_idx2 = list(np.random.choice(np.arange(num_nodes), m2*m3, replace=False))
+        sampled_idx2 = list(np.random.choice(np.arange(num_nodes), updated_sz, replace=False))
 
         # V for train data
         graph_new = train_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
