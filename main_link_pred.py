@@ -29,7 +29,8 @@ import torch
 from torch_geometric.datasets import Planetoid, WikipediaNetwork, Twitch
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
-from torch_geometric.utils import remove_isolated_nodes
+from torch_geometric.utils import remove_isolated_nodes, to_networkx
+import networkx as nx
 
 from architecture import  SignNetLinkPredNet
 from train_eval import train_link_predictor, eval_link_predictor
@@ -317,6 +318,7 @@ for r in range(n_realizations):
         sampled_idx_og = sampled_idx
         edge_index_new = graph_new.edge_index.clone()
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
+        print('nb connected: ', nx.number_connected_components(to_networkx(edge_index_new)))
         mask = mask.cpu()
         sampled_idx = torch.tensor(sampled_idx_og, device=device, dtype=torch.long)[mask==True]
         graph_new = train_data.subgraph(sampled_idx)
