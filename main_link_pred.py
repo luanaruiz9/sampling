@@ -321,7 +321,7 @@ for r in range(n_realizations):
         mask = mask.cpu()
         sampled_idx = torch.tensor(sampled_idx_og, device=device, dtype=torch.long)[mask==True]
         graph_new = train_data.subgraph(sampled_idx)
-        print('nb connected: ', nx.number_connected_components(to_networkx(graph_new).to_undirected()))
+        print('adj: ', nx.adjacency_matrix(to_networkx(graph_new)))
         if K > len(sampled_idx):
             K = len(sampled_idx)
         print(len(sampled_idx_og))
