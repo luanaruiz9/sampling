@@ -323,6 +323,7 @@ for r in range(n_realizations):
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu()
         sampled_idx = torch.tensor(sampled_idx_og, device=device, dtype=torch.long)[mask==True]
+        print(sampled_idx)
         graph_new = train_data.subgraph(sampled_idx)
         print(graph_new.edge_index)
         print('nb conn: ', nx.number_connected_components(to_networkx(graph_new).to_undirected()))
