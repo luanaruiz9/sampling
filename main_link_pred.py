@@ -354,7 +354,7 @@ for r in range(n_realizations):
             V_rec[sampled_idx,i] = v
         
         # V for test data
-        graph_new = test_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+        graph_new = test_data.subgraph(torch.tensor(sampled_idx_og, device=device, dtype=torch.long))
         
         # Removing isolated nodes
         edge_index_new = graph_new.edge_index.clone()
@@ -517,7 +517,7 @@ for r in range(n_realizations):
             V_rec[sampled_idx2,i] = v
             
         # V for test data
-        graph_new = test_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
+        graph_new = test_data.subgraph(torch.tensor(sampled_idx2_og, device=device, dtype=torch.long))
         
         # Removing isolated nodes
         edge_index_new = graph_new.edge_index.clone()
