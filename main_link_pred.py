@@ -319,6 +319,8 @@ for r in range(n_realizations):
         graph_new = train_data.subgraph(sampled_idx)
         if K > len(sampled_idx):
             K = len(sampled_idx)
+        print(len(sampled_idx_og))
+        print(len(sampled_idx))
         
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
@@ -363,6 +365,8 @@ for r in range(n_realizations):
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
         adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
+        print(len(sampled_idx_og))
+        print(len(sampled_idx))
         
         # Computing normalized Laplacian
         L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
@@ -478,6 +482,8 @@ for r in range(n_realizations):
         graph_new = train_data.subgraph(sampled_idx2)
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
+        print(len(sampled_idx2_og))
+        print(len(sampled_idx2))
         
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
@@ -518,6 +524,8 @@ for r in range(n_realizations):
         graph_new = test_data.subgraph(sampled_idx2)
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
+        print(len(sampled_idx2_og))
+        print(len(sampled_idx2))
         
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
