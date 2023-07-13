@@ -133,7 +133,7 @@ results_random_samp_pe = np.zeros(n_realizations)
 n_iters_per_rlz = np.zeros(n_realizations)
 
 for r in range(n_realizations):
-    K = 10
+    K = 20
     print('Realization ' + str(r))
     print()
     
@@ -671,6 +671,7 @@ with open(os.path.join(saveDir,'out.txt'), 'w') as f:
     print('Nb. comms.:\t\t' + str(nb_cuts), file=f)
     print('F_nn:\t\t\t' + str(F_nn), file=f)
     print('F_pe:\t\t\t' + str(F_pe), file=f)
+    print('K:\t\t\t' + str(K), file=f)
     
     print("",file=f)
     

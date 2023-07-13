@@ -121,9 +121,11 @@ results_w_samp_pe = np.zeros(n_realizations)
 results_random_samp_eigs = np.zeros(n_realizations)
 results_random_samp_pe = np.zeros(n_realizations)
 n_iters_per_rlz = np.zeros(n_realizations)
+len_sampled_idx = np.zeros(n_realizations)
+len_sampled_idx2 = np.zeros(n_realizations)
 
 for r in range(n_realizations):
-    K = 10
+    K = 20
     print('Realization ' + str(r))
     print()
     
@@ -313,6 +315,7 @@ for r in range(n_realizations):
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu().tolist()
         sampled_idx = list(np.array(sampled_idx_og)[mask])
+        len_sampled_idx[i] = len(sampled_idx)
         graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx):
             K = len(sampled_idx)
@@ -458,6 +461,7 @@ for r in range(n_realizations):
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
         mask = mask.cpu().tolist()
         sampled_idx2 = list(np.array(sampled_idx2_og)[mask])
+        len_sampled_idx2[i] = len(sampled_idx2)
         graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
@@ -628,6 +632,9 @@ with open(os.path.join(saveDir,'out.txt'), 'w') as f:
     print('Nb. comms.:\t\t' + str(nb_cuts), file=f)
     print('F_nn:\t\t\t' + str(F_nn), file=f)
     print('F_pe:\t\t\t' + str(F_pe), file=f)
+    print('K:\t\t\t' + str(K), file=f)
+    print('Avg. nb. nodes in W samp.:\t\t' + str(np.mean(len_sampled_idx)), file=f)
+    print('Avg. nb. nodes in rand. samp.:\t\t' + str(np.mean(len_sampled_idx2)), file=f)
     
     print("",file=f)
     
