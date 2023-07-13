@@ -323,7 +323,7 @@ for r in range(n_realizations):
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu().tolist()
         print(mask)
-        sampled_idx = sampled_idx_og[*mask]
+        sampled_idx = sampled_idx_og[mask]
         print(sampled_idx)
         graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         print(graph_new.edge_index)
@@ -369,7 +369,7 @@ for r in range(n_realizations):
         edge_index_new = graph_new.edge_index.clone()
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu().tolist()
-        sampled_idx = sampled_idx_og[*mask]
+        sampled_idx = sampled_idx_og[mask]
         graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx):
             K = len(sampled_idx)
@@ -490,7 +490,7 @@ for r in range(n_realizations):
         edge_index_new = graph_new.edge_index.clone()
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
         mask = mask.cpu().tolist()
-        sampled_idx2 = sampled_idx2_og[*mask]
+        sampled_idx2 = sampled_idx2_og[mask]
         graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
@@ -532,7 +532,7 @@ for r in range(n_realizations):
         edge_index_new = graph_new.edge_index.clone()
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
         mask = mask.cpu().tolist()
-        sampled_idx2 = sampled_idx2_og[*mask]
+        sampled_idx2 = sampled_idx2_og[mask]
         graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
