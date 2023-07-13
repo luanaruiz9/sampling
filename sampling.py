@@ -182,9 +182,6 @@ def cluster_hk_pr(A, seed, cheeger, eps, sz, vol_den):
                                                            # set of size sz if 
                                                            # nodes cannot be clustered
         elif volS >= vol/2 and volS <= 2*vol and cheegerS <= np.sqrt(8*cheeger):
-            print('here')
-            print(sz)
-            print(len(S))
             return S
         
 def sample_clustering(A, m, nb_cuts=1, cheeger=0.5, eps=0.05, sz=None, vol_den=4):  

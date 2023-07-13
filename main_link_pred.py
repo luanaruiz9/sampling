@@ -5,9 +5,6 @@ Created on Mon Mar  6 14:37:09 2023
 @author: Luana Ruiz
 """
 
-# Restrict eigenvector calculation to connected component!!!!!!
-# Make sure K is at most size of this component (for link pred)
-
 # TO DOS:
 # Consolidate things in classes/functions - more or less ok
 # Make things faster
@@ -15,9 +12,6 @@ Created on Mon Mar  6 14:37:09 2023
 # NEXT STEPS:
 # Link prediction on synthetic graphs
 # Transferability experiments
-
-
-# FIX DEVICES IN SAMPLING (LOOK AT WANDB)
 
 import sys
 import os
@@ -307,33 +301,22 @@ for r in range(n_realizations):
                 for j in range(idx.shape[0]):
                     idx[j] += i*n_nodes_per_int
                 sampled_idx += list(idx)
-        print(len(sampled_idx))
         sampled_idx = list(set(sampled_idx))   
         updated_sz = len(sampled_idx)
         
         # V for train data
         graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
-        print('nb conn: ', nx.number_connected_components(to_networkx(graph_new).to_undirected()))
-        print('adj: ', nx.adjacency_matrix(to_networkx(graph_new)))
-        # FIX LABELING ISSUE HERE. SAMPLED IDX OG IS LOST ONCE WE SUBGRAPH
+
         # Removing isolated nodes
         sampled_idx_og = sampled_idx
-        edge_index_new = to_undirected(graph_new.edge_index.clone(),num_nodes=len(sampled_idx_og))
-        edge_index_new = add_self_loops(edge_index_new, num_nodes = len(sampled_idx_og))[0]
+        edge_index_new = graph_new.edge_index.clone()
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu().tolist()
-        print(mask)
         sampled_idx = list(np.array(sampled_idx_og)[mask])
-        print(sampled_idx)
         graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
-        print(graph_new.edge_index)
-        print('nb conn: ', nx.number_connected_components(to_networkx(graph_new).to_undirected()))
-        print('adj: ', nx.adjacency_matrix(to_networkx(graph_new)))
         if K > len(sampled_idx):
             K = len(sampled_idx)
-        print(len(sampled_idx_og))
-        print(len(sampled_idx))
-        
+
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
         adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
@@ -353,13 +336,6 @@ for r in range(n_realizations):
         
         for i in range(V_new.shape[1]):
             v = V_new[:,i]
-            #x0 = np.random.multivariate_normal(np.zeros(num_nodes),np.eye(num_nodes)/np.sqrt(num_nodes))
-            #x0[sampled_idx] = v.cpu().numpy()*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #v_padded_lb = -torch.ones(num_nodes, device=device)
-            #v_padded_lb[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #v_padded_ub = torch.ones(num_nodes, device=device)
-            #v_padded_ub[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
             V_rec[sampled_idx,i] = v
         
         # V for test data
@@ -377,8 +353,6 @@ for r in range(n_realizations):
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
         adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
-        print(len(sampled_idx_og))
-        print(len(sampled_idx))
         
         # Computing normalized Laplacian
         L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
@@ -395,13 +369,6 @@ for r in range(n_realizations):
         
         for i in range(V_new.shape[1]):
             v = V_new[:,i]
-            #x0 = np.random.multivariate_normal(np.zeros(num_nodes), np.eye(num_nodes)/np.sqrt(num_nodes))
-            #x0[sampled_idx] = v.cpu().numpy()*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #v_padded_lb = -torch.ones(num_nodes, device=device)
-            #v_padded_lb[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #v_padded_ub = torch.ones(num_nodes, device=device)
-            #v_padded_ub[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #V_rec_test[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
             V_rec_test[sampled_idx,i] = v
             #rec_error_w[r,i] = torch.linalg.norm(V_rec_test[:,i]-V_test[:,i])/torch.linalg.norm(V_test[:,i])
         
@@ -494,8 +461,6 @@ for r in range(n_realizations):
         graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
-        print(len(sampled_idx2_og))
-        print(len(sampled_idx2))
         
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
@@ -516,13 +481,6 @@ for r in range(n_realizations):
         
         for i in range(V_new.shape[1]):
             v = V_new[:,i]
-            #x0 = np.random.multivariate_normal(np.zeros(num_nodes),np.eye(num_nodes)/np.sqrt(num_nodes))
-            #x0[sampled_idx2] = v.cpu().numpy()*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #v_padded_lb = -torch.ones(num_nodes, device=device)
-            #v_padded_lb[sampled_idx2] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #v_padded_ub = torch.ones(num_nodes, device=device)
-            #v_padded_ub[sampled_idx2] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
             V_rec[sampled_idx2,i] = v
             
         # V for test data
@@ -536,8 +494,6 @@ for r in range(n_realizations):
         graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
-        print(len(sampled_idx2_og))
-        print(len(sampled_idx2))
         
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
@@ -558,13 +514,6 @@ for r in range(n_realizations):
         
         for i in range(V_new.shape[1]):
             v = V_new[:,i]
-            #x0 = np.random.multivariate_normal(np.zeros(num_nodes), np.eye(num_nodes)/np.sqrt(num_nodes))
-            #x0[sampled_idx2] = v.cpu().numpy()*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #v_padded_lb = -torch.ones(num_nodes, device=device)
-            #v_padded_lb[sampled_idx2] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #v_padded_ub = torch.ones(num_nodes, device=device)
-            #v_padded_ub[sampled_idx2] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #V_rec_test[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
             V_rec_test[sampled_idx2,i] = v
             #rec_error_random[r,i] = torch.linalg.norm(V_rec_test[:,i]-V_test[:,i])/torch.linalg.norm(V_test[:,i])
         
@@ -694,10 +643,16 @@ with open(os.path.join(saveDir,'out.txt'), 'w') as f:
     print('Final results - MEAN',file=f)
     print("",file=f)
 
-    print('Avg. AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.mean(results_no_eigs),file=f)
-    print('Avg. AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.mean(results_eigs), np.mean(results_pe)),file=f)
-    print('Avg. AUC graphon sampling, idem above:\t\t\t%.4f    %.4f' % (np.mean(results_w_samp_eigs), np.mean(results_w_samp_pe)),file=f)
-    print('Avg. AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.mean(results_random_samp_eigs), np.mean(results_random_samp_pe)),file=f)
+    print('Avg. AUC w/o eigenvectors:\t\t\t\t\t%.4f +/- %.4f' % (np.mean(results_no_eigs),
+                                                                 np.std(results_no_eigs)),file=f)
+    print('Avg. AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f +/- %.4f    %.4f +/- %.4f' % 
+          (np.mean(results_eigs), np.std(results_eigs), np.mean(results_pe), np.std(results_pe)),file=f)
+    print('Avg. AUC graphon sampling, idem above:\t\t\t%.4f +/- %.4f    %.4f +/- %.4f' % 
+          (np.mean(results_w_samp_eigs), np.std(results_w_samp_eigs), np.mean(results_w_samp_pe), 
+           np.std(results_w_samp_pe)),file=f)
+    print('Avg. AUC random sampling, idem above:\t\t\t\t%.4f +/- %.4f    %.4f +/- %.4f' % 
+          (np.mean(results_random_samp_eigs), np.std(results_random_samp_eigs), 
+           np.mean(results_random_samp_pe), np.std(results_random_samp_pe)),file=f)
     print("",file=f)
 
     print('Final results - MEDIAN',file=f)

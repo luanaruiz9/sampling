@@ -5,13 +5,7 @@ Created on Thu Mar 30 09:18:48 2023
 @author: Luana Ruiz
 """
 
-from typing import Optional, Tuple
-
 import torch
-from torch import Tensor
-
-from torch_geometric.utils import remove_self_loops, segregate_self_loops
-from torch_geometric.utils.num_nodes import maybe_num_nodes
 
 
 def compute_adj_from_data(data):

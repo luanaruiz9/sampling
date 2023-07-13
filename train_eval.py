@@ -155,7 +155,6 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
                     for j in range(idx.shape[0]):
                         idx[j] += i*n_nodes_per_int
                     sampled_idx += list(idx)
-            print(sampled_idx)
             sampled_idx = list(set(sampled_idx))   
             
             # V for train data
@@ -163,8 +162,6 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
             
             # Removing isolated nodes
-            print('train_eval')
-            print(K)
             sampled_idx_og = sampled_idx
             edge_index_new = graph_new.edge_index.clone()
             edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
@@ -173,9 +170,6 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
             if K > len(sampled_idx):
                 K = len(sampled_idx)
-            print(len(sampled_idx_og))
-            print(len(sampled_idx))
-            print('K')
             
             graph_new = graph_new.to(device)
             num_nodes_new = graph_new.x.shape[0]
@@ -208,8 +202,6 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             # V for train data
             graph_new = eig_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
             
-            print('train_eval')
-            print(K)
             # Removing isolated nodes
             sampled_idx2_og = sampled_idx2
             edge_index_new = graph_new.edge_index.clone()
@@ -219,9 +211,6 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
             if K > len(sampled_idx2):
                 K = len(sampled_idx2)
-            print(len(sampled_idx2_og))
-            print(len(sampled_idx2))
-            print(K)
             
             graph_new = graph_new.to(device)
             num_nodes_new = graph_new.x.shape[0]
@@ -242,13 +231,6 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             
             for i in range(V_new.shape[1]):
                 v = V_new[:,i]
-                #x0 = np.random.multivariate_normal(np.zeros(num_nodes),np.eye(num_nodes)/np.sqrt(num_nodes))
-                #x0[sampled_idx2] = v.cpu().numpy()*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-                #v_padded_lb = -torch.ones(num_nodes, device=device)
-                #v_padded_lb[sampled_idx2] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-                #v_padded_ub = torch.ones(num_nodes, device=device)
-                #v_padded_ub[sampled_idx2] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-                #V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
                 V_rec[sampled_idx2,i] = v
             V_collection.append(V_rec)
         
