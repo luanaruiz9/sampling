@@ -133,7 +133,7 @@ results_random_samp_pe = np.zeros(n_realizations)
 n_iters_per_rlz = np.zeros(n_realizations)
 
 for r in range(n_realizations):
-    K = 20
+    K = 50
     print('Realization ' + str(r))
     print()
     

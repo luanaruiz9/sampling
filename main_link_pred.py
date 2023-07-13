@@ -125,7 +125,7 @@ len_sampled_idx = np.zeros(n_realizations)
 len_sampled_idx2 = np.zeros(n_realizations)
 
 for r in range(n_realizations):
-    K = 20
+    K = 50
     print('Realization ' + str(r))
     print()
     
