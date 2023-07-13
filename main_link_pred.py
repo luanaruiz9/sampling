@@ -94,19 +94,19 @@ elif 'twitch-ru' in data_name:
 elif 'sbm-d' in data_name:
     n = 20000
     c = 50
-    b_sz = n/c*torch.ones(c)
+    b_sz = int(n/c)*torch.ones(c,dtype=torch.long)
     q = 0.3
     p = 0.7
     p_m = q*torch.ones(c,c) + (p-q)*torch.eye(c)
-    dataset = StochasticBlockModelDataset('/tmp/SBM-d', b_sz, p_m)
+    dataset = StochasticBlockModelDataset(root='/tmp/SBM-d', block_sizes=b_sz, edge_probs=p_m)
 elif 'sbm-s' in data_name:
     n = 20000
     c = 50
-    b_sz = n/c*torch.ones(c)
+    b_sz = int(n/c)*torch.ones(c,dtype=torch.long)
     q = 0.3
     p = 0.7
     p_m = (q*torch.ones(c,c) + (p-q)*torch.eye(c))*(np.log(n)/n)
-    dataset = StochasticBlockModelDataset('/tmp/SBM-d', b_sz, p_m)
+    dataset = StochasticBlockModelDataset(root='/tmp/SBM-s', block_sizes=b_sz, edge_probs=p_m)
     
 graph_og = dataset[0]
 #graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
