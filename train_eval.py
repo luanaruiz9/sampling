@@ -169,7 +169,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             edge_index_new = graph_new.edge_index.clone()
             edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
             mask = mask.cpu().tolist()
-            sampled_idx = sampled_idx_og[mask]
+            sampled_idx = sampled_idx_og[**mask]
             graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
             if K > len(sampled_idx):
                 K = len(sampled_idx)
@@ -215,7 +215,7 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             edge_index_new = graph_new.edge_index.clone()
             edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
             mask = mask.cpu().tolist()
-            sampled_idx2 = sampled_idx2_og[mask]
+            sampled_idx2 = sampled_idx2_og[**mask]
             graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
             if K > len(sampled_idx2):
                 K = len(sampled_idx2)
