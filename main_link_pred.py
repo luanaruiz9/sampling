@@ -102,7 +102,7 @@ elif 'sbm-d' in data_name:
     edge_index = stochastic_blockmodel_graph(block_sizes=b_sz, edge_probs=p_m)
     y = torch.arange(c)
     y = torch.repeat_interleave(y,int(n/c))
-    dataset = [Data(edge_index=edge_index, y=y)]
+    dataset = [Data(x=torch.ones(n), edge_index=edge_index, y=y)]
 elif 'sbm-s' in data_name:
     n = 5000
     c = 50
@@ -113,7 +113,7 @@ elif 'sbm-s' in data_name:
     edge_index = stochastic_blockmodel_graph(block_sizes=b_sz, edge_probs=p_m)
     y = torch.arange(c)
     y = torch.repeat_interleave(y,int(n/c))
-    dataset = [Data(edge_index=edge_index, y=y)]
+    dataset = [Data(x=torch.ones(n), edge_index=edge_index, y=y)]
     
 graph_og = dataset[0]
 #graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
