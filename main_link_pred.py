@@ -315,16 +315,16 @@ for r in range(n_realizations):
         graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         print('nb conn: ', nx.number_connected_components(to_networkx(graph_new).to_undirected()))
         print('adj: ', nx.adjacency_matrix(to_networkx(graph_new)))
-        
+        # FIX LABELING ISSUE HERE. SAMPLED IDX OG IS LOST ONCE WE SUBGRAPH
         # Removing isolated nodes
         sampled_idx_og = sampled_idx
         edge_index_new = to_undirected(graph_new.edge_index.clone(),num_nodes=len(sampled_idx_og))
         edge_index_new = add_self_loops(edge_index_new, num_nodes = len(sampled_idx_og))[0]
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu()
-        sampled_idx = torch.tensor(sampled_idx_og, device=device, dtype=torch.long)[mask==True]
+        sampled_idx = sampled_idx_og[mask]
         print(sampled_idx)
-        graph_new = train_data.subgraph(sampled_idx)
+        graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         print(graph_new.edge_index)
         print('nb conn: ', nx.number_connected_components(to_networkx(graph_new).to_undirected()))
         print('adj: ', nx.adjacency_matrix(to_networkx(graph_new)))
@@ -368,8 +368,8 @@ for r in range(n_realizations):
         edge_index_new = graph_new.edge_index.clone()
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu()
-        sampled_idx = torch.tensor(sampled_idx_og, device=device, dtype=torch.long)[mask==True]
-        graph_new = test_data.subgraph(sampled_idx)
+        sampled_idx = sampled_idx_og[mask]
+        graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx):
             K = len(sampled_idx)
         
@@ -489,8 +489,8 @@ for r in range(n_realizations):
         edge_index_new = graph_new.edge_index.clone()
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
         mask = mask.cpu()
-        sampled_idx2 = torch.tensor(sampled_idx2_og, device=device, dtype=torch.long)[mask==True]
-        graph_new = train_data.subgraph(sampled_idx2)
+        sampled_idx2 = sampled_idx2_og[mask]
+        graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
         print(len(sampled_idx2_og))
@@ -531,8 +531,8 @@ for r in range(n_realizations):
         edge_index_new = graph_new.edge_index.clone()
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
         mask = mask.cpu()
-        sampled_idx2 = torch.tensor(sampled_idx2_og, device=device, dtype=torch.long)[mask==True]
-        graph_new = test_data.subgraph(sampled_idx2)
+        sampled_idx2 = sampled_idx2_og[mask]
+        graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
         print(len(sampled_idx2_og))
