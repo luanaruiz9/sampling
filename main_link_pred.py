@@ -322,6 +322,7 @@ for r in range(n_realizations):
         edge_index_new = add_self_loops(edge_index_new, num_nodes = len(sampled_idx_og))[0]
         edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
         mask = mask.cpu().tolist()
+        print(mask)
         sampled_idx = sampled_idx_og[*mask]
         print(sampled_idx)
         graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
