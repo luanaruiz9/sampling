@@ -92,7 +92,7 @@ elif 'twitch-pt' in data_name:
 elif 'twitch-ru' in data_name:
     dataset = Twitch(root='/tmp/RU', name='RU')
 elif 'sbm-d' in data_name:
-    n = 5000
+    n = 500
     c = 50
     b_sz = int(n/c)*torch.ones(c,dtype=torch.long)
     q = 0.3
@@ -100,7 +100,7 @@ elif 'sbm-d' in data_name:
     p_m = q*torch.ones(c,c) + (p-q)*torch.eye(c)
     dataset = StochasticBlockModelDataset(root='/tmp/SBM_d', block_sizes=b_sz, edge_probs=p_m)
 elif 'sbm-s' in data_name:
-    n = 5000
+    n = 500
     c = 50
     b_sz = int(n/c)*torch.ones(c,dtype=torch.long)
     q = 0.3
