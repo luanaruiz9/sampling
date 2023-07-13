@@ -77,6 +77,8 @@ do_learn_pe = True
 do_w_sampl = True
 do_random_sampl = True
 
+remove_isolated = False
+
 if 'cora' in data_name:
     dataset = Planetoid(root='/tmp/Cora', name='Cora')
 elif 'citeseer' in data_name:
@@ -310,13 +312,14 @@ for r in range(n_realizations):
         graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
 
         # Removing isolated nodes
-        sampled_idx_og = sampled_idx
-        edge_index_new = graph_new.edge_index.clone()
-        edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-        mask = mask.cpu().tolist()
-        sampled_idx = list(np.array(sampled_idx_og)[mask])
-        len_sampled_idx[r] = len(sampled_idx)
-        graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
+        if remove_isolated:
+            sampled_idx_og = sampled_idx
+            edge_index_new = graph_new.edge_index.clone()
+            edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
+            mask = mask.cpu().tolist()
+            sampled_idx = list(np.array(sampled_idx_og)[mask])
+            len_sampled_idx[r] = len(sampled_idx)
+            graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx):
             K = len(sampled_idx)
 
@@ -345,11 +348,12 @@ for r in range(n_realizations):
         graph_new = test_data.subgraph(torch.tensor(sampled_idx_og, device=device, dtype=torch.long))
         
         # Removing isolated nodes
-        edge_index_new = graph_new.edge_index.clone()
-        edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-        mask = mask.cpu().tolist()
-        sampled_idx = list(np.array(sampled_idx_og)[mask])
-        graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
+        if remove_isolated:
+            edge_index_new = graph_new.edge_index.clone()
+            edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
+            mask = mask.cpu().tolist()
+            sampled_idx = list(np.array(sampled_idx_og)[mask])
+            graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx):
             K = len(sampled_idx)
         
@@ -400,7 +404,7 @@ for r in range(n_realizations):
         criterion = torch.nn.BCEWithLogitsLoss()
         model, train_data_collection, V_collection = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
                                      criterion, n_epochs=n_epochs, K=K, m=m, m2=m2, 
-                                     m3=m3, nb_cuts=nb_cuts)
+                                     m3=m3, nb_cuts=nb_cuts, remove_isolated=remove_isolated)
         
         test_auc = eval_link_predictor(model, test_data_new)
         results_w_samp_eigs[r] = test_auc
@@ -434,7 +438,7 @@ for r in range(n_realizations):
                                      criterion, n_epochs=n_epochs, K=K, pe=True, m=m, 
                                      m2=m2, m3=m3, nb_cuts=nb_cuts, 
                                      train_data_collection=train_data_collection, 
-                                     V_collection=V_collection)
+                                     V_collection=V_collection, remove_isolated=remove_isolated)
         test_auc = eval_link_predictor(model, test_data_new)
         results_w_samp_pe[r] = test_auc
         print(f"Test: {test_auc:.3f}")
@@ -456,13 +460,14 @@ for r in range(n_realizations):
         graph_new = train_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
         
         # Removing isolated nodes
-        sampled_idx2_og = sampled_idx2
-        edge_index_new = graph_new.edge_index.clone()
-        edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
-        mask = mask.cpu().tolist()
-        sampled_idx2 = list(np.array(sampled_idx2_og)[mask])
-        len_sampled_idx2[r] = len(sampled_idx2)
-        graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
+        if remove_isolated:
+            sampled_idx2_og = sampled_idx2
+            edge_index_new = graph_new.edge_index.clone()
+            edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
+            mask = mask.cpu().tolist()
+            sampled_idx2 = list(np.array(sampled_idx2_og)[mask])
+            len_sampled_idx2[r] = len(sampled_idx2)
+            graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
         
@@ -491,11 +496,12 @@ for r in range(n_realizations):
         graph_new = test_data.subgraph(torch.tensor(sampled_idx2_og, device=device, dtype=torch.long))
         
         # Removing isolated nodes
-        edge_index_new = graph_new.edge_index.clone()
-        edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
-        mask = mask.cpu().tolist()
-        sampled_idx2 = list(np.array(sampled_idx2_og)[mask])
-        graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
+        if remove_isolated:
+            edge_index_new = graph_new.edge_index.clone()
+            edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
+            mask = mask.cpu().tolist()
+            sampled_idx2 = list(np.array(sampled_idx2_og)[mask])
+            graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
         
@@ -545,7 +551,7 @@ for r in range(n_realizations):
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
         model, train_data_collection, V_collection = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
-                                     criterion, n_epochs=n_epochs, K=K, m2=m2, m3=m3)
+                                     criterion, n_epochs=n_epochs, K=K, m2=m2, m3=m3, remove_isolated=remove_isolated)
         
         test_auc = eval_link_predictor(model, test_data_new)
         results_random_samp_eigs[r] = test_auc
@@ -578,7 +584,7 @@ for r in range(n_realizations):
         model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
                                      criterion, n_epochs=n_epochs, K=K, pe=True, m2=m2, m3=m3,
                                      train_data_collection=train_data_collection,
-                                     V_collection=V_collection)
+                                     V_collection=V_collection, remove_isolated=remove_isolated)
         test_auc = eval_link_predictor(model, test_data_new)
         results_random_samp_pe[r] = test_auc
         print(f"Test: {test_auc:.3f}")
@@ -633,8 +639,9 @@ with open(os.path.join(saveDir,'out.txt'), 'w') as f:
     print('F_nn:\t\t\t' + str(F_nn), file=f)
     print('F_pe:\t\t\t' + str(F_pe), file=f)
     print('K:\t\t\t' + str(K), file=f)
-    print('Avg. nb. nodes in W samp.:\t\t' + str(np.mean(len_sampled_idx)), file=f)
-    print('Avg. nb. nodes in rand. samp.:\t\t' + str(np.mean(len_sampled_idx2)), file=f)
+    print('Avg. nb. nodes in W samp.:\t' + str(np.mean(len_sampled_idx)), file=f)
+    print('Avg. nb. nodes in rand. samp.:\t' + str(np.mean(len_sampled_idx2)), file=f)
+    print('Remove isolated:\t\t' + str(remove_isolated), file=f)
     
     print("",file=f)
     

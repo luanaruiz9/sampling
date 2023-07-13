@@ -29,7 +29,7 @@ zeroTol = 1e-9
 
 def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion, ten_fold=True,
                          n_epochs=100, K=None, pe=False, m=None, m2=None, m3=None, nb_cuts=None,
-                         train_data_collection=None, V_collection=None):
+                         train_data_collection=None, V_collection=None, remove_isolated=False):
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 30, gamma=1)
     
     ########################################################################
@@ -162,12 +162,13 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
             
             # Removing isolated nodes
-            sampled_idx_og = sampled_idx
-            edge_index_new = graph_new.edge_index.clone()
-            edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-            mask = mask.cpu().tolist()
-            sampled_idx = list(np.array(sampled_idx_og)[mask])
-            graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
+            if remove_isolated:
+                sampled_idx_og = sampled_idx
+                edge_index_new = graph_new.edge_index.clone()
+                edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
+                mask = mask.cpu().tolist()
+                sampled_idx = list(np.array(sampled_idx_og)[mask])
+                graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
             if K > len(sampled_idx):
                 K = len(sampled_idx)
             
@@ -203,12 +204,13 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
             graph_new = eig_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
             
             # Removing isolated nodes
-            sampled_idx2_og = sampled_idx2
-            edge_index_new = graph_new.edge_index.clone()
-            edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
-            mask = mask.cpu().tolist()
-            sampled_idx2 = list(np.array(sampled_idx2_og)[mask])
-            graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
+            if remove_isolated:
+                sampled_idx2_og = sampled_idx2
+                edge_index_new = graph_new.edge_index.clone()
+                edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
+                mask = mask.cpu().tolist()
+                sampled_idx2 = list(np.array(sampled_idx2_og)[mask])
+                graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
             if K > len(sampled_idx2):
                 K = len(sampled_idx2)
             
