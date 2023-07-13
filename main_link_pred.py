@@ -318,10 +318,10 @@ for r in range(n_realizations):
             edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
             mask = mask.cpu().tolist()
             sampled_idx = list(np.array(sampled_idx_og)[mask])
-            len_sampled_idx[r] = len(sampled_idx)
             graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx):
             K = len(sampled_idx)
+        len_sampled_idx[r] = len(sampled_idx)
 
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
@@ -466,10 +466,10 @@ for r in range(n_realizations):
             edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
             mask = mask.cpu().tolist()
             sampled_idx2 = list(np.array(sampled_idx2_og)[mask])
-            len_sampled_idx2[r] = len(sampled_idx2)
             graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
+        len_sampled_idx2[r] = len(sampled_idx2)
         
         graph_new = graph_new.to(device)
         num_nodes_new = graph_new.x.shape[0]
