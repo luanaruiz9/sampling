@@ -20,10 +20,11 @@ import pickle as pkl
 import numpy as np
 
 import torch
-from torch_geometric.datasets import Planetoid, WikipediaNetwork, Twitch, StochasticBlockModelDataset
+from torch_geometric.datasets import Planetoid, WikipediaNetwork, Twitch
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
 from torch_geometric.utils import remove_isolated_nodes, to_networkx, add_self_loops, to_undirected
+from torch_geometric.utils.random import stochastic_blockmodel_graph
 import networkx as nx
 
 from architecture import  SignNetLinkPredNet
@@ -92,21 +93,27 @@ elif 'twitch-pt' in data_name:
 elif 'twitch-ru' in data_name:
     dataset = Twitch(root='/tmp/RU', name='RU')
 elif 'sbm-d' in data_name:
-    n = 500
+    n = 5000
     c = 50
     b_sz = int(n/c)*torch.ones(c,dtype=torch.long)
     q = 0.3
     p = 0.7
     p_m = q*torch.ones(c,c) + (p-q)*torch.eye(c)
-    dataset = StochasticBlockModelDataset(root='/tmp/SBM_d', block_sizes=b_sz, edge_probs=p_m)
+    edge_index = stochastic_blockmodel_graph(block_sizes=b_sz, edge_probs=p_m)
+    y = torch.arange(c)
+    y = torch.repeat_interleave(y,int(n/c))
+    dataset = [Data(edge_index=edge_index, y=y)]
 elif 'sbm-s' in data_name:
-    n = 500
+    n = 5000
     c = 50
     b_sz = int(n/c)*torch.ones(c,dtype=torch.long)
     q = 0.3
     p = 0.7
     p_m = (q*torch.ones(c,c) + (p-q)*torch.eye(c))*(np.log(n)/n)
-    dataset = StochasticBlockModelDataset(root='/tmp/SBM_s', block_sizes=b_sz, edge_probs=p_m)
+    edge_index = stochastic_blockmodel_graph(block_sizes=b_sz, edge_probs=p_m)
+    y = torch.arange(c)
+    y = torch.repeat_interleave(y,int(n/c))
+    dataset = [Data(edge_index=edge_index, y=y)]
     
 graph_og = dataset[0]
 #graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
