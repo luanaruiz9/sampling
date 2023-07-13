@@ -20,7 +20,7 @@ import pickle as pkl
 import numpy as np
 
 import torch
-from torch_geometric.datasets import Planetoid, WikipediaNetwork, Twitch
+from torch_geometric.datasets import Planetoid, WikipediaNetwork, Twitch, StochasticBlockModelDataset
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
 from torch_geometric.utils import remove_isolated_nodes, to_networkx, add_self_loops, to_undirected
@@ -91,6 +91,22 @@ elif 'twitch-pt' in data_name:
     dataset = Twitch(root='/tmp/PT', name='PT')
 elif 'twitch-ru' in data_name:
     dataset = Twitch(root='/tmp/RU', name='RU')
+elif 'sbm-d' in data_name:
+    n = 20000
+    c = 50
+    b_sz = n/c*torch.ones(c)
+    q = 0.3
+    p = 0.7
+    p_m = q*torch.ones(c,c) + (p-q)*torch.eye(c)
+    dataset = StochasticBlockModelDataset('/tmp/SBM-d', b_sz, p_m)
+elif 'sbm-s' in data_name:
+    n = 20000
+    c = 50
+    b_sz = n/c*torch.ones(c)
+    q = 0.3
+    p = 0.7
+    p_m = (q*torch.ones(c,c) + (p-q)*torch.eye(c))*(np.log(n)/n)
+    dataset = StochasticBlockModelDataset('/tmp/SBM-d', b_sz, p_m)
     
 graph_og = dataset[0]
 #graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
