@@ -93,8 +93,8 @@ elif 'twitch-pt' in data_name:
 elif 'twitch-ru' in data_name:
     dataset = Twitch(root='/tmp/RU', name='RU')
 elif 'sbm-d' in data_name:
-    n = 5000
-    c = 50
+    n = 1000
+    c = 25
     b_sz = int(n/c)*torch.ones(c,dtype=torch.long)
     q = 0.3
     p = 0.7
@@ -104,8 +104,8 @@ elif 'sbm-d' in data_name:
     y = torch.repeat_interleave(y,int(n/c))
     dataset = [Data(x=torch.ones(n), edge_index=edge_index, y=y)]
 elif 'sbm-s' in data_name:
-    n = 5000
-    c = 50
+    n = 1000
+    c = 25
     b_sz = int(n/c)*torch.ones(c,dtype=torch.long)
     q = 0.3
     p = 0.7
