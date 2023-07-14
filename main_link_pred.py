@@ -109,7 +109,7 @@ elif 'sbm-s' in data_name:
     b_sz = int(n/c)*torch.ones(c,dtype=torch.long)
     q = 0.3
     p = 0.7
-    p_m = (q*torch.ones(c,c) + (p-q)*torch.eye(c))*(np.log(n)/n)
+    p_m = (q*torch.ones(c,c) + (p-q)*torch.eye(c))/np.log(n)
     edge_index = stochastic_blockmodel_graph(block_sizes=b_sz, edge_probs=p_m)
     y = torch.arange(c)
     y = torch.repeat_interleave(y,int(n/c))
