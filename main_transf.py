@@ -172,7 +172,7 @@ for r in range(n_realizations):
         print('Sampling with spectral proxies...')
         print()
         
-        if r == 0: # Only sample intervals once
+        if True:# r == 0: # Only sample intervals once
             # Finding sampling set
             n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
             graph_ind = generate_induced_graphon(train_data, m)

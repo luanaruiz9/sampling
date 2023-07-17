@@ -332,7 +332,7 @@ for r in range(n_realizations):
         updated_sz = len(sampled_idx)
         
         # V for train data
-        graph_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+        graph_new = train_data.clone().subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
 
         # Removing isolated nodes
         sampled_idx_og = sampled_idx
@@ -368,7 +368,7 @@ for r in range(n_realizations):
             V_rec[sampled_idx,i] = v
         
         # V for test data
-        graph_new = test_data.subgraph(torch.tensor(sampled_idx_og, device=device, dtype=torch.long))
+        graph_new = test_data.clone().subgraph(torch.tensor(sampled_idx_og, device=device, dtype=torch.long))
         
         # Removing isolated nodes
         if remove_isolated:
@@ -481,7 +481,7 @@ for r in range(n_realizations):
         sampled_idx2 = list(np.random.choice(np.arange(num_nodes), updated_sz, replace=False))
 
         # V for train data
-        graph_new = train_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
+        graph_new = train_data.clone().subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
         
         # Removing isolated nodes
         sampled_idx2_og = sampled_idx2
@@ -517,7 +517,7 @@ for r in range(n_realizations):
             V_rec[sampled_idx2,i] = v
             
         # V for test data
-        graph_new = test_data.subgraph(torch.tensor(sampled_idx2_og, device=device, dtype=torch.long))
+        graph_new = test_data.clone().subgraph(torch.tensor(sampled_idx2_og, device=device, dtype=torch.long))
         
         # Removing isolated nodes
         if remove_isolated:
