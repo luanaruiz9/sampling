@@ -5,13 +5,8 @@ Created on Mon Mar  6 14:37:09 2023
 @author: Luana Ruiz
 """
 
-# TO DOS:
-# Consolidate things in classes/functions - more or less ok
-# Make things faster
-
 # NEXT STEPS:
-# Link prediction on synthetic graphs
-# Transferability experiments
+# Link prediction on synthetic graphs - not working
 
 import sys
 import os
@@ -47,6 +42,7 @@ updated_sz = m2*m3
 nb_cuts = int(sys.argv[8])
 fnn = int(sys.argv[9])
 fpe = int(sys.argv[10])
+K_in = int(sys.argv[11])
 
 F_nn = [fnn, fnn]
 F_pe = [fpe, fpe]
@@ -78,7 +74,8 @@ do_learn_pe = True
 do_w_sampl = True
 do_random_sampl = True
 
-remove_isolated = False
+remove_isolated = True
+sort_by_degree = True
 
 if 'cora' in data_name:
     dataset = Planetoid(root='/tmp/Cora', name='Cora')
@@ -119,7 +116,7 @@ graph_og = dataset[0]
 #graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
 
 # Sorting nodes by degree
-if 'sbm' not in data_name:
+if 'sbm' not in data_name and sort_by_degree:
     adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
     num_nodes = adj.shape[0]
     D = aux_functions.compute_degree(adj_sparse, num_nodes)
@@ -151,7 +148,8 @@ len_sampled_idx = np.zeros(n_realizations)
 len_sampled_idx2 = np.zeros(n_realizations)
 
 for r in range(n_realizations):
-    K = 50
+    K = K_in
+    
     print('Realization ' + str(r))
     print()
     
@@ -285,10 +283,6 @@ for r in range(n_realizations):
     
         print('Sampling with spectral proxies...')
         print()
-        
-        idx = torch.argsort(eigvals_test.float())
-        V_test = V_test[:,idx[0:K]].type(torch.float32)
-        eigvals_test = eigvals_test[idx[0:K]].type(torch.float32)
         
         # Finding sampling set
         n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
@@ -618,28 +612,28 @@ for r in range(n_realizations):
 print('Final results - MAX')
 print()
 
-print('Avg. AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.max(results_no_eigs))
-print('Avg. AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.max(results_eigs), np.max(results_pe)))
-print('Avg. AUC graphon sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.max(results_w_samp_eigs), np.max(results_w_samp_pe)))
-print('Avg. AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.max(results_random_samp_eigs), np.max(results_random_samp_pe)))
+print('AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.max(results_no_eigs))
+print('AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.max(results_eigs), np.max(results_pe)))
+print('AUC graphon sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.max(results_w_samp_eigs), np.max(results_w_samp_pe)))
+print('AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.max(results_random_samp_eigs), np.max(results_random_samp_pe)))
 print()    
 
 print('Final results - MEAN')
 print()
 
-print('Avg. AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.mean(results_no_eigs))
-print('Avg. AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.mean(results_eigs), np.mean(results_pe)))
-print('Avg. AUC graphon sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.mean(results_w_samp_eigs), np.mean(results_w_samp_pe)))
-print('Avg. AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.mean(results_random_samp_eigs), np.mean(results_random_samp_pe)))
+print('AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.mean(results_no_eigs))
+print('AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.mean(results_eigs), np.mean(results_pe)))
+print('AUC graphon sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.mean(results_w_samp_eigs), np.mean(results_w_samp_pe)))
+print('AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.mean(results_random_samp_eigs), np.mean(results_random_samp_pe)))
 print()  
 
 print('Final results - MEDIAN')
 print()
 
-print('Avg. AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.median(results_no_eigs))
-print('Avg. AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.median(results_eigs), np.median(results_pe)))
-print('Avg. AUC graphon sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.median(results_w_samp_eigs), np.median(results_w_samp_pe)))
-print('Avg. AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.median(results_random_samp_eigs), np.median(results_random_samp_pe)))
+print('AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.median(results_no_eigs))
+print('AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.median(results_eigs), np.median(results_pe)))
+print('AUC graphon sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.median(results_w_samp_eigs), np.median(results_w_samp_pe)))
+print('AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.median(results_random_samp_eigs), np.median(results_random_samp_pe)))
 print()  
 
 with open(os.path.join(saveDir,'out.txt'), 'w') as f:
@@ -651,7 +645,6 @@ with open(os.path.join(saveDir,'out.txt'), 'w') as f:
     
     print('Dataset:\t\t' + data_name, file=f)
     print('Learning rate:\t\t' + str(lr), file=f)
-    print('Dataset:\t\t' + data_name, file=f)
     print('Nb. epochs:\t\t' + str(n_epochs), file=f)
     print('Ratio train:\t\t' + str(ratio_train), file=f)
     print('Ratio test:\t\t' + str(ratio_test), file=f)
@@ -672,23 +665,23 @@ with open(os.path.join(saveDir,'out.txt'), 'w') as f:
     print('Final results - MAX', file=f)
     print("",file=f)
 
-    print('Avg. AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.max(results_no_eigs),file=f)
-    print('Avg. AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.max(results_eigs), np.max(results_pe)),file=f)
-    print('Avg. AUC graphon sampling, idem above:\t\t\t%.4f    %.4f' % (np.max(results_w_samp_eigs), np.max(results_w_samp_pe)),file=f)
-    print('Avg. AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.max(results_random_samp_eigs), np.max(results_random_samp_pe)),file=f)
+    print('AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.max(results_no_eigs),file=f)
+    print('AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.max(results_eigs), np.max(results_pe)),file=f)
+    print('AUC graphon sampling, idem above:\t\t\t%.4f    %.4f' % (np.max(results_w_samp_eigs), np.max(results_w_samp_pe)),file=f)
+    print('AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.max(results_random_samp_eigs), np.max(results_random_samp_pe)),file=f)
     print("",file=f)
 
     print('Final results - MEAN',file=f)
     print("",file=f)
 
-    print('Avg. AUC w/o eigenvectors:\t\t\t\t\t%.4f +/- %.4f' % (np.mean(results_no_eigs),
+    print('AUC w/o eigenvectors:\t\t\t\t\t%.4f +/- %.4f' % (np.mean(results_no_eigs),
                                                                  np.std(results_no_eigs)),file=f)
-    print('Avg. AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f +/- %.4f    %.4f +/- %.4f' % 
+    print('AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f +/- %.4f    %.4f +/- %.4f' % 
           (np.mean(results_eigs), np.std(results_eigs), np.mean(results_pe), np.std(results_pe)),file=f)
-    print('Avg. AUC graphon sampling, idem above:\t\t\t%.4f +/- %.4f    %.4f +/- %.4f' % 
+    print('AUC graphon sampling, idem above:\t\t\t%.4f +/- %.4f    %.4f +/- %.4f' % 
           (np.mean(results_w_samp_eigs), np.std(results_w_samp_eigs), np.mean(results_w_samp_pe), 
            np.std(results_w_samp_pe)),file=f)
-    print('Avg. AUC random sampling, idem above:\t\t\t\t%.4f +/- %.4f    %.4f +/- %.4f' % 
+    print('AUC random sampling, idem above:\t\t\t\t%.4f +/- %.4f    %.4f +/- %.4f' % 
           (np.mean(results_random_samp_eigs), np.std(results_random_samp_eigs), 
            np.mean(results_random_samp_pe), np.std(results_random_samp_pe)),file=f)
     print("",file=f)
@@ -696,10 +689,10 @@ with open(os.path.join(saveDir,'out.txt'), 'w') as f:
     print('Final results - MEDIAN',file=f)
     print("",file=f)
 
-    print('Avg. AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.median(results_no_eigs),file=f)
-    print('Avg. AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.median(results_eigs), np.median(results_pe)),file=f)
-    print('Avg. AUC graphon sampling, idem above:\t\t\t%.4f    %.4f' % (np.median(results_w_samp_eigs), np.median(results_w_samp_pe)),file=f)
-    print('Avg. AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.median(results_random_samp_eigs), np.median(results_random_samp_pe)),file=f)
+    print('AUC w/o eigenvectors:\t\t\t\t\t%.4f' % np.median(results_no_eigs),file=f)
+    print('AUC w/ eigenvectors and w/ PEs:\t\t\t\t%.4f    %.4f' % (np.median(results_eigs), np.median(results_pe)),file=f)
+    print('AUC graphon sampling, idem above:\t\t\t%.4f    %.4f' % (np.median(results_w_samp_eigs), np.median(results_w_samp_pe)),file=f)
+    print('AUC random sampling, idem above:\t\t\t\t%.4f    %.4f' % (np.median(results_random_samp_eigs), np.median(results_random_samp_pe)),file=f)
     print("",file=f)
 
 # Pickling

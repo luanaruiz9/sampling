@@ -5,17 +5,6 @@ Created on Mon Mar  6 14:37:09 2023
 @author: Luana Ruiz
 """
 
-# TO DOS:
-# Consolidate things in classes/functions - more or less ok
-# Make things faster
-
-# NEXT STEPS:
-# Link prediction on synthetic graphs
-# Transferability experiments
-
-# Save params and results in .txt
-# Implement PEs
-
 import sys
 import os
 import datetime
@@ -33,20 +22,22 @@ from train_eval import train, test
 from sampling import generate_induced_graphon, greedy, f, sample_clustering
 import aux_functions
 
-data_name = 'cora'#sys.argv[1]
-folder_name = data_name
-lr = 0.001#float(sys.argv[2])
-n_epochs = 100#int(sys.argv[3])
-ratio_train = 0.6#float(sys.argv[4])
-ratio_test = 0.2#float(sys.argv[5])
+data_name = sys.argv[1]
+lr = float(sys.argv[2]) # 0.001
+n_epochs = int(sys.argv[3]) #100
+ratio_train = 0.6
+ratio_test = 0.2
 ratio_val = 1-ratio_train-ratio_test
-n_realizations = 1#int(sys.argv[6]) #10
-m = 100#int(sys.argv[7]) #50 # Number of candidate intervals
-m2 = 50#int(sys.argv[8]) #25 # Number of sampled intervals
-m3 = 10#int(sys.argv[9]) #3 #8 # How many nodes (points) to sample per sampled interval
-nb_cuts = 1#int(sys.argv[10])
+n_realizations = int(sys.argv[4]) #10
+m = int(sys.argv[5]) #20 # Number of candidate intervals
+m2 = int(sys.argv[6]) #10 # Number of sampled intervals
+m3 = int(sys.argv[7]) #10 # How many nodes (points) to sample per sampled interval
+updated_sz = m2*m3
+nb_cuts = int(sys.argv[8]) #1
+F_nn = int(sys.argv[9]) #32
+K_in = int(sys.argv[10]) #7
 
-thisFilename = folder_name + '_cora' # This is the general name of all related files
+thisFilename = 'transf_' + data_name # This is the general name of all related files
 
 saveDirRoot = 'experiments' # In this case, relative location
 saveDir = os.path.join(saveDirRoot, thisFilename) 
@@ -68,9 +59,12 @@ else:
     device = 'cpu'
     
 do_no_sampling = True
-do_eig = True
+do_learn_pe = True
 do_w_sampl = True
 do_random_sampl = True
+
+remove_isolated = False
+sort_by_degree = True
 
 # Vectors to store test results
 results_no_sampl = np.zeros(n_realizations)
@@ -78,6 +72,8 @@ results_no_sampl_eig = np.zeros(n_realizations)
 results_w_samp = np.zeros(n_realizations)
 results_random_samp = np.zeros(n_realizations)
 n_iters_per_rlz = np.zeros(n_realizations)
+len_sampled_idx = np.zeros(n_realizations)
+len_sampled_idx2 = np.zeros(n_realizations)
 
 if 'cora' in data_name:
     dataset = Planetoid(root='/tmp/Cora', name='Cora', split='random')
@@ -104,24 +100,28 @@ elif 'pubmed' in data_name:
                         num_train_per_class=num_train_per_class, num_val=num_val, 
                         num_test=num_test)
 
-# Sorting nodes by degree
 graph_og = dataset[0]
 graph_og = graph_og.to(device)
-adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
 num_nodes = graph_og.num_nodes
-D = aux_functions.compute_degree(adj_sparse, num_nodes)
-deg = torch.diagonal(D.to_dense()).squeeze()
-idx = torch.argsort(deg)
-idx = idx.to(device)
-edge_index = graph_og.edge_index
-new_edge_index = torch.zeros(edge_index.shape,dtype=torch.long,device=device)
-for i in range(2):
-    for j in range(edge_index.shape[1]):
-        new_edge_index[i,j] = torch.argwhere(edge_index[i,j]==idx)
-graph = Data(x=graph_og.x[idx],edge_index=new_edge_index,y=graph_og.y[idx])
+if sort_by_degree:
+    # Sorting nodes by degree
+    adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
+    D = aux_functions.compute_degree(adj_sparse, num_nodes)
+    deg = torch.diagonal(D.to_dense()).squeeze()
+    idx = torch.argsort(deg)
+    idx = idx.to(device)
+    edge_index = graph_og.edge_index
+    new_edge_index = torch.zeros(edge_index.shape,dtype=torch.long,device=device)
+    for i in range(2):
+        for j in range(edge_index.shape[1]):
+            new_edge_index[i,j] = torch.argwhere(edge_index[i,j]==idx)
+    graph = Data(x=graph_og.x[idx],edge_index=new_edge_index,y=graph_og.y[idx])
+else:
+    graph = graph_og.clone()
 
 for r in range(n_realizations):
-    K = 50
+    K = K_in
+    
     print('Realization ' + str(r))
     print()
     
@@ -139,7 +139,7 @@ for r in range(n_realizations):
         
     if do_no_sampling:
         
-        model = GNN('gcn', [dataset.num_features,64,32], [32,dataset.num_classes], softmax=True)
+        model = GNN('gcn', [dataset.num_features,F_nn,F_nn], [F_nn,dataset.num_classes], softmax=True)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
@@ -151,50 +151,21 @@ for r in range(n_realizations):
         print(f"Test: {test_auc:.3f}")
         
         print()
-        
-        if do_eig:
-            # Computing normalized Laplacian
-            adj_sparse, adj = aux_functions.compute_adj_from_data(graph)
-            L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
-            eigvals, V = torch.lobpcg(L, k=K, largest=False)
-            #eigvals, V = torch.linalg.eig(L.to_dense())
-            eigvals = eigvals.float()
-            V = V.float()
-            idx = torch.argsort(eigvals)
-            eigvals = eigvals[idx[0:K]]
-            V = V[:,idx[0:K]]
-            V = V.to(device)
-            
-            print('Adding eigenvectors...')
-            print()
-
-            train_data_new = Data(x=torch.cat((train_data.x,V), dim=1), edge_index=train_data.edge_index,
-                                  y=train_data.y, train_mask=train_data.train_mask,
-                                  val_mask=train_data.val_mask, test_mask=train_data.test_mask)
-            val_data_new = Data(x=torch.cat((val_data.x,V), dim=1), edge_index=val_data.edge_index,
-                                  y=val_data.y, train_mask=val_data.train_mask,
-                                  val_mask=val_data.val_mask, test_mask=val_data.test_mask)
-            test_data_new = Data(x=torch.cat((test_data.x,V), dim=1), edge_index=test_data.edge_index,
-                                  y=test_data.y, train_mask=test_data.train_mask,
-                                  val_mask=test_data.val_mask, test_mask=test_data.test_mask)
-            
-            model = GNN('gcn', [dataset.num_features+K,64,32], [32,dataset.num_classes], softmax=True)
-            model = model.to(device)
-            optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
-            criterion = torch.nn.NLLLoss()
-            _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
-                          batch_size=1, n_epochs=n_epochs)
-            
-            test_auc = test(model, test_data_new)
-            results_no_sampl_eig[r] = test_auc
-            print(f"Test: {test_auc:.3f}")
-            
-            print()
     
     ##############################################################################
     ############################# Sampling! ######################################
     ##############################################################################
     
+    # Computing normalized Laplacian
+    adj_sparse, adj = aux_functions.compute_adj_from_data(graph)
+    L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
+    eigvals, V = torch.lobpcg(L, k=K, largest=False)
+    #eigvals, V = torch.linalg.eig(L.to_dense())
+    eigvals = eigvals.float()
+    V = V.float()
+    idx = torch.argsort(eigvals)
+    eigvals = eigvals[idx[0:K]]
+    V = V[:,idx[0:K]]
     
     if do_w_sampl:
     
@@ -240,75 +211,39 @@ for r in range(n_realizations):
                 for j in range(idx.shape[0]):
                     idx[j] += i*n_nodes_per_int
                 sampled_idx += list(idx)
-        sampled_idx = list(set(sampled_idx)) 
+        sampled_idx = list(set(sampled_idx))   
+        updated_sz = len(sampled_idx)
         
-        # V for train data
-        graph_new = graph.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
-        
+        # Train data
+        train_data_new = train_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+        val_data_new = val_data.subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+
         # Removing isolated nodes
-        edge_index_new = graph_new.edge_index
-        edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, 
-                                                                      num_nodes = len(sampled_idx))
-        sampled_idx = torch.tensor(sampled_idx)[mask==True]
-        graph_new = graph.subgraph(sampled_idx)
+        sampled_idx_og = sampled_idx
+        if remove_isolated:
+            edge_index_new = train_data_new.edge_index.clone()
+            edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
+            mask = mask.cpu().tolist()
+            sampled_idx = list(np.array(sampled_idx_og)[mask])
+            train_data_new = train_data_new.subgraph(torch.tensor(mask, device=device))
+            val_data_new = val_data_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx):
             K = len(sampled_idx)
-        
-        graph_new = graph_new.to(device)
-        num_nodes_new = graph_new.x.shape[0]
-        adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
-        
-        # Computing normalized Laplacian
-        L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
-        
-        #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
-        eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-        eigvals_new = eigvals_new.float()
-        V_new = V_new.float()
-        idx = torch.argsort(eigvals_new)
-        eigvals_new = eigvals_new[idx[0:K]]
-        V_new = V_new[:,idx[0:K]]
-        V_new = V_new.type(torch.float32)
-        V_rec = torch.zeros(num_nodes, K, device=device)
-        
-        for i in range(V_new.shape[1]):
-            v = V_new[:,i]
-            #x0 = np.random.multivariate_normal(np.zeros(num_nodes),np.eye(num_nodes)/np.sqrt(num_nodes))
-            #x0[sampled_idx] = v.cpu().numpy()*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #v_padded_lb = -torch.ones(num_nodes, device=device)
-            #v_padded_lb[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #v_padded_ub = torch.ones(num_nodes, device=device)
-            #v_padded_ub[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
-            V_rec[sampled_idx,i] = v
-        
-        train_data_new = Data(x=torch.cat((train_data.x,V_rec), dim=1), 
-                              edge_index=train_data.edge_index, y=train_data.y,
-                              train_mask=val_data.train_mask,
-                              val_mask=val_data.val_mask, test_mask=val_data.test_mask)
-        val_data_new = Data(x=torch.cat((val_data.x,V_rec), dim=1), 
-                              edge_index=val_data.edge_index, y=val_data.y,
-                              train_mask=val_data.train_mask,
-                              val_mask=val_data.val_mask, test_mask=val_data.test_mask)
-        test_data_new = Data(x=torch.cat((test_data.x,V_rec), dim=1), 
-                              edge_index=test_data.edge_index, y=test_data.y,
-                              train_mask=val_data.train_mask,
-                              val_mask=val_data.val_mask, test_mask=val_data.test_mask)
-        
+        len_sampled_idx[r] = len(sampled_idx)
+
         train_data_new = train_data_new.to(device)
         val_data_new = val_data_new.to(device)
         
         in_feats = dataset.num_features
-        in_feats += K
         
-        model = GNN('gcn', [in_feats,64,32], [32,dataset.num_classes], softmax=True)
+        model = GNN('gcn', [in_feats,F_nn,F_nn], [F_nn,dataset.num_classes], softmax=True)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
         _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
                       batch_size=1, n_epochs=n_epochs)
         
-        test_auc = test(model, test_data_new)
+        test_auc = test(model, test_data)
         results_w_samp[r] = test_auc
         print(f"Test: {test_auc:.3f}")
         
@@ -323,75 +258,38 @@ for r in range(n_realizations):
         print('Sampling at random...')
         print()
         
-        sampled_idx2 = list(np.random.choice(np.arange(num_nodes), m2*m3, replace=False))
+        sampled_idx2 = list(np.random.choice(np.arange(num_nodes), updated_sz, replace=False))
 
-        # V for train data
-        graph_new = graph.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
-        
+        # Train data
+        train_data_new = train_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
+        val_data_new = val_data.subgraph(torch.tensor(sampled_idx2, device=device, dtype=torch.long))
+
         # Removing isolated nodes
-        edge_index_new = graph_new.edge_index
-        edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, 
-                                                                      num_nodes = len(sampled_idx2))
-        sampled_idx2 = torch.tensor(sampled_idx2)[mask==True]
-        graph_new = graph.subgraph(sampled_idx2)
+        sampled_idx2_og = sampled_idx2
+        if remove_isolated:
+            edge_index_new = train_data_new.edge_index.clone()
+            edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx2_og))
+            mask = mask.cpu().tolist()
+            sampled_idx2 = list(np.array(sampled_idx2_og)[mask])
+            train_data_new = train_data_new.subgraph(torch.tensor(mask, device=device))
+            val_data_new = val_data_new.subgraph(torch.tensor(mask, device=device))
         if K > len(sampled_idx2):
             K = len(sampled_idx2)
-        
-        graph_new = graph_new.to(device)
-        num_nodes_new = graph_new.x.shape[0]
-        adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
-        
-        # Computing normalized Laplacian
-        L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
-        
-        #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
-        eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-        eigvals_new = eigvals_new.float()
-        V_new = V_new.float()
-        idx = torch.argsort(eigvals_new)
-        eigvals_new = eigvals_new[idx[0:K]]
-        V_new = V_new[:,idx[0:K]]
-        V_new = V_new.type(torch.float32)
-        V_rec = torch.zeros(num_nodes, K, device=device)
-        
-        for i in range(V_new.shape[1]):
-            v = V_new[:,i]
-            #x0 = np.random.multivariate_normal(np.zeros(num_nodes),np.eye(num_nodes)/np.sqrt(num_nodes))
-            #x0[sampled_idx] = v.cpu().numpy()*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #v_padded_lb = -torch.ones(num_nodes, device=device)
-            #v_padded_lb[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #v_padded_ub = torch.ones(num_nodes, device=device)
-            #v_padded_ub[sampled_idx] = v*np.sqrt(m2*m3)/np.sqrt(num_nodes)
-            #V_rec[:,i] = torch.from_numpy(reconstruct(f_rec, x0, v_padded_lb, v_padded_ub, L, k))
-            V_rec[sampled_idx2,i] = v
-        
-        train_data_new = Data(x=torch.cat((train_data.x,V_rec), dim=1), 
-                              edge_index=train_data.edge_index, y=train_data.y, 
-                              train_mask=val_data.train_mask,
-                              val_mask=val_data.val_mask, test_mask=val_data.test_mask)
-        val_data_new = Data(x=torch.cat((val_data.x,V_rec), dim=1), 
-                              edge_index=val_data.edge_index, y=val_data.y,
-                              train_mask=val_data.train_mask,
-                              val_mask=val_data.val_mask, test_mask=val_data.test_mask)
-        test_data_new = Data(x=torch.cat((test_data.x,V_rec), dim=1), 
-                              edge_index=test_data.edge_index, y=test_data.y,
-                              train_mask=val_data.train_mask,
-                              val_mask=val_data.val_mask, test_mask=val_data.test_mask)
-        
+        len_sampled_idx2[r] = len(sampled_idx2)
+
         train_data_new = train_data_new.to(device)
         val_data_new = val_data_new.to(device)
         
         in_feats = dataset.num_features
-        in_feats += K
-        
-        model = GNN('gcn', [in_feats,64,32], [32,dataset.num_classes], softmax=True)
+
+        model = GNN('gcn', [in_feats,F_nn,F_nn], [F_nn,dataset.num_classes], softmax=True)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
         _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
                       batch_size=1, n_epochs=n_epochs)
         
-        test_auc = test(model, test_data_new)
+        test_auc = test(model, test_data)
         results_random_samp[r] = test_auc
         print(f"Test: {test_auc:.3f}")
         
@@ -400,33 +298,81 @@ for r in range(n_realizations):
 print('Final results - MAX')
 print()
 
-print('Avg. acc. without sampling:\t\t\t\t\t%.4f' % np.max(results_no_sampl))
-print('Avg. acc. with eigenvectors:\t\t\t\t\t%.4f' % np.max(results_no_sampl_eig))
-print('Avg. acc. idem above, graphon samp.:\t\t\t\t%.4f' % np.max(results_w_samp))
-print('Avg. acc. idem above, random samp.:\t\t\t\t%.4f' % np.max(results_random_samp))
+print('Acc. without sampling:\t\t\t\t\t%.4f' % np.max(results_no_sampl))
+print('Acc. graphon sampling:\t\t\t\t%.4f' % np.max(results_w_samp))
+print('Acc. random sampling:\t\t\t\t%.4f' % np.max(results_random_samp))
 print()       
 
 print('Final results - MEAN')
 print()
 
-print('Avg. acc. without sampling:\t\t\t\t\t%.4f' % np.mean(results_no_sampl))
-print('Avg. acc. with eigenvectors:\t\t\t\t\t%.4f' % np.mean(results_no_sampl_eig))
-print('Avg. acc. idem above, graphon samp.:\t\t\t\t%.4f' % np.mean(results_w_samp))
-print('Avg. acc. idem above, random samp.:\t\t\t\t%.4f' % np.mean(results_random_samp))
+print('Acc. without sampling:\t\t\t\t\t%.4f' % np.mean(results_no_sampl))
+print('Acc. graphon sampling:\t\t\t\t%.4f' % np.mean(results_w_samp))
+print('Acc. random sampling:\t\t\t\t%.4f' % np.mean(results_random_samp))
 print()    
 
 print('Final results - MEDIAN')
 print()
 
-print('Avg. acc. without sampling:\t\t\t\t\t%.4f' % np.median(results_no_sampl))
-print('Avg. acc. with eigenvectors:\t\t\t\t\t%.4f' % np.median(results_no_sampl_eig))
-print('Avg. acc. idem above, graphon samp.:\t\t\t\t%.4f' % np.median(results_w_samp))
-print('Avg. acc. idem above, random samp.:\t\t\t\t%.4f' % np.median(results_random_samp))
+print('Acc. without sampling:\t\t\t\t\t%.4f' % np.median(results_no_sampl))
+print('Acc. graphon sampling:\t\t\t\t%.4f' % np.median(results_w_samp))
+print('Acc. random sampling:\t\t\t\t%.4f' % np.median(results_random_samp))
 print()       
+
+with open(os.path.join(saveDir,'out.txt'), 'w') as f:
+    
+    print("",file=f)
+    
+    print('Hyperparameters', file=f)
+    print("",file=f)
+    
+    print('Dataset:\t\t' + data_name, file=f)
+    print('Learning rate:\t\t' + str(lr), file=f)
+    print('Nb. epochs:\t\t' + str(n_epochs), file=f)
+    print('Ratio train:\t\t' + str(ratio_train), file=f)
+    print('Ratio test:\t\t' + str(ratio_test), file=f)
+    print('Nb. realiz.:\t\t' + str(n_realizations), file=f)
+    print('Partition sz.:\t\t' + str(m), file=f)
+    print('Nb. intervals:\t\t' + str(m2), file=f)
+    print('Nb. nodes per int.:\t' + str(m3), file=f)
+    print('Nb. comms.:\t\t' + str(nb_cuts), file=f)
+    print('F_nn:\t\t\t' + str(F_nn), file=f)
+    print('K:\t\t\t' + str(K), file=f)
+    print('Avg. nb. nodes in W samp.:\t' + str(np.mean(len_sampled_idx)), file=f)
+    print('Avg. nb. nodes in rand. samp.:\t' + str(np.mean(len_sampled_idx2)), file=f)
+    print('Remove isolated:\t\t' + str(remove_isolated), file=f)
+    
+    print("",file=f)
+    
+    print('Final results - MAX', file=f)
+    print("",file=f)
+
+    print('Acc. without sampling:\t\t\t\t\t%.4f' % np.max(results_no_sampl),file=f)
+    print('Acc. graphon sampling:\t\t\t%.4f' % (np.max(results_w_samp)),file=f)
+    print('Acc. random sampling:\t\t\t\t%.4f' % (np.max(results_random_samp)),file=f)
+    print("",file=f)
+
+    print('Final results - MEAN',file=f)
+    print("",file=f)
+
+    print('Acc. without sampling:\t\t\t\t\t%.4f +/- %.4f' % (np.mean(results_no_sampl),
+                                                                 np.std(results_no_sampl)),file=f)
+    print('Acc. graphon sampling:\t\t\t%.4f +/- %.4f' % 
+          (np.mean(results_w_samp), np.std(results_w_samp)),file=f)
+    print('Acc. random sampling:\t\t\t\t%.4f +/- %.4f' % 
+          (np.mean(results_random_samp), np.std(results_random_samp)),file=f)
+    print("",file=f)
+
+    print('Final results - MEDIAN',file=f)
+    print("",file=f)
+
+    print('Acc. without sampling:\t\t\t\t\t%.4f' % np.median(results_no_sampl),file=f)
+    print('Acc. graphon sampling:\t\t\t%.4f' % (np.median(results_w_samp)),file=f)
+    print('Acc. random sampling:\t\t\t\t%.4f' % (np.median(results_random_samp)),file=f)
+    print("",file=f)
 
 # Pickling
 dict_results = {'results_no_sampl': results_no_sampl,
-                'results_no_sampl_eig': results_no_sampl_eig,
                 'results_w_samp': results_w_samp,
                 'results_random_samp': results_random_samp,
                 'n_iters': n_iters_per_rlz}
