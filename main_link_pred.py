@@ -76,6 +76,7 @@ do_random_sampl = True
 
 remove_isolated = True
 sort_by_degree = True
+ten_fold = True
 
 if 'cora' in data_name:
     dataset = Planetoid(root='/tmp/Cora', name='Cora')
@@ -91,7 +92,7 @@ elif 'twitch-ru' in data_name:
     dataset = Twitch(root='/tmp/RU', name='RU')
 elif 'sbm-d' in data_name:
     n = 1000
-    c = 25
+    c = 5
     b_sz = int(n/c)*torch.ones(c,dtype=torch.long)
     q = 0.3
     p = 0.7
@@ -100,9 +101,11 @@ elif 'sbm-d' in data_name:
     y = torch.arange(c)
     y = torch.repeat_interleave(y,int(n/c))
     dataset = [Data(x=torch.ones(n), edge_index=edge_index, y=y)]
+    ten_fold = False
+    sort_by_degree = False
 elif 'sbm-s' in data_name:
-    n = 1000
-    c = 25
+    n = 500
+    c = 5
     b_sz = int(n/c)*torch.ones(c,dtype=torch.long)
     q = 0.3
     p = 0.7
@@ -111,12 +114,14 @@ elif 'sbm-s' in data_name:
     y = torch.arange(c)
     y = torch.repeat_interleave(y,int(n/c))
     dataset = [Data(x=torch.ones(n), edge_index=edge_index, y=y)]
+    ten_fold = False
+    sort_by_degree = False
     
 graph_og = dataset[0]
 #graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
 
 # Sorting nodes by degree
-if 'sbm' not in data_name and sort_by_degree:
+if sort_by_degree:
     adj_sparse, adj = aux_functions.compute_adj_from_data(graph_og)
     num_nodes = adj.shape[0]
     D = aux_functions.compute_degree(adj_sparse, num_nodes)
@@ -232,7 +237,7 @@ for r in range(n_realizations):
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
         model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
-                                     criterion, n_epochs=n_epochs, K=K)
+                                     criterion, n_epochs=n_epochs, K=K, ten_fold=ten_fold)
         
         test_auc = eval_link_predictor(model, test_data_new)
         results_eigs[r] = test_auc
@@ -268,7 +273,7 @@ for r in range(n_realizations):
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
         model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
-                                     criterion, n_epochs=n_epochs, K=K, pe=True)
+                                     criterion, n_epochs=n_epochs, K=K, pe=True, ten_fold=ten_fold)
         test_auc = eval_link_predictor(model, test_data_new)
         results_pe[r] = test_auc
         print(f"Test: {test_auc:.3f}")
@@ -422,7 +427,7 @@ for r in range(n_realizations):
         criterion = torch.nn.BCEWithLogitsLoss()
         model, train_data_collection, V_collection = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
                                      criterion, n_epochs=n_epochs, K=K, m=m, m2=m2, 
-                                     m3=m3, nb_cuts=nb_cuts, remove_isolated=remove_isolated)
+                                     m3=m3, nb_cuts=nb_cuts, remove_isolated=remove_isolated, ten_fold=ten_fold)
         
         test_auc = eval_link_predictor(model, test_data_new)
         results_w_samp_eigs[r] = test_auc
@@ -456,7 +461,8 @@ for r in range(n_realizations):
                                      criterion, n_epochs=n_epochs, K=K, pe=True, m=m, 
                                      m2=m2, m3=m3, nb_cuts=nb_cuts, 
                                      train_data_collection=train_data_collection, 
-                                     V_collection=V_collection, remove_isolated=remove_isolated)
+                                     V_collection=V_collection, remove_isolated=remove_isolated, 
+                                     ten_fold=ten_fold)
         test_auc = eval_link_predictor(model, test_data_new)
         results_w_samp_pe[r] = test_auc
         print(f"Test: {test_auc:.3f}")
@@ -569,7 +575,8 @@ for r in range(n_realizations):
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.BCEWithLogitsLoss()
         model, train_data_collection, V_collection = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
-                                     criterion, n_epochs=n_epochs, K=K, m2=m2, m3=m3, remove_isolated=remove_isolated)
+                                     criterion, n_epochs=n_epochs, K=K, m2=m2, m3=m3, remove_isolated=remove_isolated, 
+                                     updated_sz=updated_sz, ten_fold=ten_fold)
         
         test_auc = eval_link_predictor(model, test_data_new)
         results_random_samp_eigs[r] = test_auc
@@ -602,7 +609,8 @@ for r in range(n_realizations):
         model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
                                      criterion, n_epochs=n_epochs, K=K, pe=True, m2=m2, m3=m3,
                                      train_data_collection=train_data_collection,
-                                     V_collection=V_collection, remove_isolated=remove_isolated)
+                                     V_collection=V_collection, remove_isolated=remove_isolated,
+                                     ten_fold=ten_fold)
         test_auc = eval_link_predictor(model, test_data_new)
         results_random_samp_pe[r] = test_auc
         print(f"Test: {test_auc:.3f}")

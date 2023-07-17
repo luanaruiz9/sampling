@@ -172,23 +172,24 @@ for r in range(n_realizations):
         print('Sampling with spectral proxies...')
         print()
         
-        # Finding sampling set
-        n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
-        graph_ind = generate_induced_graphon(train_data, m)
-        num_nodes_ind = graph_ind.x.shape[0]
-        assert num_nodes_ind == m
-        adj_sparse_ind, adj_ind = aux_functions.compute_adj_from_data(graph_ind)
-        
-        # Computing normalized Laplacian
-        L_ind = aux_functions.compute_laplacian(adj_sparse_ind,num_nodes_ind)
-        
-        lam = eigvals[-1]
-        L_aux = L_ind.cpu()
-        k = 5
-        
-        s_vec, n_iters = greedy(f, lam, L_aux, k, m2, exponent=100000000)
-        n_iters_per_rlz[r] = n_iters
-        s_vec = torch.tensor(s_vec)
+        if r == 0: # Only sample intervals once
+            # Finding sampling set
+            n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
+            graph_ind = generate_induced_graphon(train_data, m)
+            num_nodes_ind = graph_ind.x.shape[0]
+            assert num_nodes_ind == m
+            adj_sparse_ind, adj_ind = aux_functions.compute_adj_from_data(graph_ind)
+            
+            # Computing normalized Laplacian
+            L_ind = aux_functions.compute_laplacian(adj_sparse_ind,num_nodes_ind)
+            
+            lam = eigvals[-1]
+            L_aux = L_ind.cpu()
+            k = 5
+            
+            s_vec, n_iters = greedy(f, lam, L_aux, k, m2, exponent=100000000)
+            n_iters_per_rlz[r] = n_iters
+            s_vec = torch.tensor(s_vec)
         
         sampled_idx = []
         for i in range(m):
@@ -298,7 +299,7 @@ for r in range(n_realizations):
 print('Final results - MAX')
 print()
 
-print('Acc. without sampling:\t\t\t\t\t%.4f' % np.max(results_no_sampl))
+print('Acc. without sampling:\t\t\t\t%.4f' % np.max(results_no_sampl))
 print('Acc. graphon sampling:\t\t\t\t%.4f' % np.max(results_w_samp))
 print('Acc. random sampling:\t\t\t\t%.4f' % np.max(results_random_samp))
 print()       
@@ -306,7 +307,7 @@ print()
 print('Final results - MEAN')
 print()
 
-print('Acc. without sampling:\t\t\t\t\t%.4f' % np.mean(results_no_sampl))
+print('Acc. without sampling:\t\t\t\t%.4f' % np.mean(results_no_sampl))
 print('Acc. graphon sampling:\t\t\t\t%.4f' % np.mean(results_w_samp))
 print('Acc. random sampling:\t\t\t\t%.4f' % np.mean(results_random_samp))
 print()    
@@ -314,7 +315,7 @@ print()
 print('Final results - MEDIAN')
 print()
 
-print('Acc. without sampling:\t\t\t\t\t%.4f' % np.median(results_no_sampl))
+print('Acc. without sampling:\t\t\t\t%.4f' % np.median(results_no_sampl))
 print('Acc. graphon sampling:\t\t\t\t%.4f' % np.median(results_w_samp))
 print('Acc. random sampling:\t\t\t\t%.4f' % np.median(results_random_samp))
 print()       
@@ -347,7 +348,7 @@ with open(os.path.join(saveDir,'out.txt'), 'w') as f:
     print('Final results - MAX', file=f)
     print("",file=f)
 
-    print('Acc. without sampling:\t\t\t\t\t%.4f' % np.max(results_no_sampl),file=f)
+    print('Acc. without sampling:\t\t\t\t%.4f' % np.max(results_no_sampl),file=f)
     print('Acc. graphon sampling:\t\t\t%.4f' % (np.max(results_w_samp)),file=f)
     print('Acc. random sampling:\t\t\t\t%.4f' % (np.max(results_random_samp)),file=f)
     print("",file=f)
@@ -355,7 +356,7 @@ with open(os.path.join(saveDir,'out.txt'), 'w') as f:
     print('Final results - MEAN',file=f)
     print("",file=f)
 
-    print('Acc. without sampling:\t\t\t\t\t%.4f +/- %.4f' % (np.mean(results_no_sampl),
+    print('Acc. without sampling:\t\t\t\t%.4f +/- %.4f' % (np.mean(results_no_sampl),
                                                                  np.std(results_no_sampl)),file=f)
     print('Acc. graphon sampling:\t\t\t%.4f +/- %.4f' % 
           (np.mean(results_w_samp), np.std(results_w_samp)),file=f)
@@ -366,7 +367,7 @@ with open(os.path.join(saveDir,'out.txt'), 'w') as f:
     print('Final results - MEDIAN',file=f)
     print("",file=f)
 
-    print('Acc. without sampling:\t\t\t\t\t%.4f' % np.median(results_no_sampl),file=f)
+    print('Acc. without sampling:\t\t\t\t%.4f' % np.median(results_no_sampl),file=f)
     print('Acc. graphon sampling:\t\t\t%.4f' % (np.median(results_w_samp)),file=f)
     print('Acc. random sampling:\t\t\t\t%.4f' % (np.median(results_random_samp)),file=f)
     print("",file=f)

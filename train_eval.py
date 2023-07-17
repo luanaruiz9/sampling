@@ -29,7 +29,8 @@ zeroTol = 1e-9
 
 def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion, ten_fold=True,
                          n_epochs=100, K=None, pe=False, m=None, m2=None, m3=None, nb_cuts=None,
-                         train_data_collection=None, V_collection=None, remove_isolated=False):
+                         train_data_collection=None, V_collection=None, remove_isolated=False, 
+                         updated_sz = None):
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 30, gamma=1)
     
     ########################################################################
@@ -196,7 +197,9 @@ def train_link_predictor(model, train_data_og_0, val_data, optimizer, criterion,
     
     elif m2 is not None and V_collection is None:
         ###### Random sampling
-        sampled_idx2 = list(np.random.choice(np.arange(num_nodes), m2*m3, replace=False))
+        if updated_sz is None:
+            updated_sz = m2*m3
+        sampled_idx2 = list(np.random.choice(np.arange(num_nodes), updated_sz, replace=False))
         V_collection = []
 
         for eig_data in eig_data_collection:

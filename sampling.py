@@ -23,6 +23,8 @@ def generate_induced_graphon(og_graph, n_intervals):
     n = og_graph.num_nodes
     
     n_nodes_per_int, n_nodes_last_int = np.divmod(n,n_intervals)
+    if n_nodes_last_int == 0:
+        n_nodes_last_int = n_nodes_per_int
     edge_index = og_graph.edge_index
     
     if og_graph.edge_weight is not None:
@@ -34,7 +36,7 @@ def generate_induced_graphon(og_graph, n_intervals):
     adj = adj_sparse.to_dense()
     adj_ind_graphon = torch.zeros(n_intervals,n_intervals,device=edge_index.device)
     x = og_graph.x
-    x_ind_graphon = torch.zeros(n_intervals,og_graph.x.shape[1],device=edge_index.device)
+    x_ind_graphon = torch.zeros(n_intervals,og_graph.x.shape[-1],device=edge_index.device)
     y = og_graph.y
     y_ind_graphon = torch.zeros(n_intervals,device=edge_index.device)
     
@@ -84,9 +86,8 @@ def f(x, *args):
     for i in range(k):
         omega = torch.matmul(L,omega)
     omega = omega.numpy()
-        
     omega = np.power(np.dot(omega,omega)/np.dot(x,x),1/(2*k))
-    
+
     return lam-omega
 
 def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
@@ -198,6 +199,8 @@ def sample_clustering(A, m, nb_cuts=1, cheeger=0.5, eps=0.05, sz=None, vol_den=4
     for i in range(nb_cuts):
         thisA = A[S_complement,:]
         thisA = thisA[:,S_complement]
+        if thisA.shape[0] == 0:
+            break
         thisSeed = np.random.choice(thisA.shape[0])
         idx = cluster_hk_pr(thisA, thisSeed, cheeger, eps, cluster_sizes[i],vol_den)
         S = []
