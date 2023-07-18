@@ -22,6 +22,9 @@ from train_eval import train, test
 from sampling import generate_induced_graphon, greedy, f, sample_clustering
 import aux_functions
 
+# SBM - graphon case
+# Learning by transference?
+
 data_name = sys.argv[1]
 lr = float(sys.argv[2]) # 0.001
 n_epochs = int(sys.argv[3]) #100

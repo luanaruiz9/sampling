@@ -5,9 +5,6 @@ Created on Mon Mar  6 14:37:09 2023
 @author: Luana Ruiz
 """
 
-# NEXT STEPS:
-# Link prediction on synthetic graphs - not working
-
 import sys
 import os
 import datetime
