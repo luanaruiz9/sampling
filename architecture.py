@@ -144,7 +144,7 @@ class SignNetLinkPredNet(torch.nn.Module):
                  in_channels_sign=None, hidden_channels_sign=None, out_channels_sign=None):
         super().__init__()
         if sign:
-            self.conv1 = GraphFilter(in_channels_sign, in_channels_sign, 2)
+            self.conv1 = GraphFilter(in_channels_sign, in_channels_sign, 5)
             self.conv2 = GraphFilter(in_channels_sign, out_channels_sign, 1)
         self.inner_model = LinkPredNet(in_channels, hidden_channels, out_channels)
         
