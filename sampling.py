@@ -117,7 +117,7 @@ def greedy(f, lam, L, k, m, exponent=10000000): # m is sampling set size
             amax = idx_x[np.argmax(phi)]
         s_vec[amax] = 1
         idx_x = idx_x[s_vec[idx_x]==0]
-        if res.fun > lam:
+        if res.success and res.fun > lam:
             print('here')
             print(res.fun)
             print(lam)
