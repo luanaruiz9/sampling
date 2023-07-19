@@ -108,7 +108,7 @@ def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
             #x0 = np.ones(n-i)/(n-i)
             #x0 = np.zeros(n-i)
             #x0[np.random.choice(n-i)]=1
-            res = opt.minimize(f, x0, args=(lam, L, k, s_vec), method='BFGS',
+            res = opt.minimize(f, x0, args=(lam, L, k, s_vec), method='Nelder-Mead',
                                options={'disp': True})
             n_iters += res.nit
             #res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),
