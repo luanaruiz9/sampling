@@ -97,6 +97,7 @@ def greedy(f, lam, L, k, m, exponent=10000000): # m is sampling set size
     s_vec = np.zeros(n)
     idx_x = np.arange(n)
     n_iters = 0
+    print(L)
     for i in range(m):
         print(i)
         if False:#np.random.rand(1) <= np.exp(-exponent*i/m):
@@ -104,8 +105,8 @@ def greedy(f, lam, L, k, m, exponent=10000000): # m is sampling set size
             while s_vec[amax] == 1:
                 amax = idx_x[np.random.choice(n-i)]
         else:
-            #x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i)/np.sqrt(n-i))
-            x0 = np.ones(n-i)/(n-i)
+            x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i)/np.sqrt(n-i))
+            #x0 = np.ones(n-i)/(n-i)
             #x0 = np.zeros(n-i)
             #x0[np.random.choice(n-i)]=1
             res = opt.minimize(f, x0, args=(lam, L, k, s_vec),
