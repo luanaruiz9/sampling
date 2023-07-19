@@ -88,7 +88,7 @@ def f(x, *args):
     omega = omega.numpy()
     omega = np.power(np.dot(omega,omega)/np.dot(x,x),1/(2*k))
 
-    return lam-omega
+    return omega-lam
 
 def greedy(f, lam, L, k, m, exponent=10000000): # m is sampling set size
     lam = lam.cpu().numpy()
