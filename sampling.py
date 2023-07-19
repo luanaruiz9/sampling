@@ -90,7 +90,7 @@ def f(x, *args):
 
     return lam-omega
 
-def greedy(f, lam, L, k, m, exponent=5): # m is sampling set size
+def greedy(f, lam, L, k, m, exponent=10000000): # m is sampling set size
     lam = lam.cpu().numpy()
     L = L.cpu()
     n = L.shape[0]
