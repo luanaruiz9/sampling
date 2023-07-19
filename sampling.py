@@ -106,7 +106,7 @@ def greedy(f, lam, L, k, m, exponent=10000000): # m is sampling set size
                 amax = idx_x[np.random.choice(n-i)]
         else:
             x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i))
-            x0 = torch.matmul(L,torch.tensor(x0)).cpu().numpy()
+            x0 = torch.matmul(L,torch.tensor(x0).float()).cpu().numpy()
             #x0 = np.ones(n-i)/(n-i)
             #x0 = np.zeros(n-i)
             #x0[np.random.choice(n-i)] += 1
