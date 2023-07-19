@@ -99,7 +99,7 @@ def greedy(f, lam, L, k, m, exponent=10000000): # m is sampling set size
     n_iters = 0
     for i in range(m):
         print(i)
-        if np.random.rand(1) <= np.exp(-exponent*i/m):
+        if False:#np.random.rand(1) <= np.exp(-exponent*i/m):
             amax = idx_x[np.random.choice(n-i)]
             while s_vec[amax] == 1:
                 amax = idx_x[np.random.choice(n-i)]
