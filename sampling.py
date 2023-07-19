@@ -112,27 +112,18 @@ def greedy(f, lam, L, k, m, exponent=10000000): # m is sampling set size
             #x0 = np.ones(n-i)/(n-i)
             #x0 = np.zeros(n-i)
             #x0[np.random.choice(n-i)] += 1
-            print(f(x0, lam, L, k, s_vec))
-            print(x0)
-            phi0 = np.power(x0,2)
-            print(np.argmax(phi0))
-            res = opt.minimize(f, x0, args=(lam, L, k, s_vec),
-                                       options={'disp': True})
+            res = opt.minimize(f, x0, args=(lam, L, k, s_vec), options={'disp': True,
+                                                                        'gtol': 1e-6,
+                                                                        'ftol': 1e-6, 
+                                                                        'xtol': 1e-6})
             n_iters += res.nit
-            print(res.fun)
-            print(res.x)
-            print(res.x-x0)
             #res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),
             #                   options={'disp': True,'maxiter' : 10})
             phi = np.power(res.x,2)
             amax = idx_x[np.argmax(phi)]
-            print(amax)
         s_vec[amax] = 1
         idx_x = idx_x[s_vec[idx_x]==0]
         if res.success and res.fun > lam:
-            print('here')
-            print(res.fun)
-            print(lam)
             break
     return s_vec, n_iters
 
