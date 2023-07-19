@@ -77,7 +77,7 @@ def f(x, *args):
     n = L.shape[0]
     # Construct I_vsc from s_vec
     Ivsc = np.zeros((n,n-int(np.sum(s_vec))))
-    idx = np.argwhere(s_vec==0)
+    idx = np.argwhere(s_vec==0).squeeze()
     for i in range(n-int(np.sum(s_vec))):
         Ivsc[idx[i],i] = 1
         
@@ -108,7 +108,7 @@ def greedy(f, lam, L, k, m, exponent=10000000): # m is sampling set size
             #x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i))
             x0 = np.random.multivariate_normal(np.zeros(n),np.eye(n))
             x0 = torch.matmul(L,torch.tensor(x0).float()).cpu().numpy()
-            x0 = x0[np.argwhere(s_vec==0)]
+            x0 = x0[np.argwhere(s_vec==0).squeeze()]
             #x0 = np.ones(n-i)/(n-i)
             #x0 = np.zeros(n-i)
             #x0[np.random.choice(n-i)] += 1
