@@ -115,6 +115,8 @@ elif 'sbm-s' in data_name:
     sort_by_degree = False
     
 graph_og = dataset[0]
+transform = T.ToUndirected()
+graph_og = transform(graph_og)
 #graph_og = graph_og.subgraph(torch.arange(500)) # comment it out
 
 # Sorting nodes by degree

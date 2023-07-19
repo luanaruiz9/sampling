@@ -115,8 +115,8 @@ def greedy(f, lam, L, k, m, exponent=10000000): # m is sampling set size
                                options={'disp': True,
                                         'maxfev': 1e5,
                                         'maxiter': 1e5,
-                                        'fatol': 1e-4, 
-                                        'xatol': 1e-4})
+                                        'fatol': 1e-6, 
+                                        'xatol': 1e-6})
             n_iters += res.nit
             #res = opt.minimize(f_lobpcg, np.expand_dims(x0,axis=1), args=(lam, L, k, s_vec),
             #                   options={'disp': True,'maxiter' : 10})
