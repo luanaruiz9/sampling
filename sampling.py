@@ -88,7 +88,7 @@ def f(x, *args):
     omega = omega.numpy()
     omega = np.power(np.dot(omega,omega)/np.dot(x,x),1/(2*k))
 
-    return omega-lam
+    return omega
 
 def greedy(f, lam, L, k, m, exponent=10000000): # m is sampling set size
     lam = lam.cpu().numpy()
@@ -104,8 +104,8 @@ def greedy(f, lam, L, k, m, exponent=10000000): # m is sampling set size
             while s_vec[amax] == 1:
                 amax = idx_x[np.random.choice(n-i)]
         else:
-            x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i)/np.sqrt(n-i))
-            #x0 = np.ones(n-i)/(n-i)
+            #x0 = np.random.multivariate_normal(np.zeros(n-i),np.eye(n-i)/np.sqrt(n-i))
+            x0 = np.ones(n-i)/(n-i)
             #x0 = np.zeros(n-i)
             #x0[np.random.choice(n-i)]=1
             res = opt.minimize(f, x0, args=(lam, L, k, s_vec), method="Nelder-Mead",
