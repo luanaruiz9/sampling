@@ -104,6 +104,8 @@ elif 'pubmed' in data_name:
                         num_test=num_test)
 
 graph_og = dataset[0]
+transform = T.ToUndirected()
+graph_og = transform(graph_og)
 graph_og = graph_og.to(device)
 num_nodes = graph_og.num_nodes
 if sort_by_degree:
@@ -164,7 +166,7 @@ for r in range(n_realizations):
     L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
     eigvals, V = torch.lobpcg(L, k=K, largest=False)
     #eigvals, V = torch.linalg.eig(L.to_dense())
-    eigvals = eigvals.float()
+    eigvals = torch.abs(eigvals).float()
     V = V.float()
     idx = torch.argsort(eigvals)
     eigvals = eigvals[idx[0:K]]
