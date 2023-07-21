@@ -300,7 +300,7 @@ for r in range(n_realizations):
         
         lam = eigvals[-1]
         L_aux = L_ind.cpu()
-        k = 5
+        k = 10
         
         s_vec, n_iters, new_lam = greedy(f, lam, L_aux, k, m2)
         count = 2
