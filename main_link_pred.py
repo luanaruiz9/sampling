@@ -300,18 +300,9 @@ for r in range(n_realizations):
         
         lam = eigvals[-1]
         L_aux = L_ind.cpu()
-        k = 10
+        k = 5
         
-        s_vec, n_iters, new_lam = greedy(f, lam, L_aux, k, m2)
-        count = 2
-        
-        print(lam)
-        print(new_lam)
-        while new_lam < lam:
-            lam = eigvals[-count]
-            K -= 1
-            count += 1
-            
+        s_vec, n_iters = greedy(f, lam, L_aux, k, m2)
             
         n_iters_per_rlz[r] = n_iters
         s_vec = torch.tensor(s_vec)
@@ -368,6 +359,16 @@ for r in range(n_realizations):
         V_new = V_new.float()
         idx = torch.argsort(eigvals_new)
         eigvals_new = eigvals_new[idx[0:K]]
+        
+        count = 2
+        new_lam = eigvals_new[-1]
+        print(lam)
+        print(new_lam)
+        while new_lam < lam:
+            lam = eigvals[-count]
+            K -= 1
+            count += 1
+        
         V_new = V_new[:,idx[0:K]]
         V_new = V_new.type(torch.float32)
         V_rec = torch.zeros(num_nodes, K, device=device)

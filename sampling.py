@@ -126,7 +126,7 @@ def greedy(f, lam, L, k, m, exponent=10000000): # m is sampling set size
         idx_x = idx_x[s_vec[idx_x]==0]
         #if res.success and res.fun > lam:
             #break
-    return s_vec, n_iters, res.fun
+    return s_vec, n_iters
 
 ##################################
 # Local clustering-based sampling
