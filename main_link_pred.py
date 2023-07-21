@@ -303,11 +303,15 @@ for r in range(n_realizations):
         k = 5
         
         s_vec, n_iters, new_lam = greedy(f, lam, L_aux, k, m2)
-        i = 2
+        count = 2
         
+        print(lam)
+        print(new_lam)
         while new_lam < lam:
-            lam = eigvals[-i]
+            lam = eigvals[-count]
             K -= 1
+            count += 1
+            
             
         n_iters_per_rlz[r] = n_iters
         s_vec = torch.tensor(s_vec)
