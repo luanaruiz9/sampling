@@ -302,7 +302,13 @@ for r in range(n_realizations):
         L_aux = L_ind.cpu()
         k = 5
         
-        s_vec, n_iters = greedy(f, lam, L_aux, k, m2)
+        s_vec, n_iters, new_lam = greedy(f, lam, L_aux, k, m2)
+        i = 2
+        
+        while new_lam < lam:
+            lam = eigvals[-i]
+            K -= 1
+            
         n_iters_per_rlz[r] = n_iters
         s_vec = torch.tensor(s_vec)
         
