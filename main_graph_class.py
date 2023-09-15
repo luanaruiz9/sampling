@@ -220,6 +220,7 @@ for r in range(n_realizations):
         for test_data_elt in test_data:
             # V for test data
             adj_sparse_test, adj_test = aux_functions.compute_adj_from_data(test_data_elt)
+            num_nodes = adj_test.shape[0]
             
             # Computing normalized Laplacian
             L_test = aux_functions.compute_laplacian(adj_sparse_test, num_nodes)
