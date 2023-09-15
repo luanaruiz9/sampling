@@ -70,7 +70,11 @@ remove_isolated = False
 sort_by_degree = False
 
 dataset = MalNetTiny(root='/tmp/MalNetTiny')
-dataset = dataset[0:128]
+for data in dataset:
+    if data.num_nodes < 500:
+        dataset.remove(data)
+print("length of dataset ", len(dataset))
+
 transformed_dataset = []
 transform = T.ToUndirected()
 pre_defined_kwargs = {'eigvecs': False}
@@ -144,7 +148,7 @@ for r in range(n_realizations):
                     num_graph_classes = dataset.num_classes)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
-        criterion = torch.nn.NLLLoss()
+        criterion = torch.nn.CrossEntropyLoss()
         _,_,model,_,_,_,_ = train(model, train_data, val_data, optimizer, criterion, 
                       batch_size=32, n_epochs=n_epochs)
         
@@ -243,52 +247,53 @@ for r in range(n_realizations):
                     num_graph_classes = dataset.num_classes)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
-        criterion = torch.nn.NLLLoss()
+        criterion = torch.nn.CrossEntropyLoss()
         _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
                       batch_size=32, n_epochs=n_epochs)
         
         test_auc = test(model, test_data_new)
-        results_no_eigs[r] = test_auc
+        results_eigs[r] = test_auc
         print(f"Test: {test_auc:.3f}")
         
         print()
 
-"""
-    ##############################################################################
-    ############################# Adding PEs #####################################
-    ##############################################################################
-    
-    if do_learn_pe:
-    
-        print('Adding PE...')
-        print()
+    """
+        ##############################################################################
+        ############################# Adding PEs #####################################
+        ##############################################################################
         
-        pre_defined_kwargs = {'eigvecs': V}
-        pre_defined_kwargs_test = {'eigvecs': V_test}
+        if do_learn_pe:
         
-        train_data_new = Data(x=train_data.x, edge_index=train_data.edge_index,
-                              edge_label=train_data.edge_label,
-                              y=train_data.y,edge_label_index=train_data.edge_label_index)
-        val_data_new = Data(x=val_data.x, edge_index=val_data.edge_index,
-                              edge_label=val_data.edge_label,
-                              y=train_data.y,edge_label_index=val_data.edge_label_index,
-                              **pre_defined_kwargs)
-        test_data_new = Data(x=test_data.x, edge_index=test_data.edge_index,
-                              edge_label=test_data.edge_label,
-                              y=test_data.y,edge_label_index=test_data.edge_label_index,
-                              **pre_defined_kwargs_test)
-        
-        model = SignNetLinkPredNet(num_feats+F_pe[-1]*K, F_nn[0], F_nn[1], True, 1, F_pe[0], F_pe[1]).to(device)
-        optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
-        criterion = torch.nn.BCEWithLogitsLoss()
-        model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
-                                     criterion, n_epochs=n_epochs, K=K, pe=True, ten_fold=ten_fold)
-        test_auc = eval_link_predictor(model, test_data_new)
-        results_pe[r] = test_auc
-        print(f"Test: {test_auc:.3f}")
-        
-        print()
-    
+            print('Adding PE...')
+            print()
+            
+            pre_defined_kwargs = {'eigvecs': V}
+            pre_defined_kwargs_test = {'eigvecs': V_test}
+            
+            train_data_new = Data(x=train_data.x, edge_index=train_data.edge_index,
+                                  edge_label=train_data.edge_label,
+                                  y=train_data.y,edge_label_index=train_data.edge_label_index)
+            val_data_new = Data(x=val_data.x, edge_index=val_data.edge_index,
+                                  edge_label=val_data.edge_label,
+                                  y=train_data.y,edge_label_index=val_data.edge_label_index,
+                                  **pre_defined_kwargs)
+            test_data_new = Data(x=test_data.x, edge_index=test_data.edge_index,
+                                  edge_label=test_data.edge_label,
+                                  y=test_data.y,edge_label_index=test_data.edge_label_index,
+                                  **pre_defined_kwargs_test)
+            
+            model = SignNetLinkPredNet(num_feats+F_pe[-1]*K, F_nn[0], F_nn[1], True, 1, F_pe[0], F_pe[1]).to(device)
+            optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
+            criterion = torch.nn.BCEWithLogitsLoss()
+            model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
+                                         criterion, n_epochs=n_epochs, K=K, pe=True, ten_fold=ten_fold)
+            test_auc = eval_link_predictor(model, test_data_new)
+            results_pe[r] = test_auc
+            print(f"Test: {test_auc:.3f}")
+            
+            print()
+     """
+   
     ##############################################################################
     ############################# Sampling! ######################################
     ##############################################################################
@@ -298,163 +303,343 @@ for r in range(n_realizations):
         print('Sampling with spectral proxies...')
         print()
         
-        # Finding sampling set
-        n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
-        graph_ind = generate_induced_graphon(train_data, m)
-        num_nodes_ind = graph_ind.x.shape[0]
-        assert num_nodes_ind == m
-        adj_sparse_ind, adj_ind = aux_functions.compute_adj_from_data(graph_ind)
-        
-        # Computing normalized Laplacian
-        L_ind = aux_functions.compute_laplacian(adj_sparse_ind,num_nodes_ind)
-        
-        lam = eigvals[-1]
-        L_aux = L_ind.cpu()
-        k = 5
-        
-        s_vec, n_iters = greedy(f, lam, L_aux, k, m2)
-            
-        n_iters_per_rlz[r] = n_iters
-        s_vec = torch.tensor(s_vec)
-        
-        sampled_idx = []
-        for i in range(m):
-            if s_vec[i] == 1:
-                if i < m-1:
-                    cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,:]
-                    cur_adj = cur_adj[:,i*n_nodes_per_int:(i+1)*n_nodes_per_int]
-                    idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
-                else:
-                    if m3 > n_nodes_last_int:
-                        #m3 = n_nodes_last_int
-                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
-                        cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
-                    else:
-                        cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
-                        cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+m3]
-                    idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
-                                                     #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
-                idx = np.sort(idx)
-                for j in range(idx.shape[0]):
-                    idx[j] += i*n_nodes_per_int
-                sampled_idx += list(idx)
-        sampled_idx = list(set(sampled_idx))   
-        updated_sz = len(sampled_idx)
-        
-        # V for train data
-        graph_new = train_data.clone().subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
-
-        # Removing isolated nodes
-        sampled_idx_og = sampled_idx
-        if remove_isolated:
-            edge_index_new = graph_new.edge_index.clone()
-            edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-            mask = mask.cpu().tolist()
-            sampled_idx = list(np.array(sampled_idx_og)[mask])
-            graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
-        if K > len(sampled_idx):
-            K = len(sampled_idx)
-        len_sampled_idx[r] = len(sampled_idx)
-
-        graph_new = graph_new.to(device)
-        num_nodes_new = graph_new.x.shape[0]
-        adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
-        
-        # Computing normalized Laplacian
-        L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
-        
-        #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
-        eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-        eigvals_new = torch.abs(eigvals_new).float()
-        V_new = V_new.float()
-        idx = torch.argsort(eigvals_new)
-        eigvals_new = eigvals_new[idx[0:K]]
-        
-        count = 2
-        new_lam = eigvals_new[-1]
-        print(lam)
-        print(new_lam)
-        while new_lam < lam:
-            lam = eigvals[-count]
-            K -= 1
-            count += 1
-        
-        V_new = V_new[:,idx[0:K]]
-        V_new = V_new.type(torch.float32)
-        V_rec = torch.zeros(num_nodes, K, device=device)
-        
-        for i in range(V_new.shape[1]):
-            v = V_new[:,i]
-            V_rec[sampled_idx,i] = v
-        
-        # V for test data
-        graph_new = test_data.clone().subgraph(torch.tensor(sampled_idx_og, device=device, dtype=torch.long))
-        
-        # Removing isolated nodes
-        if remove_isolated:
-            edge_index_new = graph_new.edge_index.clone()
-            edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-            mask = mask.cpu().tolist()
-            sampled_idx = list(np.array(sampled_idx_og)[mask])
-            graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
-        if K > len(sampled_idx):
-            K = len(sampled_idx)
-        
-        graph_new = graph_new.to(device)
-        num_nodes_new = graph_new.x.shape[0]
-        adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
-        
-        # Computing normalized Laplacian
-        L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
-        
-        #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
-        eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-        eigvals_new = torch.abs(eigvals_new).float()
-        V_new = V_new.float()
-        idx = torch.argsort(eigvals_new)
-        eigvals_new = eigvals_new[idx[0:K]]
-        V_new = V_new[:,idx[0:K]]
-        V_new = V_new.type(torch.float32)
-        V_rec_test = torch.zeros(num_nodes, K, device=device)
-        
-        for i in range(V_new.shape[1]):
-            v = V_new[:,i]
-            V_rec_test[sampled_idx,i] = v
-            #rec_error_w[r,i] = torch.linalg.norm(V_rec_test[:,i]-V_test[:,i])/torch.linalg.norm(V_test[:,i])
-        
         # Just adding eigenvectors
         
         print("Just adding eigenvectors...")
         print()
         
-        pre_defined_kwargs = {'eigvecs': False}
+        all_train_Vs_w = []
+        all_val_Vs_w = []
+        all_test_Vs_w = []
         
-        train_data_new = Data(x=train_data.x, edge_index=train_data.edge_index,
-                              edge_label=train_data.edge_label,
-                              y=train_data.y,edge_label_index=train_data.edge_label_index,
-                              **pre_defined_kwargs)
-        val_data_new = Data(x=torch.cat((val_data.x,V_rec), dim=1), edge_index=val_data.edge_index,
-                              edge_label=val_data.edge_label,
-                              y=train_data.y,edge_label_index=val_data.edge_label_index,
-                              **pre_defined_kwargs)
-        test_data_new = Data(x=torch.cat((test_data.x,V_rec_test), dim=1), edge_index=test_data.edge_index,
-                              edge_label=test_data.edge_label,
-                              y=test_data.y,edge_label_index=test_data.edge_label_index,
-                              **pre_defined_kwargs)
+        train_data_new = []
+        val_data_new = []
+        test_data_new = []
         
-        model = SignNetLinkPredNet(num_feats+K, F_nn[0], F_nn[1]).to(device)
+        # Train data
+        for train_data_elt in train_data:
+        
+            # Finding sampling set
+            num_nodes = train_data_elt.x.shape[0]
+            n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
+            graph_ind = generate_induced_graphon(train_data_elt, m)
+            num_nodes_ind = graph_ind.x.shape[0]
+            assert num_nodes_ind == m
+            adj_sparse_ind, adj_ind = aux_functions.compute_adj_from_data(graph_ind)
+            
+            # Computing normalized Laplacian
+            L_ind = aux_functions.compute_laplacian(adj_sparse_ind,num_nodes_ind)
+            
+            lam = eigvals[-1]
+            L_aux = L_ind.cpu()
+            k = 5
+            
+            s_vec, n_iters = greedy(f, lam, L_aux, k, m2)
+                
+            n_iters_per_rlz[r] = n_iters
+            s_vec = torch.tensor(s_vec)
+            
+            sampled_idx = []
+            for i in range(m):
+                if s_vec[i] == 1:
+                    if i < m-1:
+                        cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,:]
+                        cur_adj = cur_adj[:,i*n_nodes_per_int:(i+1)*n_nodes_per_int]
+                        idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
+                    else:
+                        if m3 > n_nodes_last_int:
+                            #m3 = n_nodes_last_int
+                            cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                            cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
+                        else:
+                            cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                            cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+m3]
+                        idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
+                                                         #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
+                    idx = np.sort(idx)
+                    for j in range(idx.shape[0]):
+                        idx[j] += i*n_nodes_per_int
+                    sampled_idx += list(idx)
+            sampled_idx = list(set(sampled_idx))   
+            updated_sz = len(sampled_idx)
+            
+            # V for train data
+            graph_new = train_data_elt.clone().subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+    
+            # Removing isolated nodes
+            sampled_idx_og = sampled_idx
+            if remove_isolated:
+                edge_index_new = graph_new.edge_index.clone()
+                edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
+                mask = mask.cpu().tolist()
+                sampled_idx = list(np.array(sampled_idx_og)[mask])
+                graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
+            if K > len(sampled_idx):
+                K = len(sampled_idx)
+            len_sampled_idx[r] = len(sampled_idx)
+    
+            graph_new = graph_new.to(device)
+            num_nodes_new = graph_new.x.shape[0]
+            adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
+            
+            # Computing normalized Laplacian
+            L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
+            
+            #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
+            eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
+            eigvals_new = torch.abs(eigvals_new).float()
+            V_new = V_new.float()
+            idx = torch.argsort(eigvals_new)
+            eigvals_new = eigvals_new[idx[0:K]]
+            
+            count = 2
+            new_lam = eigvals_new[-1]
+            print(lam)
+            print(new_lam)
+            while new_lam < lam:
+                lam = eigvals[-count]
+                K -= 1
+                count += 1
+            
+            V_new = V_new[:,idx[0:K]]
+            V_new = V_new.type(torch.float32)
+            V_rec = torch.zeros(num_nodes, K, device=device)
+            
+            for i in range(V_new.shape[1]):
+                v = V_new[:,i]
+                V_rec[sampled_idx,i] = v
+                
+            all_train_Vs_w.append(V_rec)
+            
+            pre_defined_kwargs = {'eigvecs': False}
+            
+            train_data_elt_new = Data(x=torch.cat((train_data_elt.x,V), dim=1),
+                                      edge_index=train_data_elt.edge_index,
+                                      y=train_data_elt.y,
+                                      **pre_defined_kwargs)
+            train_data_new.append(train_data_elt_new)
+        
+        
+        # Val data
+        for val_data_elt in val_data:
+        
+            # Finding sampling set
+            num_nodes = val_data_elt.x.shape[0]
+            n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
+            graph_ind = generate_induced_graphon(val_data_elt, m)
+            num_nodes_ind = graph_ind.x.shape[0]
+            assert num_nodes_ind == m
+            adj_sparse_ind, adj_ind = aux_functions.compute_adj_from_data(graph_ind)
+            
+            # Computing normalized Laplacian
+            L_ind = aux_functions.compute_laplacian(adj_sparse_ind,num_nodes_ind)
+            
+            lam = eigvals[-1]
+            L_aux = L_ind.cpu()
+            k = 5
+            
+            s_vec, n_iters = greedy(f, lam, L_aux, k, m2)
+                
+            n_iters_per_rlz[r] = n_iters
+            s_vec = torch.tensor(s_vec)
+            
+            sampled_idx = []
+            for i in range(m):
+                if s_vec[i] == 1:
+                    if i < m-1:
+                        cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,:]
+                        cur_adj = cur_adj[:,i*n_nodes_per_int:(i+1)*n_nodes_per_int]
+                        idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
+                    else:
+                        if m3 > n_nodes_last_int:
+                            #m3 = n_nodes_last_int
+                            cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                            cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
+                        else:
+                            cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                            cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+m3]
+                        idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
+                                                         #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
+                    idx = np.sort(idx)
+                    for j in range(idx.shape[0]):
+                        idx[j] += i*n_nodes_per_int
+                    sampled_idx += list(idx)
+            sampled_idx = list(set(sampled_idx))   
+            updated_sz = len(sampled_idx)
+            
+            # V for val data
+            graph_new = val_data_elt.clone().subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+    
+            # Removing isolated nodes
+            sampled_idx_og = sampled_idx
+            if remove_isolated:
+                edge_index_new = graph_new.edge_index.clone()
+                edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
+                mask = mask.cpu().tolist()
+                sampled_idx = list(np.array(sampled_idx_og)[mask])
+                graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
+            if K > len(sampled_idx):
+                K = len(sampled_idx)
+            len_sampled_idx[r] = len(sampled_idx)
+    
+            graph_new = graph_new.to(device)
+            num_nodes_new = graph_new.x.shape[0]
+            adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
+            
+            # Computing normalized Laplacian
+            L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
+            
+            #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
+            eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
+            eigvals_new = torch.abs(eigvals_new).float()
+            V_new = V_new.float()
+            idx = torch.argsort(eigvals_new)
+            eigvals_new = eigvals_new[idx[0:K]]
+            
+            count = 2
+            new_lam = eigvals_new[-1]
+            print(lam)
+            print(new_lam)
+            while new_lam < lam:
+                lam = eigvals[-count]
+                K -= 1
+                count += 1
+            
+            V_new = V_new[:,idx[0:K]]
+            V_new = V_new.type(torch.float32)
+            V_rec = torch.zeros(num_nodes, K, device=device)
+            
+            for i in range(V_new.shape[1]):
+                v = V_new[:,i]
+                V_rec[sampled_idx,i] = v
+                
+            all_val_Vs_w.append(V_rec)
+            
+            pre_defined_kwargs = {'eigvecs': False}
+            
+            val_data_elt_new = Data(x=torch.cat((val_data_elt.x,V), dim=1),
+                                      edge_index=val_data_elt.edge_index,
+                                      y=val_data_elt.y,
+                                      **pre_defined_kwargs)
+            val_data_new.append(val_data_elt_new)
+        
+        # Test data
+        for test_data_elt in test_data:
+                                              
+            # Finding sampling set
+            num_nodes = test_data_elt.x.shape[0]
+            n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
+            graph_ind = generate_induced_graphon(test_data_elt, m)
+            num_nodes_ind = graph_ind.x.shape[0]
+            assert num_nodes_ind == m
+            adj_sparse_ind, adj_ind = aux_functions.compute_adj_from_data(graph_ind)
+            
+            # Computing normalized Laplacian
+            L_ind = aux_functions.compute_laplacian(adj_sparse_ind,num_nodes_ind)
+            
+            lam = eigvals[-1]
+            L_aux = L_ind.cpu()
+            k = 5
+            
+            s_vec, n_iters = greedy(f, lam, L_aux, k, m2)
+                
+            n_iters_per_rlz[r] = n_iters
+            s_vec = torch.tensor(s_vec)
+            
+            sampled_idx = []
+            for i in range(m):
+                if s_vec[i] == 1:
+                    if i < m-1:
+                        cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,:]
+                        cur_adj = cur_adj[:,i*n_nodes_per_int:(i+1)*n_nodes_per_int]
+                        idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
+                    else:
+                        if m3 > n_nodes_last_int:
+                            #m3 = n_nodes_last_int
+                            cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                            cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
+                        else:
+                            cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
+                            cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+m3]
+                        idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
+                                                         #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
+                    idx = np.sort(idx)
+                    for j in range(idx.shape[0]):
+                        idx[j] += i*n_nodes_per_int
+                    sampled_idx += list(idx)
+            sampled_idx = list(set(sampled_idx))   
+            updated_sz = len(sampled_idx)
+            
+            # V for test data
+            graph_new = test_data_elt.clone().subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+    
+            # Removing isolated nodes
+            sampled_idx_og = sampled_idx
+            if remove_isolated:
+                edge_index_new = graph_new.edge_index.clone()
+                edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
+                mask = mask.cpu().tolist()
+                sampled_idx = list(np.array(sampled_idx_og)[mask])
+                graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
+            if K > len(sampled_idx):
+                K = len(sampled_idx)
+            len_sampled_idx[r] = len(sampled_idx)
+    
+            graph_new = graph_new.to(device)
+            num_nodes_new = graph_new.x.shape[0]
+            adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
+            
+            # Computing normalized Laplacian
+            L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
+            
+            #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
+            eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
+            eigvals_new = torch.abs(eigvals_new).float()
+            V_new = V_new.float()
+            idx = torch.argsort(eigvals_new)
+            eigvals_new = eigvals_new[idx[0:K]]
+            
+            count = 2
+            new_lam = eigvals_new[-1]
+            print(lam)
+            print(new_lam)
+            while new_lam < lam:
+                lam = eigvals[-count]
+                K -= 1
+                count += 1
+            
+            V_new = V_new[:,idx[0:K]]
+            V_new = V_new.type(torch.float32)
+            V_rec = torch.zeros(num_nodes, K, device=device)
+            
+            for i in range(V_new.shape[1]):
+                v = V_new[:,i]
+                V_rec[sampled_idx,i] = v
+                
+            all_test_Vs_w.append(V_rec)
+            
+            pre_defined_kwargs = {'eigvecs': False}
+            
+            test_data_elt_new = Data(x=torch.cat((test_data_elt.x,V), dim=1),
+                                      edge_index=test_data_elt.edge_index,
+                                      y=test_data_elt.y,
+                                      **pre_defined_kwargs)
+            test_data_new.append(test_data_elt_new)
+        
+        model = GNN('gcn', [num_feats+K,F_nn,F_nn], [], softmax=False, aggregate=True, 
+                    num_graph_classes = dataset.num_classes)
+        model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
-        criterion = torch.nn.BCEWithLogitsLoss()
-        model, train_data_collection, V_collection = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
-                                     criterion, n_epochs=n_epochs, K=K, m=m, m2=m2, 
-                                     m3=m3, nb_cuts=nb_cuts, remove_isolated=remove_isolated, ten_fold=ten_fold)
+        criterion = torch.nn.CrossEntropyLoss()
+        _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
+                      batch_size=32, n_epochs=n_epochs)
         
-        test_auc = eval_link_predictor(model, test_data_new)
+        test_auc = test(model, test_data_new)
         results_w_samp_eigs[r] = test_auc
         print(f"Test: {test_auc:.3f}")
         
         print()
-        
+""""        
         # Now with PEs
         
         print("Now with PEs...")
