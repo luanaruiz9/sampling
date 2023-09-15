@@ -72,7 +72,7 @@ sort_by_degree = False
 dataset_og = MalNetTiny(root='/tmp/MalNetTiny')
 dataset = []
 for data in dataset_og:
-    if data.num_nodes >= 1000:
+    if data.num_nodes >= 2500:
         dataset.append(data)
 print("length of dataset ", len(dataset))
 
