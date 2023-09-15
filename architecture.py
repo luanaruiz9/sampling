@@ -91,7 +91,11 @@ class GNN(torch.nn.Module):
         if self.aggregate:
             self.aggregator = aggr.MeanAggregation()
             self.softmax = False
-            self.lin = nn.Linear(MLPlist[-1],num_graph_classes)
+            if len(MLPlist) > 0:
+                in_feats = MLPlist[-1]
+            else:
+                in_feats = Flist[1]
+            self.lin = nn.Linear(in_feats,num_graph_classes)
         self.layers = nn.ModuleList()
         self.MLPlayers = nn.ModuleList()
 
