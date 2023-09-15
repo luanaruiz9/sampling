@@ -381,10 +381,6 @@ def test(test_model, data, is_validation=False, save_model_preds=False):
         flag = True
     else:
         loader = DataLoader(data)
-        
-    # Graph classification setting
-    if len(data.y.shape) > 1:
-        flag = False
     
     test_model.eval()
     correct = 0
