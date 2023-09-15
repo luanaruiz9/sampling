@@ -153,37 +153,10 @@ for r in range(n_realizations):
         print(f"Test: {test_auc:.3f}")
         
         print()
-"""   
+  
     ##############################################################################
     ######################## Adding eigenvectors #################################
     ##############################################################################
-
-    # V for train data
-    adj_sparse, adj = aux_functions.compute_adj_from_data(train_data)
-    num_nodes = adj.shape[0]
-    
-    # Computing normalized Laplacian
-    L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
-    eigvals, V = torch.lobpcg(L, k=K, largest=False)
-    #eigvals, V = torch.linalg.eig(L.to_dense())
-    eigvals = torch.abs(eigvals).float()
-    V = V.float()
-    idx = torch.argsort(eigvals)
-    eigvals = eigvals[idx[0:K]]
-    V = V[:,idx[0:K]]
-    
-    # V for test data
-    adj_sparse_test, adj_test = aux_functions.compute_adj_from_data(test_data)
-    
-    # Computing normalized Laplacian
-    L_test = aux_functions.compute_laplacian(adj_sparse_test, num_nodes)
-    eigvals_test, V_test = torch.lobpcg(L_test, k=K, largest=False)
-    #eigvals_test, V_test = torch.linalg.eig(L_test.to_dense())
-    eigvals_test = torch.abs(eigvals_test).float()
-    V_test = V_test.float()
-    idx = torch.argsort(eigvals_test)
-    eigvals_test = eigvals_test[idx[0:K]]
-    V_test = V_test[:,idx[0:K]]
     
     if do_eig:
     
@@ -191,32 +164,96 @@ for r in range(n_realizations):
         print()
         
         pre_defined_kwargs = {'eigvecs': False}
+    
+        all_train_Vs = []
+        all_val_Vs = []
+        all_test_Vs = []
         
-        train_data_new = Data(x=train_data.x, edge_index=train_data.edge_index,
-                              edge_label=train_data.edge_label,
-                              y=train_data.y,edge_label_index=train_data.edge_label_index,
-                              **pre_defined_kwargs)
-        val_data_new = Data(x=torch.cat((val_data.x,V), dim=1), edge_index=val_data.edge_index,
-                              edge_label=val_data.edge_label,
-                              y=train_data.y,edge_label_index=val_data.edge_label_index,
-                              **pre_defined_kwargs)
-        test_data_new = Data(x=torch.cat((test_data.x,V_test), dim=1), edge_index=test_data.edge_index,
-                              edge_label=test_data.edge_label,
-                              y=test_data.y,edge_label_index=test_data.edge_label_index,
-                              **pre_defined_kwargs)
+        train_data_new = []
+        val_data_new = []
+        test_data_new = []
+    
+        for train_data_elt in train_data:
+            # V for train data
+            adj_sparse, adj = aux_functions.compute_adj_from_data(train_data_elt)
+            num_nodes = adj.shape[0]
+            
+            # Computing normalized Laplacian
+            L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
+            eigvals, V = torch.lobpcg(L, k=K, largest=False)
+            #eigvals, V = torch.linalg.eig(L.to_dense())
+            eigvals = torch.abs(eigvals).float()
+            V = V.float()
+            idx = torch.argsort(eigvals)
+            eigvals = eigvals[idx[0:K]]
+            V = V[:,idx[0:K]]
+            all_train_Vs.append(V)
+            
+            train_data_elt_new = Data(x=torch.cat((train_data_elt.x,V), dim=1), edge_index=train_data_elt.edge_index,
+                                  edge_label=train_data_elt.edge_label,
+                                  y=train_data_elt.y,edge_label_index=train_data_elt.edge_label_index,
+                                  **pre_defined_kwargs)
+            train_data_new.append(train_data_elt)
         
-        model = SignNetLinkPredNet(num_feats+K, F_nn[0], F_nn[1]).to(device)
+        for val_data_elt in val_data:
+            # V for val data
+            adj_sparse, adj = aux_functions.compute_adj_from_data(val_data_elt)
+            num_nodes = adj.shape[0]
+            
+            # Computing normalized Laplacian
+            L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
+            eigvals, V = torch.lobpcg(L, k=K, largest=False)
+            #eigvals, V = torch.linalg.eig(L.to_dense())
+            eigvals = torch.abs(eigvals).float()
+            V = V.float()
+            idx = torch.argsort(eigvals)
+            eigvals = eigvals[idx[0:K]]
+            V = V[:,idx[0:K]]
+            all_val_Vs.append(V)
+            
+            val_data_elt_new = Data(x=torch.cat((val_data_elt.x,V), dim=1), edge_index=val_data_elt.edge_index,
+                                      edge_label=val_data_elt.edge_label,
+                                      y=val_data_elt.y,edge_label_index=val_data_elt.edge_label_index,
+                                      **pre_defined_kwargs)
+            val_data_new.append(val_data_elt)
+            
+            
+        for test_data_elt in test_data:
+            # V for test data
+            adj_sparse_test, adj_test = aux_functions.compute_adj_from_data(test_data_elt)
+            
+            # Computing normalized Laplacian
+            L_test = aux_functions.compute_laplacian(adj_sparse_test, num_nodes)
+            eigvals_test, V_test = torch.lobpcg(L_test, k=K, largest=False)
+            #eigvals_test, V_test = torch.linalg.eig(L_test.to_dense())
+            eigvals_test = torch.abs(eigvals_test).float()
+            V_test = V_test.float()
+            idx = torch.argsort(eigvals_test)
+            eigvals_test = eigvals_test[idx[0:K]]
+            V_test = V_test[:,idx[0:K]]
+            all_test_Vs.append(V_test)
+        
+            test_data_elt_new = Data(x=torch.cat((test_data_elt.x,V_test), dim=1), edge_index=test_data_elt.edge_index,
+                                  edge_label=test_data_elt.edge_label,
+                                  y=test_data_elt.y,edge_label_index=test_data_elt.edge_label_index,
+                                  **pre_defined_kwargs)
+            test_data_new.append(test_data_elt)
+        
+        model = GNN('gcn', [num_feats+K,F_nn,F_nn], [], softmax=False, aggregate=True, 
+                    num_graph_classes = dataset.num_classes)
+        model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
-        criterion = torch.nn.BCEWithLogitsLoss()
-        model, _, _ = train_link_predictor(model, train_data_new, val_data_new, optimizer, 
-                                     criterion, n_epochs=n_epochs, K=K, ten_fold=ten_fold)
+        criterion = torch.nn.NLLLoss()
+        _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
+                      batch_size=32, n_epochs=n_epochs)
         
-        test_auc = eval_link_predictor(model, test_data_new)
-        results_eigs[r] = test_auc
+        test_auc = test(model, test_data_new)
+        results_no_eigs[r] = test_auc
         print(f"Test: {test_auc:.3f}")
         
         print()
-    
+
+"""
     ##############################################################################
     ############################# Adding PEs #####################################
     ##############################################################################
