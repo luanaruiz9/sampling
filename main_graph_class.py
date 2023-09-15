@@ -69,10 +69,11 @@ do_random_sampl = True
 remove_isolated = False
 sort_by_degree = False
 
-dataset = MalNetTiny(root='/tmp/MalNetTiny')
+dataset_og = MalNetTiny(root='/tmp/MalNetTiny')
+dataset = []
 for data in dataset:
-    if data.num_nodes < 500:
-        dataset.remove(data)
+    if data.num_nodes >+ 500:
+        dataset.append(data)
 print("length of dataset ", len(dataset))
 
 transformed_dataset = []
