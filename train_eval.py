@@ -329,8 +329,13 @@ def eval_link_predictor(model, data):
     return roc_auc_score(data.edge_label.cpu().numpy(), out.cpu().numpy()) 
 
 def train(model, train_data, val_data, optimizer, criterion, batch_size, n_epochs):
-
-    loader = DataLoader([train_data], batch_size=batch_size)  
+    
+    flag = False
+    if not isinstance(train_data, list):
+        loader = DataLoader([train_data], batch_size=batch_size) 
+        flag = True
+    else:
+        loader = DataLoader(train_data, batch_size=batch_size)
 
     # train
     losses = []
@@ -345,8 +350,9 @@ def train(model, train_data, val_data, optimizer, criterion, batch_size, n_epoch
             optimizer.zero_grad()
             pred = model(batch)
             label = batch.y
-            pred = pred[batch.train_mask]
-            label = label[batch.train_mask]
+            if flag:
+                pred = pred[batch.train_mask]
+                label = label[batch.train_mask]
             loss = criterion(pred, label)
             loss.backward()
             optimizer.step()
@@ -369,7 +375,17 @@ def train(model, train_data, val_data, optimizer, criterion, batch_size, n_epoch
 
 def test(test_model, data, is_validation=False, save_model_preds=False):
     
-    loader = DataLoader([data])
+    flag = False
+    if not isinstance(data, list):
+        loader = DataLoader([data]) 
+        flag = True
+    else:
+        loader = DataLoader(data)
+        
+    # Graph classification setting
+    if len(data.y.shape) > 1:
+        flag = False
+    
     test_model.eval()
     correct = 0
     # Note that Cora is only one graph!
@@ -378,11 +394,12 @@ def test(test_model, data, is_validation=False, save_model_preds=False):
             # max(dim=1) returns values, indices tuple; only need indices
             pred = test_model(data).max(dim=1)[1]
             label = data.y
-
-        mask = data.val_mask if is_validation else data.test_mask
-        # node classification: only evaluate on nodes in test set
-        pred = pred[mask]
-        label = label[mask]
+        
+        if flag:
+            mask = data.val_mask if is_validation else data.test_mask
+            # node classification: only evaluate on nodes in test set
+            pred = pred[mask]
+            label = label[mask]
 
         if save_model_preds:
           print ("Saving Model Predictions for Model Type", test_model.type)
@@ -395,6 +412,9 @@ def test(test_model, data, is_validation=False, save_model_preds=False):
 
     total = 0
     for data in loader.dataset:
-        total += torch.sum(data.val_mask if is_validation else data.test_mask).item()
+        if flag:
+            total += torch.sum(data.val_mask if is_validation else data.test_mask).item()
+        else:
+            total += 1
 
     return correct / total

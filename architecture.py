@@ -6,6 +6,7 @@ Created on Mon Mar  6 14:34:08 2023
 """
 
 from torch_geometric.nn import SAGEConv, GCNConv
+from torch_geometric.nn import aggr
 import torch
 import scipy
 import torch.nn as nn
@@ -75,7 +76,8 @@ class GraphFilter(torch.nn.Module):
 
 class GNN(torch.nn.Module):
 
-    def __init__(self, GNNtype, Flist, MLPlist, softmax=False, Klist = None):
+    def __init__(self, GNNtype, Flist, MLPlist, softmax=False, Klist=None, 
+                 aggregate=False, num_graph_classes=None):
 
         super(GNN, self).__init__()
         self.type = GNNtype
@@ -85,7 +87,11 @@ class GNN(torch.nn.Module):
         self.Lmlp = len(MLPlist)
         self.softmax = softmax
         self.Klist = Klist
-
+        self.aggregate = aggregate
+        if self.aggregate:
+            self.aggregator = aggr.MeanAggregation()
+            self.softmax = False
+            self.lin = nn.Linear(MLPlist[-1],num_graph_classes)
         self.layers = nn.ModuleList()
         self.MLPlayers = nn.ModuleList()
 
@@ -102,8 +108,7 @@ class GNN(torch.nn.Module):
             
     def forward(self, data):
 
-        y, edge_index, edge_weight = data.x, data.edge_index, data.edge_weight
-
+        y, edge_index, edge_weight, batch = data.x, data.edge_index, data.edge_weight, data.batch
         for i, layer in enumerate(self.layers):
             if self.type == 'gnn':
                 y = layer(y, edge_index=edge_index, edge_weight=edge_weight)
@@ -114,9 +119,13 @@ class GNN(torch.nn.Module):
         for i, layer in enumerate(self.MLPlayers):
             y = layer(y)
         
-        if self.softmax == True:
-            y = F.log_softmax(y, dim=1)
-
+        if self.aggregate:
+            y = self.aggregator(y, batch)
+            y = F.dropout(y, p=0.5, training=self.training)
+            y = self.lin(y)
+            
+        if self.softmax:
+            y = F.log_softmax(y, dim=-1)
         return y
 
 class LinkPredNet(torch.nn.Module):
