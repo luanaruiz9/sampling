@@ -72,7 +72,7 @@ sort_by_degree = False
 dataset_og = MalNetTiny(root='/tmp/MalNetTiny')
 dataset = []
 for data in dataset_og:
-    if data.num_nodes >= 4000:
+    if data.num_nodes >= 4500:
         dataset.append(data)
 print("length of dataset ", len(dataset))
 
@@ -414,7 +414,7 @@ for r in range(n_realizations):
             
             pre_defined_kwargs = {'eigvecs': False}
             
-            train_data_elt_new = Data(x=torch.cat((train_data_elt.x,V), dim=1),
+            train_data_elt_new = Data(x=torch.cat((train_data_elt.x,V_rec), dim=1),
                                       edge_index=train_data_elt.edge_index,
                                       y=train_data_elt.y,
                                       **pre_defined_kwargs)
@@ -518,7 +518,7 @@ for r in range(n_realizations):
             
             pre_defined_kwargs = {'eigvecs': False}
             
-            val_data_elt_new = Data(x=torch.cat((val_data_elt.x,V), dim=1),
+            val_data_elt_new = Data(x=torch.cat((val_data_elt.x,V_rec), dim=1),
                                       edge_index=val_data_elt.edge_index,
                                       y=val_data_elt.y,
                                       **pre_defined_kwargs)
@@ -621,7 +621,7 @@ for r in range(n_realizations):
             
             pre_defined_kwargs = {'eigvecs': False}
             
-            test_data_elt_new = Data(x=torch.cat((test_data_elt.x,V), dim=1),
+            test_data_elt_new = Data(x=torch.cat((test_data_elt.x,V_rec), dim=1),
                                       edge_index=test_data_elt.edge_index,
                                       y=test_data_elt.y,
                                       **pre_defined_kwargs)
