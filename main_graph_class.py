@@ -70,6 +70,7 @@ remove_isolated = False
 sort_by_degree = False
 
 dataset = MalNetTiny(root='/tmp/MalNetTiny')
+dataset = dataset[0:128]
 transformed_dataset = []
 transform = T.ToUndirected()
 pre_defined_kwargs = {'eigvecs': False}
