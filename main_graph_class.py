@@ -80,7 +80,7 @@ transformed_dataset = []
 transform = T.ToUndirected()
 pre_defined_kwargs = {'eigvecs': False}
 num_feats = 1
-num_classes = dataset.num_classes
+num_classes = dataset_og.num_classes
 
 for graph_og in dataset:
     
@@ -146,7 +146,7 @@ for r in range(n_realizations):
     if do_no_pe:
     
         model = GNN('gcn', [num_feats,F_nn,F_nn], [], softmax=False, aggregate=True, 
-                    num_graph_classes = dataset.num_classes)
+                    num_graph_classes = num_classes)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.CrossEntropyLoss()
@@ -245,7 +245,7 @@ for r in range(n_realizations):
             test_data_new.append(test_data_elt_new)
         
         model = GNN('gcn', [num_feats+K,F_nn,F_nn], [], softmax=False, aggregate=True, 
-                    num_graph_classes = dataset.num_classes)
+                    num_graph_classes = num_classes)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.CrossEntropyLoss()
@@ -628,7 +628,7 @@ for r in range(n_realizations):
             test_data_new.append(test_data_elt_new)
         
         model = GNN('gcn', [num_feats+K,F_nn,F_nn], [], softmax=False, aggregate=True, 
-                    num_graph_classes = dataset.num_classes)
+                    num_graph_classes = num_classes)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.CrossEntropyLoss()
