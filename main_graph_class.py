@@ -393,15 +393,6 @@ for r in range(n_realizations):
             idx = torch.argsort(eigvals_new)
             eigvals_new = eigvals_new[idx[0:K]]
             
-            count = 2
-            new_lam = eigvals_new[-1]
-            print(lam)
-            print(new_lam)
-            while new_lam < lam and count <= len(eigvals):
-                lam = eigvals[-count]
-                K -= 1
-                count += 1
-            
             V_new = V_new[:,idx[0:K]]
             V_new = V_new.type(torch.float32)
             V_rec = torch.zeros(num_nodes, K, device=device)
@@ -497,15 +488,6 @@ for r in range(n_realizations):
             idx = torch.argsort(eigvals_new)
             eigvals_new = eigvals_new[idx[0:K]]
             
-            count = 2
-            new_lam = eigvals_new[-1]
-            print(lam)
-            print(new_lam)
-            while new_lam < lam and count <= len(eigvals):
-                lam = eigvals[-count]
-                K -= 1
-                count += 1
-            
             V_new = V_new[:,idx[0:K]]
             V_new = V_new.type(torch.float32)
             V_rec = torch.zeros(num_nodes, K, device=device)
@@ -599,15 +581,6 @@ for r in range(n_realizations):
             V_new = V_new.float()
             idx = torch.argsort(eigvals_new)
             eigvals_new = eigvals_new[idx[0:K]]
-            
-            count = 2
-            new_lam = eigvals_new[-1]
-            print(lam)
-            print(new_lam)
-            while new_lam < lam and count <= len(eigvals):
-                lam = eigvals[-count]
-                K -= 1
-                count += 1
             
             V_new = V_new[:,idx[0:K]]
             V_new = V_new.type(torch.float32)
