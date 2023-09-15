@@ -189,10 +189,10 @@ for r in range(n_realizations):
             V = V[:,idx[0:K]]
             all_train_Vs.append(V)
             
-            train_data_elt_new = Data(x=torch.cat((train_data_elt.x,V), dim=1), edge_index=train_data_elt.edge_index,
-                                  edge_label=train_data_elt.edge_label,
-                                  y=train_data_elt.y,edge_label_index=train_data_elt.edge_label_index,
-                                  **pre_defined_kwargs)
+            train_data_elt_new = Data(x=torch.cat((train_data_elt.x,V), dim=1), 
+                                      edge_index=train_data_elt.edge_index,
+                                      y=train_data_elt.y,
+                                      **pre_defined_kwargs)
             train_data_new.append(train_data_elt)
         
         for val_data_elt in val_data:
@@ -211,12 +211,11 @@ for r in range(n_realizations):
             V = V[:,idx[0:K]]
             all_val_Vs.append(V)
             
-            val_data_elt_new = Data(x=torch.cat((val_data_elt.x,V), dim=1), edge_index=val_data_elt.edge_index,
-                                      edge_label=val_data_elt.edge_label,
-                                      y=val_data_elt.y,edge_label_index=val_data_elt.edge_label_index,
-                                      **pre_defined_kwargs)
+            val_data_elt_new = Data(x=torch.cat((val_data_elt.x,V), dim=1), 
+                                    edge_index=val_data_elt.edge_index,
+                                    y=val_data_elt.y,
+                                    **pre_defined_kwargs)
             val_data_new.append(val_data_elt)
-            
             
         for test_data_elt in test_data:
             # V for test data
@@ -233,10 +232,10 @@ for r in range(n_realizations):
             V_test = V_test[:,idx[0:K]]
             all_test_Vs.append(V_test)
         
-            test_data_elt_new = Data(x=torch.cat((test_data_elt.x,V_test), dim=1), edge_index=test_data_elt.edge_index,
-                                  edge_label=test_data_elt.edge_label,
-                                  y=test_data_elt.y,edge_label_index=test_data_elt.edge_label_index,
-                                  **pre_defined_kwargs)
+            test_data_elt_new = Data(x=torch.cat((test_data_elt.x,V_test), dim=1), 
+                                     edge_index=test_data_elt.edge_index,
+                                     y=test_data_elt.y,
+                                     **pre_defined_kwargs)
             test_data_new.append(test_data_elt)
         
         model = GNN('gcn', [num_feats+K,F_nn,F_nn], [], softmax=False, aggregate=True, 
