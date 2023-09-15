@@ -193,7 +193,7 @@ for r in range(n_realizations):
                                       edge_index=train_data_elt.edge_index,
                                       y=train_data_elt.y,
                                       **pre_defined_kwargs)
-            train_data_new.append(train_data_elt)
+            train_data_new.append(train_data_elt_new)
         
         for val_data_elt in val_data:
             # V for val data
@@ -215,7 +215,7 @@ for r in range(n_realizations):
                                     edge_index=val_data_elt.edge_index,
                                     y=val_data_elt.y,
                                     **pre_defined_kwargs)
-            val_data_new.append(val_data_elt)
+            val_data_new.append(val_data_elt_new)
             
         for test_data_elt in test_data:
             # V for test data
@@ -237,7 +237,7 @@ for r in range(n_realizations):
                                      edge_index=test_data_elt.edge_index,
                                      y=test_data_elt.y,
                                      **pre_defined_kwargs)
-            test_data_new.append(test_data_elt)
+            test_data_new.append(test_data_elt_new)
         
         model = GNN('gcn', [num_feats+K,F_nn,F_nn], [], softmax=False, aggregate=True, 
                     num_graph_classes = dataset.num_classes)
