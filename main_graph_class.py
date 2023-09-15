@@ -397,7 +397,7 @@ for r in range(n_realizations):
             new_lam = eigvals_new[-1]
             print(lam)
             print(new_lam)
-            while new_lam < lam:
+            while new_lam < lam and count <= len(eigvals):
                 lam = eigvals[-count]
                 K -= 1
                 count += 1
@@ -501,7 +501,7 @@ for r in range(n_realizations):
             new_lam = eigvals_new[-1]
             print(lam)
             print(new_lam)
-            while new_lam < lam:
+            while new_lam < lam and count <= len(eigvals):
                 lam = eigvals[-count]
                 K -= 1
                 count += 1
@@ -604,7 +604,7 @@ for r in range(n_realizations):
             new_lam = eigvals_new[-1]
             print(lam)
             print(new_lam)
-            while new_lam < lam:
+            while new_lam < lam and count <= len(eigvals):
                 lam = eigvals[-count]
                 K -= 1
                 count += 1
