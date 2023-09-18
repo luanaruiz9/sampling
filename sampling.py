@@ -183,7 +183,7 @@ def cluster_hk_pr(A, seed, cheeger, eps, sz, vol_den):
     for i, node in enumerate(list(idx)):
         S.append(node)
         volS = torch.sum(deg_vec[S]).cpu().numpy()
-        if len(torch.argwhere(A[S]).shape) <= 1:
+        if torch.argwhere(A[S]).shape[0] <= 1:
             bS = list(torch.argwhere(A[S]).cpu().numpy())
         else:
             bS = list(torch.argwhere(A[S])[1].cpu().numpy())
