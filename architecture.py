@@ -90,7 +90,7 @@ class GNN(torch.nn.Module):
         self.aggregate = aggregate
         if self.aggregate:
             self.aggregator = aggr.MeanAggregation()
-            self.softmax = False
+            self.softmax = True
             if len(MLPlist) > 0:
                 in_feats = MLPlist[-1]
             else:
@@ -125,7 +125,6 @@ class GNN(torch.nn.Module):
         
         if self.aggregate:
             y = self.aggregator(y, batch)
-            y = F.dropout(y, p=0.5, training=self.training)
             y = self.lin(y)
             
         if self.softmax:

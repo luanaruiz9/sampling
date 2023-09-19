@@ -167,7 +167,7 @@ for r in range(n_realizations):
                     num_graph_classes = num_classes)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
-        criterion = torch.nn.CrossEntropyLoss()
+        criterion = torch.nn.NLLLoss()
         _,_,model,_,_,_,_ = train(model, train_data, val_data, optimizer, criterion, 
                       batch_size=32, n_epochs=n_epochs)
         
