@@ -72,13 +72,20 @@ sort_by_degree = False
 dataset_og = MalNetTiny(root='/tmp/MalNetTiny')
 dataset = []
 y_dict = {}
+"""
+{3: 53, 0: 173, 4: 54, 1: 132}
+"""
 for data in dataset_og:
     if data.num_nodes >= 4500:
-        dataset.append(data)
-        if data.y.cpu().numpy()[0] not in y_dict.keys():
-            y_dict[data.y.cpu().numpy()[0]] = 1
+        label = data.y.cpu().numpy()[0]
+        if label not in y_dict.keys():
+            y_dict[label] = 1
         else:
-            y_dict[data.y.cpu().numpy()[0]] += 1
+            y_dict[label] += 1
+        if label > 1:
+            data.y -= 1
+        if y_dict[label] <= 54:
+            dataset.append(data)
 print(y_dict)
         
 print("length of dataset ", len(dataset))
@@ -87,7 +94,7 @@ transformed_dataset = []
 transform = T.ToUndirected()
 pre_defined_kwargs = {'eigvecs': False}
 num_feats = 1
-num_classes = dataset_og.num_classes
+num_classes = 4#dataset_og.num_classes
 
 for graph_og in dataset:
     
