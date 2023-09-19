@@ -360,9 +360,11 @@ def train(model, train_data, val_data, optimizer, criterion, batch_size, n_epoch
         total_loss /= len(loader.dataset)
         losses.append(total_loss)
 
-        if epoch % 1 == 0:
+        if epoch % 5 == 0:
           val_acc = test(model, val_data, is_validation=True)
           val_accs.append(val_acc)
+          print('loss:    ', loss.item())
+          print('val_acc: ', val_acc)
           if val_acc > best_acc:
             best_acc = val_acc
             best_model = copy.deepcopy(model)
@@ -390,6 +392,8 @@ def test(test_model, data, is_validation=False, save_model_preds=False):
             # max(dim=1) returns values, indices tuple; only need indices
             pred = test_model(data).max(dim=1)[1]
             label = data.y
+            print(pred)
+            print(label)
         
         if flag:
             mask = data.val_mask if is_validation else data.test_mask
