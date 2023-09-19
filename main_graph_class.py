@@ -75,10 +75,10 @@ y_dict = {}
 for data in dataset_og:
     if data.num_nodes >= 4500:
         dataset.append(data)
-        if data.y.cpu().numpy() not in y_dict.keys():
-            y_dict[data.y.cpu().numpy()] = 1
+        if data.y.cpu().numpy()[0] not in y_dict.keys():
+            y_dict[data.y.cpu().numpy()[0]] = 1
         else:
-            y_dict[data.y.cpu().numpy()] += 1
+            y_dict[data.y.cpu().numpy()[0]] += 1
 print(y_dict)
         
 print("length of dataset ", len(dataset))
