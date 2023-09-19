@@ -125,6 +125,7 @@ class GNN(torch.nn.Module):
         
         if self.aggregate:
             y = self.aggregator(y, batch)
+            y = F.dropout(y, p=0.5, training=self.training)
             y = self.lin(y)
             
         if self.softmax:
