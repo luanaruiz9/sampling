@@ -390,6 +390,8 @@ def test(test_model, data, is_validation=False, save_model_preds=False):
     for data in loader:
         with torch.no_grad():
             # max(dim=1) returns values, indices tuple; only need indices
+            print(test_model(data).shape)
+            print(test_model(data))
             pred = test_model(data).max(dim=1)[1]
             label = data.y
             print(pred)
