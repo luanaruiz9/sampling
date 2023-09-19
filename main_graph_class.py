@@ -88,7 +88,7 @@ for data in dataset_og:
             y_dict[label] += 1
         if label > 1:
             data.y -= 1
-        if y_dict[label] <= 5: #54
+        if y_dict[label] <= 25: #54
             dataset.append(data)
         
 print("length of dataset ", len(dataset))
@@ -636,9 +636,9 @@ for r in range(n_realizations):
         print()
         
         if data_exists == False:
-            pkl.dump(open("graphon_train_data.p","wb"), train_data_new)
-            pkl.dump(open("graphon_val_data.p","wb"), val_data_new)
-            pkl.dump(open("graphon_test_data.p","wb"), test_data_new)
+            pkl.dump(train_data_new,open("graphon_train_data.p","wb"))
+            pkl.dump(val_data_new,open("graphon_val_data.p","wb"))
+            pkl.dump(test_data_new,open("graphon_test_data.p","wb"))
         
      ##############################################################################
      ############################# Sampling! ######################################
