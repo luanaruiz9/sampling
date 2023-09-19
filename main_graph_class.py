@@ -71,9 +71,16 @@ sort_by_degree = False
 
 dataset_og = MalNetTiny(root='/tmp/MalNetTiny')
 dataset = []
+y_dict = {}
 for data in dataset_og:
     if data.num_nodes >= 4500:
         dataset.append(data)
+        if data.y.cpu().numpy() not in y_dict.keys():
+            y_dict[data.y.cpu().numpy()] = 1
+        else:
+            y_dict[data.y.cpu().numpy()] += 1
+print(y_dict)
+        
 print("length of dataset ", len(dataset))
 
 transformed_dataset = []
