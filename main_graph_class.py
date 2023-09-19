@@ -88,9 +88,8 @@ for data in dataset_og:
             y_dict[label] += 1
         if label > 1:
             data.y -= 1
-        if y_dict[label] <= 54:
+        if y_dict[label] <= 2: #54
             dataset.append(data)
-print(y_dict)
         
 print("length of dataset ", len(dataset))
 
@@ -946,7 +945,7 @@ with open(os.path.join(saveDir,'out.txt'), 'w') as f:
     print('Hyperparameters', file=f)
     print("",file=f)
     
-    print('Dataset:\t\t' + data_name, file=f)
+    print('Dataset:\t\tMalNet Tiny', file=f)
     print('Learning rate:\t\t' + str(lr), file=f)
     print('Nb. epochs:\t\t' + str(n_epochs), file=f)
     print('Ratio train:\t\t' + str(ratio_train), file=f)
