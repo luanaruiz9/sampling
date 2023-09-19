@@ -24,6 +24,10 @@ from sampling import generate_induced_graphon, greedy, f, sample_clustering
 #from reconstruction import f_rec, reconstruct
 import aux_functions
 
+import random
+
+random.seed(10)
+
 lr = float(sys.argv[1])
 n_epochs = int(sys.argv[2])
 ratio_train = 0.8
