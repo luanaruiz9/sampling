@@ -30,8 +30,8 @@ random.seed(10)
 
 lr = float(sys.argv[1])
 n_epochs = int(sys.argv[2])
-ratio_train = 0.6
-ratio_test = 0.2
+ratio_train = 0.8
+ratio_test = 0.1
 ratio_val = 1-ratio_train-ratio_test
 n_realizations = int(sys.argv[3]) #10
 m = int(sys.argv[4]) #50 # Number of candidate intervals
