@@ -162,7 +162,7 @@ for r in range(n_realizations):
     
     if do_no_pe:
     
-        model = GNN('sage', [num_feats,F_nn,F_nn], [], softmax=False, aggregate=True, 
+        model = GNN('sage', [num_feats,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                     num_graph_classes = num_classes)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
@@ -261,7 +261,7 @@ for r in range(n_realizations):
                                      **pre_defined_kwargs)
             test_data_new.append(test_data_elt_new)
         
-        model = GNN('sage', [num_feats+K,F_nn,F_nn], [], softmax=False, aggregate=True, 
+        model = GNN('sage', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                     num_graph_classes = num_classes)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
@@ -621,7 +621,7 @@ for r in range(n_realizations):
                                           **pre_defined_kwargs)
                 test_data_new.append(test_data_elt_new)
         
-        model = GNN('sage', [num_feats+K,F_nn,F_nn], [], softmax=False, aggregate=True, 
+        model = GNN('sage', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                     num_graph_classes = num_classes)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
@@ -825,7 +825,7 @@ for r in range(n_realizations):
                                        **pre_defined_kwargs)
              test_data_new.append(test_data_elt_new)
          
-         model = GNN('sage', [num_feats+K,F_nn,F_nn], [], softmax=False, aggregate=True, 
+         model = GNN('sage', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                      num_graph_classes = num_classes)
          model = model.to(device)
          optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
