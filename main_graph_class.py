@@ -88,7 +88,7 @@ for data in dataset_og:
             y_dict[label] += 1
         if label > 1:
             data.y -= 1
-        if y_dict[label] <= 25: #54
+        if y_dict[label] <= 54: #54
             dataset.append(data)
         
 print("length of dataset ", len(dataset))
