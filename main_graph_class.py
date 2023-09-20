@@ -151,9 +151,9 @@ for r in range(n_realizations):
     
     all_data = []
     random_permutation = np.random.permutation(n_total)
-    train_idx = list(random_permutation[0:n_train])
-    test_idx = list(random_permutation[n_train:n_train+n_test])
-    val_idx = list(random_permutation[-n_val:])
+    train_idx = random_permutation[0:n_train]
+    test_idx = random_permutation[n_train:n_train+n_test]
+    val_idx = random_permutation[-n_val:]
     
     if do_no_pe:
         
