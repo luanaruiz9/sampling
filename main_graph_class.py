@@ -151,9 +151,9 @@ for r in range(n_realizations):
     
     all_data = []
     random_permutation = np.random.permutation(n_total)
-    train_idx = random_permutation[0:n_train]
-    test_idx = random_permutation[n_train:n_train+n_test]
-    val_idx = random_permutation[-n_val:]
+    train_idx = list(random_permutation[0:n_train])
+    test_idx = list(random_permutation[n_train:n_train+n_test])
+    val_idx = list(random_permutation[-n_val:])
     
     if do_no_pe:
         
@@ -211,9 +211,9 @@ for r in range(n_realizations):
                                       **pre_defined_kwargs)
             all_data_new.append(data_elt_new)
         
-        train_data_new = all_data_new[train_idx]
-        val_data_new = all_data_new[val_idx]
-        test_data_new = all_data_new[test_idx]
+        train_data_new = [all_data_new[i] for i in train_idx]
+        val_data_new = [all_data_new[i] for i in val_idx]
+        test_data_new = [all_data_new[i] for i in test_idx]
         
         model = GNN('sage', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                     num_graph_classes = num_classes)
@@ -384,9 +384,9 @@ for r in range(n_realizations):
                                           **pre_defined_kwargs)
                 all_data_new.append(data_elt_new)
         
-        train_data_new = all_data_new[train_idx]
-        val_data_new = all_data_new[val_idx]
-        test_data_new = all_data_new[test_idx]
+        train_data_new = [all_data_new[i] for i in train_idx]
+        val_data_new = [all_data_new[i] for i in val_idx]
+        test_data_new = [all_data_new[i] for i in test_idx]
         
         model = GNN('sage', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                     num_graph_classes = num_classes)
@@ -478,9 +478,9 @@ for r in range(n_realizations):
                                        **pre_defined_kwargs)
              all_data_new.append(data_elt_new)
          
-         train_data_new = all_data_new[train_idx]
-         val_data_new = all_data_new[val_idx]
-         test_data_new = all_data_new[test_idx]
+         train_data_new = [all_data_new[i] for i in train_idx]
+         val_data_new = [all_data_new[i] for i in val_idx]
+         test_data_new = [all_data_new[i] for i in test_idx]
          
          model = GNN('sage', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                      num_graph_classes = num_classes)
