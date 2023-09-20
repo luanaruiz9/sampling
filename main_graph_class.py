@@ -417,7 +417,7 @@ for r in range(n_realizations):
                 
                 V_new = V_new[:,idx[0:K]]
                 V_new = V_new.type(torch.float32)
-                V_rec = torch.zeros(num_nodes, K, device=device)
+                V_rec = torch.zeros(num_nodes, K_og, device=device)
                 
                 for i in range(V_new.shape[1]):
                     v = V_new[:,i]
@@ -511,7 +511,7 @@ for r in range(n_realizations):
                 
                 V_new = V_new[:,idx[0:K]]
                 V_new = V_new.type(torch.float32)
-                V_rec = torch.zeros(num_nodes, K, device=device)
+                V_rec = torch.zeros(num_nodes, K_og, device=device)
                 
                 for i in range(V_new.shape[1]):
                     v = V_new[:,i]
@@ -604,7 +604,7 @@ for r in range(n_realizations):
                 
                 V_new = V_new[:,idx[0:K]]
                 V_new = V_new.type(torch.float32)
-                V_rec = torch.zeros(num_nodes, K, device=device)
+                V_rec = torch.zeros(num_nodes, K_og, device=device)
                 
                 for i in range(V_new.shape[1]):
                     v = V_new[:,i]
@@ -700,7 +700,7 @@ for r in range(n_realizations):
              
              V_new = V_new[:,idx[0:K]]
              V_new = V_new.type(torch.float32)
-             V_rec = torch.zeros(num_nodes, K, device=device)
+             V_rec = torch.zeros(num_nodes, K_og, device=device)
              
              for i in range(V_new.shape[1]):
                  v = V_new[:,i]
@@ -755,7 +755,7 @@ for r in range(n_realizations):
              
              V_new = V_new[:,idx[0:K]]
              V_new = V_new.type(torch.float32)
-             V_rec = torch.zeros(num_nodes, K, device=device)
+             V_rec = torch.zeros(num_nodes, K_og, device=device)
              
              for i in range(V_new.shape[1]):
                  v = V_new[:,i]
@@ -809,7 +809,7 @@ for r in range(n_realizations):
              
              V_new = V_new[:,idx[0:K]]
              V_new = V_new.type(torch.float32)
-             V_rec = torch.zeros(num_nodes, K, device=device)
+             V_rec = torch.zeros(num_nodes, K_og, device=device)
              
              for i in range(V_new.shape[1]):
                  v = V_new[:,i]
