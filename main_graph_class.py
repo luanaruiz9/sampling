@@ -149,7 +149,7 @@ for r in range(n_realizations):
     print('Realization ' + str(r))
     print() 
     
-    all_data = []
+    all_data = transformed_dataset
     random_permutation = np.random.permutation(n_total)
     train_idx = list(random_permutation[0:n_train])
     test_idx = list(random_permutation[n_train:n_train+n_test])
