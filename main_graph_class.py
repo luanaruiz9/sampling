@@ -315,9 +315,7 @@ for r in range(n_realizations):
     ##############################################################################
     ############################# Sampling! ######################################
     ##############################################################################
-    
     if do_w_sampl:
-    
         print('Sampling with spectral proxies...')
         print()
         
@@ -342,8 +340,9 @@ for r in range(n_realizations):
             test_data_new = []
         
             # Train data
+            K_og = K
             for train_data_elt in train_data:
-            
+                K = K_og
                 # Finding sampling set
                 num_nodes = train_data_elt.x.shape[0]
                 n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
@@ -437,7 +436,7 @@ for r in range(n_realizations):
         
             # Val data
             for val_data_elt in val_data:
-            
+                K = K_og
                 # Finding sampling set
                 num_nodes = val_data_elt.x.shape[0]
                 n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
@@ -530,7 +529,7 @@ for r in range(n_realizations):
             
             # Test data
             for test_data_elt in test_data:
-                                                  
+                K = K_og
                 # Finding sampling set
                 num_nodes = test_data_elt.x.shape[0]
                 n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
@@ -663,8 +662,9 @@ for r in range(n_realizations):
          test_data_new = []
          
          # Train data
+         K_og  = K
          for train_data_elt in train_data:
-         
+             K = K_og
              # Finding sampling set
              num_nodes = train_data_elt.x.shape[0]
              sampled_idx = list(np.random.choice(np.arange(num_nodes), updated_sz, replace=False))
@@ -719,7 +719,7 @@ for r in range(n_realizations):
          
          # Val data
          for val_data_elt in val_data:
-         
+             K = K_og
              # Finding sampling set
              num_nodes = val_data_elt.x.shape[0]
              sampled_idx = list(np.random.choice(np.arange(num_nodes), updated_sz, replace=False))
@@ -773,7 +773,7 @@ for r in range(n_realizations):
          
          # Test data
          for test_data_elt in test_data:
-                                               
+             K = K_og
              # Finding sampling set
              num_nodes = test_data_elt.x.shape[0]
              sampled_idx = list(np.random.choice(np.arange(num_nodes), updated_sz, replace=False))
