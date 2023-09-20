@@ -157,9 +157,9 @@ for r in range(n_realizations):
     
     if do_no_pe:
         
-        train_data = all_data[train_idx]
-        val_data = all_data[val_idx]
-        test_data = all_data[test_idx]
+        train_data = [all_data[i] for i in train_idx]
+        val_data = [all_data[i] for i in val_idx]
+        test_data = [all_data[i] for i in test_idx]
         
         model = GNN('sage', [num_feats,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                     num_graph_classes = num_classes)
