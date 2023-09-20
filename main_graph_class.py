@@ -152,7 +152,8 @@ for r in range(n_realizations):
     train_data = []
     test_data = []
     val_data = []
-    random_permutation = np.random.permutation(n_total)
+    if r == 0:
+        random_permutation = np.random.permutation(n_total)
     for i in list(random_permutation[0:n_train]):
         train_data.append(transformed_dataset[i])
     for i in list(random_permutation[n_train:n_train+n_test]):
