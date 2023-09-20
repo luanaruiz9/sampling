@@ -149,20 +149,18 @@ for r in range(n_realizations):
     print('Realization ' + str(r))
     print() 
     
-    train_data = []
-    test_data = []
-    val_data = []
-    if r == 0:
-        random_permutation = np.random.permutation(n_total)
-    for i in list(random_permutation[0:n_train]):
-        train_data.append(transformed_dataset[i])
-    for i in list(random_permutation[n_train:n_train+n_test]):
-        test_data.append(transformed_dataset[i])
-    for i in list(random_permutation[-n_val:]):
-        val_data.append(transformed_dataset[i])
+    all_data = []
+    random_permutation = np.random.permutation(n_total)
+    train_idx = list(random_permutation[0:n_train])
+    test_idx = list(random_permutation[n_train:n_train+n_test])
+    val_idx = list(random_permutation[-n_val:])
     
     if do_no_pe:
-    
+        
+        train_data = all_data[train_idx]
+        val_data = all_data[val_idx]
+        test_data = all_data[test_idx]
+        
         model = GNN('sage', [num_feats,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                     num_graph_classes = num_classes)
         model = model.to(device)
@@ -188,17 +186,12 @@ for r in range(n_realizations):
         
         pre_defined_kwargs = {'eigvecs': False}
     
-        all_train_Vs = []
-        all_val_Vs = []
-        all_test_Vs = []
-        
-        train_data_new = []
-        val_data_new = []
-        test_data_new = []
+        all_data_new = []
+        all_Vs= []
     
-        for train_data_elt in train_data:
+        for data_elt in all_data:
             # V for train data
-            adj_sparse, adj = aux_functions.compute_adj_from_data(train_data_elt)
+            adj_sparse, adj = aux_functions.compute_adj_from_data(data_elt)
             num_nodes = adj.shape[0]
             
             # Computing normalized Laplacian
@@ -210,57 +203,17 @@ for r in range(n_realizations):
             idx = torch.argsort(eigvals)
             eigvals = eigvals[idx[0:K]]
             V = V[:,idx[0:K]]
-            all_train_Vs.append(V)
+            all_Vs.append(V)
             
-            train_data_elt_new = Data(x=torch.cat((train_data_elt.x,V), dim=1), 
-                                      edge_index=train_data_elt.edge_index,
-                                      y=train_data_elt.y,
+            data_elt_new = Data(x=torch.cat((data_elt.x,V), dim=1), 
+                                      edge_index=data_elt.edge_index,
+                                      y=data_elt.y,
                                       **pre_defined_kwargs)
-            train_data_new.append(train_data_elt_new)
+            all_data_new.append(data_elt_new)
         
-        for val_data_elt in val_data:
-            # V for val data
-            adj_sparse, adj = aux_functions.compute_adj_from_data(val_data_elt)
-            num_nodes = adj.shape[0]
-            
-            # Computing normalized Laplacian
-            L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
-            eigvals, V = torch.lobpcg(L, k=K, largest=False)
-            #eigvals, V = torch.linalg.eig(L.to_dense())
-            eigvals = torch.abs(eigvals).float()
-            V = V.float()
-            idx = torch.argsort(eigvals)
-            eigvals = eigvals[idx[0:K]]
-            V = V[:,idx[0:K]]
-            all_val_Vs.append(V)
-            
-            val_data_elt_new = Data(x=torch.cat((val_data_elt.x,V), dim=1), 
-                                    edge_index=val_data_elt.edge_index,
-                                    y=val_data_elt.y,
-                                    **pre_defined_kwargs)
-            val_data_new.append(val_data_elt_new)
-            
-        for test_data_elt in test_data:
-            # V for test data
-            adj_sparse_test, adj_test = aux_functions.compute_adj_from_data(test_data_elt)
-            num_nodes = adj_test.shape[0]
-            
-            # Computing normalized Laplacian
-            L_test = aux_functions.compute_laplacian(adj_sparse_test, num_nodes)
-            eigvals_test, V_test = torch.lobpcg(L_test, k=K, largest=False)
-            #eigvals_test, V_test = torch.linalg.eig(L_test.to_dense())
-            eigvals_test = torch.abs(eigvals_test).float()
-            V_test = V_test.float()
-            idx = torch.argsort(eigvals_test)
-            eigvals_test = eigvals_test[idx[0:K]]
-            V_test = V_test[:,idx[0:K]]
-            all_test_Vs.append(V_test)
-        
-            test_data_elt_new = Data(x=torch.cat((test_data_elt.x,V_test), dim=1), 
-                                     edge_index=test_data_elt.edge_index,
-                                     y=test_data_elt.y,
-                                     **pre_defined_kwargs)
-            test_data_new.append(test_data_elt_new)
+        train_data_new = all_data_new[train_idx]
+        val_data_new = all_data_new[val_idx]
+        test_data_new = all_data_new[test_idx]
         
         model = GNN('sage', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                     num_graph_classes = num_classes)
@@ -316,7 +269,9 @@ for r in range(n_realizations):
     ##############################################################################
     ############################# Sampling! ######################################
     ##############################################################################
+    
     if do_w_sampl:
+        
         print('Sampling with spectral proxies...')
         print()
         
@@ -325,29 +280,24 @@ for r in range(n_realizations):
         print("Just adding eigenvectors...")
         print()
         
-        all_train_Vs_w = []
-        all_val_Vs_w = []
-        all_test_Vs_w = []
+        all_data_new =[]
+        all_Vs_w = []
         
         data_exists = False
-        if os.path.isfile("graphon_train_data.p"):
+        if os.path.isfile("graphon_data"+str(r)+".p"):
             data_exists = True
-            train_data_new = pkl.load(open("graphon_train_data.p","rb"))
-            val_data_new = pkl.load(open("graphon_val_data.p","rb"))
-            test_data_new = pkl.load(open("graphon_test_data.p","rb"))
+            all_data_new = pkl.load(open("graphon_data.p","rb"))
         else:
-            train_data_new = []
-            val_data_new = []
-            test_data_new = []
+            all_data_new = []
         
             # Train data
             K_og = K
-            for train_data_elt in train_data:
+            for data_elt in all_data:
                 K = K_og
                 # Finding sampling set
-                num_nodes = train_data_elt.x.shape[0]
+                num_nodes = data_elt.x.shape[0]
                 n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
-                graph_ind = generate_induced_graphon(train_data_elt, m)
+                graph_ind = generate_induced_graphon(data_elt, m)
                 num_nodes_ind = graph_ind.x.shape[0]
                 assert num_nodes_ind == m
                 adj_sparse_ind, adj_ind = aux_functions.compute_adj_from_data(graph_ind)
@@ -388,7 +338,7 @@ for r in range(n_realizations):
                 sampled_idx = list(set(sampled_idx))   
                 
                 # V for train data
-                graph_new = train_data_elt.clone().subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+                graph_new = data_elt.clone().subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
         
                 # Removing isolated nodes
                 sampled_idx_og = sampled_idx
@@ -424,202 +374,19 @@ for r in range(n_realizations):
                     v = V_new[:,i]
                     V_rec[sampled_idx,i] = v
                     
-                all_train_Vs_w.append(V_rec)
+                all_Vs_w.append(V_rec)
                 
                 pre_defined_kwargs = {'eigvecs': False}
                 
-                train_data_elt_new = Data(x=torch.cat((train_data_elt.x,V_rec), dim=1),
-                                          edge_index=train_data_elt.edge_index,
-                                          y=train_data_elt.y,
+                data_elt_new = Data(x=torch.cat((data_elt.x,V_rec), dim=1),
+                                          edge_index=data_elt.edge_index,
+                                          y=data_elt.y,
                                           **pre_defined_kwargs)
-                train_data_new.append(train_data_elt_new)
+                all_data_new.append(data_elt_new)
         
-        
-            # Val data
-            for val_data_elt in val_data:
-                K = K_og
-                # Finding sampling set
-                num_nodes = val_data_elt.x.shape[0]
-                n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
-                graph_ind = generate_induced_graphon(val_data_elt, m)
-                num_nodes_ind = graph_ind.x.shape[0]
-                assert num_nodes_ind == m
-                adj_sparse_ind, adj_ind = aux_functions.compute_adj_from_data(graph_ind)
-                
-                # Computing normalized Laplacian
-                L_ind = aux_functions.compute_laplacian(adj_sparse_ind,num_nodes_ind)
-                
-                lam = eigvals[-1]
-                L_aux = L_ind.cpu()
-                k = 5
-                
-                s_vec, n_iters = greedy(f, lam, L_aux, k, m2)
-                    
-                n_iters_per_rlz[r] = n_iters
-                s_vec = torch.tensor(s_vec)
-                
-                sampled_idx = []
-                for i in range(m):
-                    if s_vec[i] == 1:
-                        if i < m-1:
-                            cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,:]
-                            cur_adj = cur_adj[:,i*n_nodes_per_int:(i+1)*n_nodes_per_int]
-                            idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
-                        else:
-                            if m3 > n_nodes_last_int:
-                                #m3 = n_nodes_last_int
-                                cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
-                                cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
-                            else:
-                                cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
-                                cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+m3]
-                            idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
-                                                             #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
-                        idx = np.sort(idx)
-                        for j in range(idx.shape[0]):
-                            idx[j] += i*n_nodes_per_int
-                        sampled_idx += list(idx)
-                sampled_idx = list(set(sampled_idx))   
-                
-                # V for val data
-                graph_new = val_data_elt.clone().subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
-        
-                # Removing isolated nodes
-                sampled_idx_og = sampled_idx
-                if remove_isolated:
-                    edge_index_new = graph_new.edge_index.clone()
-                    edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-                    mask = mask.cpu().tolist()
-                    sampled_idx = list(np.array(sampled_idx_og)[mask])
-                    graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
-                if K > len(sampled_idx):
-                    K = len(sampled_idx)
-                len_sampled_idx[r] = len(sampled_idx)
-        
-                graph_new = graph_new.to(device)
-                num_nodes_new = graph_new.x.shape[0]
-                adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
-                
-                # Computing normalized Laplacian
-                L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
-                
-                #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
-                eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-                eigvals_new = torch.abs(eigvals_new).float()
-                V_new = V_new.float()
-                idx = torch.argsort(eigvals_new)
-                eigvals_new = eigvals_new[idx[0:K]]
-                
-                V_new = V_new[:,idx[0:K]]
-                V_new = V_new.type(torch.float32)
-                V_rec = torch.zeros(num_nodes, K_og, device=device)
-                
-                for i in range(V_new.shape[1]):
-                    v = V_new[:,i]
-                    V_rec[sampled_idx,i] = v
-                    
-                all_val_Vs_w.append(V_rec)
-                
-                pre_defined_kwargs = {'eigvecs': False}
-                
-                val_data_elt_new = Data(x=torch.cat((val_data_elt.x,V_rec), dim=1),
-                                          edge_index=val_data_elt.edge_index,
-                                          y=val_data_elt.y,
-                                          **pre_defined_kwargs)
-                val_data_new.append(val_data_elt_new)
-            
-            # Test data
-            for test_data_elt in test_data:
-                K = K_og
-                # Finding sampling set
-                num_nodes = test_data_elt.x.shape[0]
-                n_nodes_per_int, n_nodes_last_int = np.divmod(num_nodes, m)
-                graph_ind = generate_induced_graphon(test_data_elt, m)
-                num_nodes_ind = graph_ind.x.shape[0]
-                assert num_nodes_ind == m
-                adj_sparse_ind, adj_ind = aux_functions.compute_adj_from_data(graph_ind)
-                
-                # Computing normalized Laplacian
-                L_ind = aux_functions.compute_laplacian(adj_sparse_ind,num_nodes_ind)
-                
-                lam = eigvals[-1]
-                L_aux = L_ind.cpu()
-                k = 5
-                
-                s_vec, n_iters = greedy(f, lam, L_aux, k, m2)
-                    
-                n_iters_per_rlz[r] = n_iters
-                s_vec = torch.tensor(s_vec)
-                
-                sampled_idx = []
-                for i in range(m):
-                    if s_vec[i] == 1:
-                        if i < m-1:
-                            cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,:]
-                            cur_adj = cur_adj[:,i*n_nodes_per_int:(i+1)*n_nodes_per_int]
-                            idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
-                        else:
-                            if m3 > n_nodes_last_int:
-                                #m3 = n_nodes_last_int
-                                cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
-                                cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int]
-                            else:
-                                cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
-                                cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+m3]
-                            idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
-                                                             #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
-                        idx = np.sort(idx)
-                        for j in range(idx.shape[0]):
-                            idx[j] += i*n_nodes_per_int
-                        sampled_idx += list(idx)
-                sampled_idx = list(set(sampled_idx))   
-                
-                # V for test data
-                graph_new = test_data_elt.clone().subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
-        
-                # Removing isolated nodes
-                sampled_idx_og = sampled_idx
-                if remove_isolated:
-                    edge_index_new = graph_new.edge_index.clone()
-                    edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-                    mask = mask.cpu().tolist()
-                    sampled_idx = list(np.array(sampled_idx_og)[mask])
-                    graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
-                if K > len(sampled_idx):
-                    K = len(sampled_idx)
-                len_sampled_idx[r] = len(sampled_idx)
-        
-                graph_new = graph_new.to(device)
-                num_nodes_new = graph_new.x.shape[0]
-                adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
-                
-                # Computing normalized Laplacian
-                L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
-                
-                #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
-                eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-                eigvals_new = torch.abs(eigvals_new).float()
-                V_new = V_new.float()
-                idx = torch.argsort(eigvals_new)
-                eigvals_new = eigvals_new[idx[0:K]]
-                
-                V_new = V_new[:,idx[0:K]]
-                V_new = V_new.type(torch.float32)
-                V_rec = torch.zeros(num_nodes, K_og, device=device)
-                
-                for i in range(V_new.shape[1]):
-                    v = V_new[:,i]
-                    V_rec[sampled_idx,i] = v
-                    
-                all_test_Vs_w.append(V_rec)
-                
-                pre_defined_kwargs = {'eigvecs': False}
-                
-                test_data_elt_new = Data(x=torch.cat((test_data_elt.x,V_rec), dim=1),
-                                          edge_index=test_data_elt.edge_index,
-                                          y=test_data_elt.y,
-                                          **pre_defined_kwargs)
-                test_data_new.append(test_data_elt_new)
+        train_data_new = all_data_new[train_idx]
+        val_data_new = all_data_new[val_idx]
+        test_data_new = all_data_new[test_idx]
         
         model = GNN('sage', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                     num_graph_classes = num_classes)
@@ -636,9 +403,7 @@ for r in range(n_realizations):
         print()
         
         if data_exists == False:
-            pkl.dump(train_data_new,open("graphon_train_data.p","wb"))
-            pkl.dump(val_data_new,open("graphon_val_data.p","wb"))
-            pkl.dump(test_data_new,open("graphon_test_data.p","wb"))
+            pkl.dump(all_data_new,open("graphon_data"+str(r)+".p","wb"))
         
      ##############################################################################
      ############################# Sampling! ######################################
@@ -654,24 +419,20 @@ for r in range(n_realizations):
          print("Just adding eigenvectors...")
          print()
          
-         all_train_Vs_w = []
-         all_val_Vs_w = []
-         all_test_Vs_w = []
+         all_Vs_r = []
          
-         train_data_new = []
-         val_data_new = []
-         test_data_new = []
+         all_data_new = []
          
          # Train data
          K_og  = K
-         for train_data_elt in train_data:
+         for data_elt in all_data:
              K = K_og
              # Finding sampling set
-             num_nodes = train_data_elt.x.shape[0]
+             num_nodes = data_elt.x.shape[0]
              sampled_idx = list(np.random.choice(np.arange(num_nodes), updated_sz, replace=False))
              
              # V for train data
-             graph_new = train_data_elt.clone().subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
+             graph_new = data_elt.clone().subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
      
              # Removing isolated nodes
              sampled_idx_og = sampled_idx
@@ -707,124 +468,19 @@ for r in range(n_realizations):
                  v = V_new[:,i]
                  V_rec[sampled_idx,i] = v
                  
-             all_train_Vs_w.append(V_rec)
+             all_Vs_r.append(V_rec)
              
              pre_defined_kwargs = {'eigvecs': False}
              
-             train_data_elt_new = Data(x=torch.cat((train_data_elt.x,V_rec), dim=1),
-                                       edge_index=train_data_elt.edge_index,
-                                       y=train_data_elt.y,
+             data_elt_new = Data(x=torch.cat((data_elt.x,V_rec), dim=1),
+                                       edge_index=data_elt.edge_index,
+                                       y=data_elt.y,
                                        **pre_defined_kwargs)
-             train_data_new.append(train_data_elt_new)
+             all_data_new.append(data_elt_new)
          
-         
-         # Val data
-         for val_data_elt in val_data:
-             K = K_og
-             # Finding sampling set
-             num_nodes = val_data_elt.x.shape[0]
-             sampled_idx = list(np.random.choice(np.arange(num_nodes), updated_sz, replace=False))
-             
-             # V for val data
-             graph_new = val_data_elt.clone().subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
-     
-             # Removing isolated nodes
-             sampled_idx_og = sampled_idx
-             if remove_isolated:
-                 edge_index_new = graph_new.edge_index.clone()
-                 edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-                 mask = mask.cpu().tolist()
-                 sampled_idx = list(np.array(sampled_idx_og)[mask])
-                 graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
-             if K > len(sampled_idx):
-                 K = len(sampled_idx)
-             len_sampled_idx[r] = len(sampled_idx)
-     
-             graph_new = graph_new.to(device)
-             num_nodes_new = graph_new.x.shape[0]
-             adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
-             
-             # Computing normalized Laplacian
-             L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
-             
-             #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
-             eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-             eigvals_new = torch.abs(eigvals_new).float()
-             V_new = V_new.float()
-             idx = torch.argsort(eigvals_new)
-             eigvals_new = eigvals_new[idx[0:K]]
-             
-             V_new = V_new[:,idx[0:K]]
-             V_new = V_new.type(torch.float32)
-             V_rec = torch.zeros(num_nodes, K_og, device=device)
-             
-             for i in range(V_new.shape[1]):
-                 v = V_new[:,i]
-                 V_rec[sampled_idx,i] = v
-                 
-             all_val_Vs_w.append(V_rec)
-             
-             pre_defined_kwargs = {'eigvecs': False}
-             
-             val_data_elt_new = Data(x=torch.cat((val_data_elt.x,V_rec), dim=1),
-                                       edge_index=val_data_elt.edge_index,
-                                       y=val_data_elt.y,
-                                       **pre_defined_kwargs)
-             val_data_new.append(val_data_elt_new)
-         
-         # Test data
-         for test_data_elt in test_data:
-             K = K_og
-             # Finding sampling set
-             num_nodes = test_data_elt.x.shape[0]
-             sampled_idx = list(np.random.choice(np.arange(num_nodes), updated_sz, replace=False))
-             
-             # V for test data
-             graph_new = test_data_elt.clone().subgraph(torch.tensor(sampled_idx, device=device, dtype=torch.long))
-     
-             # Removing isolated nodes
-             sampled_idx_og = sampled_idx
-             if remove_isolated:
-                 edge_index_new = graph_new.edge_index.clone()
-                 edge_index_new, _, mask = remove_isolated_nodes(edge_index_new, num_nodes = len(sampled_idx_og))
-                 mask = mask.cpu().tolist()
-                 sampled_idx = list(np.array(sampled_idx_og)[mask])
-                 graph_new = graph_new.subgraph(torch.tensor(mask, device=device))
-             if K > len(sampled_idx):
-                 K = len(sampled_idx)
-             len_sampled_idx[r] = len(sampled_idx)
-     
-             graph_new = graph_new.to(device)
-             num_nodes_new = graph_new.x.shape[0]
-             adj_sparse_new, adj_new = aux_functions.compute_adj_from_data(graph_new)
-             
-             # Computing normalized Laplacian
-             L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
-             
-             #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
-             eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
-             eigvals_new = torch.abs(eigvals_new).float()
-             V_new = V_new.float()
-             idx = torch.argsort(eigvals_new)
-             eigvals_new = eigvals_new[idx[0:K]]
-             
-             V_new = V_new[:,idx[0:K]]
-             V_new = V_new.type(torch.float32)
-             V_rec = torch.zeros(num_nodes, K_og, device=device)
-             
-             for i in range(V_new.shape[1]):
-                 v = V_new[:,i]
-                 V_rec[sampled_idx,i] = v
-                 
-             all_test_Vs_w.append(V_rec)
-             
-             pre_defined_kwargs = {'eigvecs': False}
-             
-             test_data_elt_new = Data(x=torch.cat((test_data_elt.x,V_rec), dim=1),
-                                       edge_index=test_data_elt.edge_index,
-                                       y=test_data_elt.y,
-                                       **pre_defined_kwargs)
-             test_data_new.append(test_data_elt_new)
+         train_data_new = all_data_new[train_idx]
+         val_data_new = all_data_new[val_idx]
+         test_data_new = all_data_new[test_idx]
          
          model = GNN('sage', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                      num_graph_classes = num_classes)
