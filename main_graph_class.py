@@ -26,7 +26,7 @@ import aux_functions
 
 import random
 
-random.seed(10)
+random.seed(0)
 
 lr = float(sys.argv[1])
 n_epochs = int(sys.argv[2])
@@ -284,9 +284,9 @@ for r in range(n_realizations):
         all_data_new =[]
         all_Vs_w = []
         
-        if os.path.isfile("graphon_data.p"):
+        if os.path.isfile("graphon_data"+str(r)+".p"):
             data_exists = True
-            all_data_new = pkl.load(open("graphon_data.p","rb"))
+            all_data_new = pkl.load(open("graphon_data"+str(r)+".p","rb"))
         else:
             all_data_new = []
         
@@ -403,7 +403,7 @@ for r in range(n_realizations):
         print()
         
         if data_exists == False:
-            pkl.dump(all_data_new,open("graphon_data.p","wb"))
+            pkl.dump(all_data_new,open("graphon_data"+str(r)+".p","wb"))
         
      ##############################################################################
      ############################# Sampling! ######################################

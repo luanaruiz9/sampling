@@ -13,9 +13,11 @@ import numpy as np
 
 import torch
 from torch_geometric.datasets import Planetoid
+from ogb.nodeproppred import PygNodePropPredDataset, Evaluator
 import torch_geometric.transforms as T
 from torch_geometric.data import Data
-from torch_geometric.utils import remove_isolated_nodes
+from torch_geometric.utils import remove_isolated_nodes, index_to_mask
+
 
 from architecture import GNN
 from train_eval import train, test
@@ -78,6 +80,9 @@ n_iters_per_rlz = np.zeros(n_realizations)
 len_sampled_idx = np.zeros(n_realizations)
 len_sampled_idx2 = np.zeros(n_realizations)
 
+in_feats = 0
+C = 0
+
 if 'cora' in data_name:
     dataset = Planetoid(root='/tmp/Cora', name='Cora', split='random')
     num_train_per_class = int((ratio_train*dataset[0].num_nodes)/dataset.num_classes)
@@ -102,6 +107,42 @@ elif 'pubmed' in data_name:
     dataset = Planetoid(root='/tmp/PubMed', name='PubMed', split='random',
                         num_train_per_class=num_train_per_class, num_val=num_val, 
                         num_test=num_test)
+elif 'ogb' in data_name:
+    dataset = PygNodePropPredDataset(name='ogbn-mag')
+    rel_data = dataset[0]
+
+    split_idx = dataset.get_idx_split()
+
+    train_idx = split_idx['train']['paper']
+    val_idx = split_idx['valid']['paper']
+    test_idx = split_idx['test']['paper']
+
+    nTrain = torch.sum(train_idx).item()
+    nVal = torch.sum(val_idx).item()
+    nTest = torch.sum(test_idx).item()
+
+    m = rel_data.x_dict['paper'].shape[0]
+
+    # We are only interested in paper <-> paper relations.
+    data = Data(
+        x=rel_data.x_dict['paper'],
+        edge_index=rel_data.edge_index_dict[('paper', 'cites', 'paper')],
+        y=rel_data.y_dict['paper'],
+        train_mask=index_to_mask(train_idx,size=m),
+        val_mask=index_to_mask(val_idx,size=m),
+        test_mask=index_to_mask(test_idx,size=m))
+
+    data = T.ToUndirected()(data)
+    data = data.subgraph(torch.randperm(m)[0:200000]) # Restricting to 200k 
+                                                    # nodes due to memory limitations
+    in_feats = rel_data.x_dict['paper'].shape[1]
+    C = dataset.num_classes
+    dataset = [data]
+
+if in_feats == 0:
+    in_feats = dataset.num_features
+if C == 0:
+    C = dataset.num_classes
 
 graph_og = dataset[0]
 transform = T.ToUndirected()
@@ -130,21 +171,26 @@ for r in range(n_realizations):
     print('Realization ' + str(r))
     print()
     
-    split = T.RandomNodeSplit(
-        'random',
-        num_train_per_class=num_train_per_class,
-        num_val=num_val,
-        num_test=num_test
-    )
-
-    train_data = split(graph)
-    train_data = train_data.to(device)
-    val_data = train_data
-    test_data = train_data
+    if 'ogb' in data_name:
+        train_data = graph
+        val_data = graph
+        test_data = graph
+    else:
+        split = T.RandomNodeSplit(
+            'random',
+            num_train_per_class=num_train_per_class,
+            num_val=num_val,
+            num_test=num_test
+        )
+    
+        train_data = split(graph)
+        train_data = train_data.to(device)
+        val_data = train_data
+        test_data = train_data
         
     if do_no_sampling:
         
-        model = GNN('gcn', [dataset.num_features,F_nn,F_nn], [F_nn,dataset.num_classes], softmax=True)
+        model = GNN('gcn', [dataset.num_features,F_nn,F_nn], [F_nn,C], softmax=True)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
@@ -239,10 +285,8 @@ for r in range(n_realizations):
 
         train_data_new = train_data_new.to(device)
         val_data_new = val_data_new.to(device)
-        
-        in_feats = dataset.num_features
-        
-        model = GNN('gcn', [in_feats,F_nn,F_nn], [F_nn,dataset.num_classes], softmax=True)
+                
+        model = GNN('gcn', [in_feats,F_nn,F_nn], [F_nn,C], softmax=True)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
@@ -286,9 +330,7 @@ for r in range(n_realizations):
         train_data_new = train_data_new.to(device)
         val_data_new = val_data_new.to(device)
         
-        in_feats = dataset.num_features
-
-        model = GNN('gcn', [in_feats,F_nn,F_nn], [F_nn,dataset.num_classes], softmax=True)
+        model = GNN('gcn', [in_feats,F_nn,F_nn], [F_nn,C], softmax=True)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
