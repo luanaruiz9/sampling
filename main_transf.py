@@ -28,7 +28,7 @@ import aux_functions
 data_name = sys.argv[1]
 lr = float(sys.argv[2]) # 0.001
 n_epochs = int(sys.argv[3]) #100
-ratio_train = 0.7
+ratio_train = 0.6
 ratio_test = 0.2
 ratio_val = 1-ratio_train-ratio_test
 n_realizations = int(sys.argv[4]) #10
