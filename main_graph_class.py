@@ -286,7 +286,7 @@ for r in range(n_realizations):
         data_exists = False
         if os.path.isfile("graphon_data"+str(r)+".p"):
             data_exists = True
-            all_data_new = pkl.load(open("graphon_data.p","rb"))
+            all_data_new = pkl.load(open("graphon_data"+str(r)+".p","rb"))
         else:
             all_data_new = []
         
