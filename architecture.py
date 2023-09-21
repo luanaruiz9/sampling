@@ -89,7 +89,7 @@ class GNN(torch.nn.Module):
         self.Klist = Klist
         self.aggregate = aggregate
         if self.aggregate:
-            self.aggregator = aggr.SumAggregation()
+            self.aggregator = aggr.MeanAggregation()
             self.softmax = True
             if len(MLPlist) > 0:
                 in_feats = MLPlist[-1]

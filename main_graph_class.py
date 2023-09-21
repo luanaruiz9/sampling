@@ -162,13 +162,13 @@ for r in range(n_realizations):
         val_data = [all_data[i] for i in val_idx]
         test_data = [all_data[i] for i in test_idx]
         
-        model = GNN('sage', [num_feats,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
+        model = GNN('gcn', [num_feats,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                     num_graph_classes = num_classes)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
         _,_,model,_,_,_,_ = train(model, train_data, val_data, optimizer, criterion, 
-                      batch_size=32, n_epochs=n_epochs)
+                      batch_size=8, n_epochs=n_epochs)
         
         test_auc = test(model, test_data)
         results_no_eigs[r] = test_auc
@@ -216,13 +216,13 @@ for r in range(n_realizations):
         val_data_new = [all_data_new[i] for i in val_idx]
         test_data_new = [all_data_new[i] for i in test_idx]
         
-        model = GNN('sage', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
+        model = GNN('gcn', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                     num_graph_classes = num_classes)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.CrossEntropyLoss()
         _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
-                      batch_size=32, n_epochs=n_epochs)
+                      batch_size=8, n_epochs=n_epochs)
         
         test_auc = test(model, test_data_new)
         results_eigs[r] = test_auc
@@ -388,13 +388,13 @@ for r in range(n_realizations):
         val_data_new = [all_data_new[i] for i in val_idx]
         test_data_new = [all_data_new[i] for i in test_idx]
         
-        model = GNN('sage', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
+        model = GNN('gcn', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                     num_graph_classes = num_classes)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.CrossEntropyLoss()
         _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
-                      batch_size=32, n_epochs=n_epochs)
+                      batch_size=8, n_epochs=n_epochs)
         
         test_auc = test(model, test_data_new)
         results_w_samp_eigs[r] = test_auc
@@ -482,13 +482,13 @@ for r in range(n_realizations):
          val_data_new = [all_data_new[i] for i in val_idx]
          test_data_new = [all_data_new[i] for i in test_idx]
          
-         model = GNN('sage', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
+         model = GNN('gcn', [num_feats+K,F_nn,F_nn,F_nn,F_nn], [], softmax=False, aggregate=True, 
                      num_graph_classes = num_classes)
          model = model.to(device)
          optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
          criterion = torch.nn.CrossEntropyLoss()
          _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
-                       batch_size=32, n_epochs=n_epochs)
+                       batch_size=8, n_epochs=n_epochs)
          
          test_auc = test(model, test_data_new)
          results_random_samp_eigs[r] = test_auc
