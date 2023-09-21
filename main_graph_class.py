@@ -26,7 +26,7 @@ import aux_functions
 
 import random
 
-random.seed(0)
+random.seed(10)
 
 lr = float(sys.argv[1])
 n_epochs = int(sys.argv[2])
