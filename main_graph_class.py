@@ -143,13 +143,14 @@ n_train = int(n_total*ratio_train)
 n_test = int(n_total*ratio_test)
 n_val = n_total-n_train-n_test
 
+all_data = transformed_dataset
+data_exists = False
 for r in range(n_realizations):
     K = K_in
     
     print('Realization ' + str(r))
     print() 
     
-    all_data = transformed_dataset
     random_permutation = np.random.permutation(n_total)
     train_idx = list(random_permutation[0:n_train])
     test_idx = list(random_permutation[n_train:n_train+n_test])
@@ -283,10 +284,9 @@ for r in range(n_realizations):
         all_data_new =[]
         all_Vs_w = []
         
-        data_exists = False
-        if os.path.isfile("graphon_data"+str(r)+".p"):
+        if os.path.isfile("graphon_data.p"):
             data_exists = True
-            all_data_new = pkl.load(open("graphon_data"+str(r)+".p","rb"))
+            all_data_new = pkl.load(open("graphon_data.p","rb"))
         else:
             all_data_new = []
         
@@ -403,7 +403,7 @@ for r in range(n_realizations):
         print()
         
         if data_exists == False:
-            pkl.dump(all_data_new,open("graphon_data"+str(r)+".p","wb"))
+            pkl.dump(all_data_new,open("graphon_data.p","wb"))
         
      ##############################################################################
      ############################# Sampling! ######################################
