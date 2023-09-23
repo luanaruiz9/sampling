@@ -70,7 +70,7 @@ do_learn_pe = False
 do_w_sampl = True
 do_random_sampl = True
 
-remove_isolated = True
+remove_isolated = False
 sort_by_degree = False
 
 dataset_og = MalNetTiny(root='/tmp/MalNetTiny')
@@ -145,9 +145,11 @@ n_val = n_total-n_train-n_test
 
 all_data = transformed_dataset
 data_exists = False
+
 for r in range(n_realizations):
-    K = K_in
     
+    K = K_in
+    data_exists = False
     print('Realization ' + str(r))
     print() 
     
