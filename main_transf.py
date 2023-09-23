@@ -108,6 +108,7 @@ elif 'pubmed' in data_name:
                         num_train_per_class=num_train_per_class, num_val=num_val, 
                         num_test=num_test)
 elif 'ogb' in data_name:
+    sort_by_degree = False
     dataset = PygNodePropPredDataset(name='ogbn-mag')
     rel_data = dataset[0]
 
