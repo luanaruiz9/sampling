@@ -190,7 +190,7 @@ for r in range(n_realizations):
         
     if do_no_sampling:
         
-        model = GNN('gcn', [dataset.num_features,F_nn,F_nn], [F_nn,C], softmax=True)
+        model = GNN('gcn', [in_feats,F_nn,F_nn], [F_nn,C], softmax=True)
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
