@@ -133,7 +133,7 @@ elif 'ogb' in data_name:
         test_mask=index_to_mask(test_idx,size=m))
 
     data = T.ToUndirected()(data)
-    data = data.subgraph(torch.randperm(m)[0:200000]) # Restricting to 200k 
+    data = data.subgraph(torch.randperm(m)[0:50000]) # Restricting to 200k 
                                                     # nodes due to memory limitations
     in_feats = rel_data.x_dict['paper'].shape[1]
     C = dataset.num_classes
