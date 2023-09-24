@@ -426,7 +426,6 @@ for r in range(n_realizations):
          all_data_new = []
          
          # Train data
-         K_og  = K
          for data_elt in all_data:
              K = K_og
              # Finding sampling set
