@@ -42,6 +42,7 @@ nb_cuts = int(sys.argv[7])
 F_nn = int(sys.argv[8])
 F_pe = int(sys.argv[9])
 K_in = int(sys.argv[10])
+K_og = K_in
 
 thisFilename = 'malnet_' # This is the general name of all related files
 
@@ -293,7 +294,6 @@ for r in range(n_realizations):
             all_data_new = []
         
             # Train data
-            K_og = K
             for data_elt in all_data:
                 K = K_og
                 # Finding sampling set
