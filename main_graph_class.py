@@ -71,7 +71,7 @@ do_learn_pe = False
 do_w_sampl = True
 do_random_sampl = True
 
-remove_isolated = True
+remove_isolated = False
 sort_by_degree = False
 
 dataset_og = MalNetTiny(root='/tmp/MalNetTiny')
