@@ -338,7 +338,8 @@ for r in range(n_realizations):
                         if i < m-1:
                             cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,:]
                             cur_adj = cur_adj[:,i*n_nodes_per_int:(i+1)*n_nodes_per_int]
-                            idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
+                            #idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)
+                            idx = np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
                         else:
                             if m3 > n_nodes_last_int:
                                 #m3 = n_nodes_last_int
@@ -347,8 +348,9 @@ for r in range(n_realizations):
                             else:
                                 cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
                                 cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+m3]
-                            idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)#np.random.choice(np.arange(i*n_nodes_per_int,
-                                                             #i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
+                            #idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)
+                            idx = np.random.choice(np.arange(i*n_nodes_per_int,
+                                                             i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
                         idx = np.sort(idx)
                         for j in range(idx.shape[0]):
                             idx[j] += i*n_nodes_per_int
