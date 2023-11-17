@@ -205,7 +205,11 @@ for r in range(n_realizations):
             
             # Computing normalized Laplacian
             L = aux_functions.compute_laplacian(adj_sparse, num_nodes)
+            start = time.time()
             eigvals, V = torch.lobpcg(L, k=K, largest=False)
+            end = time.time()
+            print('Eigenvector time: ' + str(end-start))
+            print()
             #eigvals, V = torch.linalg.eig(L.to_dense())
             eigvals = torch.abs(eigvals).float()
             V = V.float()
@@ -370,7 +374,11 @@ for r in range(n_realizations):
                 L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
                 
                 #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
+                start = time.time()
                 eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
+                end = time.time()
+                print('Eigenvector time: ' + str(end-start))
+                print()
                 eigvals_new = torch.abs(eigvals_new).float()
                 V_new = V_new.float()
                 idx = torch.argsort(eigvals_new)
@@ -466,7 +474,11 @@ for r in range(n_realizations):
              L_new = aux_functions.compute_laplacian(adj_sparse_new, num_nodes_new)
              
              #eigvals_new, V_new = torch.lobpcg(L_new, k=K, largest=False)
+             start = time.time()
              eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
+             end = time.time()
+             print('Eigenvector time: ' + str(end-start))
+             print()
              eigvals_new = torch.abs(eigvals_new).float()
              V_new = V_new.float()
              idx = torch.argsort(eigvals_new)
