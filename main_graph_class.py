@@ -188,6 +188,7 @@ for r in range(n_realizations):
     ######################## Adding eigenvectors #################################
     ##############################################################################
     
+    eigenvector_time = 0
     if do_eig:
     
         print('Adding eigenvectors...')
@@ -197,7 +198,7 @@ for r in range(n_realizations):
     
         all_data_new = []
         all_Vs= []
-    
+        
         for data_elt in all_data:
             # V for train data
             adj_sparse, adj = aux_functions.compute_adj_from_data(data_elt)
@@ -208,8 +209,7 @@ for r in range(n_realizations):
             start = time.time()
             eigvals, V = torch.lobpcg(L, k=K, largest=False)
             end = time.time()
-            print('Eigenvector time: ' + str(end-start))
-            print()
+            eigenvector_time += end-start
             #eigvals, V = torch.linalg.eig(L.to_dense())
             eigvals = torch.abs(eigvals).float()
             V = V.float()
@@ -223,6 +223,9 @@ for r in range(n_realizations):
                                       y=data_elt.y,
                                       **pre_defined_kwargs)
             all_data_new.append(data_elt_new)
+            
+        print('Eigenvector time: ' + str(eigenvector_time))
+        print()
         
         train_data_new = [all_data_new[i] for i in train_idx]
         val_data_new = [all_data_new[i] for i in val_idx]
@@ -286,6 +289,7 @@ for r in range(n_realizations):
     ############################# Sampling! ######################################
     ##############################################################################
     
+    w_eigenvector_time = 0
     if do_w_sampl:
         
         print('Sampling with spectral proxies...')
@@ -377,8 +381,8 @@ for r in range(n_realizations):
                 start = time.time()
                 eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
                 end = time.time()
-                print('Eigenvector time: ' + str(end-start))
-                print()
+                w_eigenvector_time += end-start
+                
                 eigvals_new = torch.abs(eigvals_new).float()
                 V_new = V_new.float()
                 idx = torch.argsort(eigvals_new)
@@ -401,6 +405,9 @@ for r in range(n_realizations):
                                           y=data_elt.y,
                                           **pre_defined_kwargs)
                 all_data_new.append(data_elt_new)
+        
+        print('Eigenvector time: ' + str(w_eigenvector_time))
+        print()
         
         train_data_new = [all_data_new[i] for i in train_idx]
         val_data_new = [all_data_new[i] for i in val_idx]
@@ -430,6 +437,7 @@ for r in range(n_realizations):
      ############################# Sampling! ######################################
      ##############################################################################
      
+    r_eigenvector_time= 0
     if do_random_sampl:
      
          print('Sampling at random...')
@@ -477,8 +485,9 @@ for r in range(n_realizations):
              start = time.time()
              eigvals_new, V_new = torch.linalg.eig(L_new.to_dense())
              end = time.time()
-             print('Eigenvector time: ' + str(end-start))
-             print()
+             end = time.time()
+             r_eigenvector_time += end-start
+             
              eigvals_new = torch.abs(eigvals_new).float()
              V_new = V_new.float()
              idx = torch.argsort(eigvals_new)
@@ -502,6 +511,9 @@ for r in range(n_realizations):
                                        **pre_defined_kwargs)
              all_data_new.append(data_elt_new)
          
+         print('Eigenvector time: ' + str(r_eigenvector_time))
+         print()
+            
          train_data_new = [all_data_new[i] for i in train_idx]
          val_data_new = [all_data_new[i] for i in val_idx]
          test_data_new = [all_data_new[i] for i in test_idx]
