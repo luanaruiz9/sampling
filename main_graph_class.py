@@ -339,7 +339,10 @@ for r in range(n_realizations):
                             cur_adj = adj[i*n_nodes_per_int:(i+1)*n_nodes_per_int,:]
                             cur_adj = cur_adj[:,i*n_nodes_per_int:(i+1)*n_nodes_per_int]
                             #idx = sample_clustering(cur_adj, m3, nb_cuts=nb_cuts)
-                            idx = np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
+                            if m3 <= n_nodes_per_int: # newly added 
+                                idx = np.random.choice(np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int), m3, replace=False)
+                            else: # newly added 
+                                idx = np.arange(i*n_nodes_per_int,(i+1)*n_nodes_per_int) # newly added
                         else:
                             if m3 > n_nodes_last_int:
                                 #m3 = n_nodes_last_int
