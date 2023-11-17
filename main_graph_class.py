@@ -352,8 +352,11 @@ for r in range(n_realizations):
                                 cur_adj = adj[i*n_nodes_per_int:i*n_nodes_per_int+n_nodes_last_int,:]
                                 cur_adj = cur_adj[:,i*n_nodes_per_int:i*n_nodes_per_int+m3]
                             #idx = sample_clustering(cur_adj, n_nodes_last_int, nb_cuts=nb_cuts)
-                            idx = np.random.choice(np.arange(i*n_nodes_per_int,
+                            if m3 <= n_nodes_last_int: # newly added 
+                                idx = np.random.choice(np.arange(i*n_nodes_per_int,
                                                              i*n_nodes_per_int+n_nodes_last_int), m3, replace=False)
+                            else: # newly added 
+                                idx = np.arange(i*n_nodes_per_int, i*n_nodes_per_int+n_nodes_last_int) # newly added
                         idx = np.sort(idx)
                         for j in range(idx.shape[0]):
                             idx[j] += i*n_nodes_per_int
