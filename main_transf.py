@@ -5,6 +5,7 @@ Created on Mon Mar  6 14:37:09 2023
 @author: Luana Ruiz
 """
 
+import time
 import sys
 import os
 import datetime
@@ -195,9 +196,12 @@ for r in range(n_realizations):
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
+        start = time.time()
         _,_,model,_,_,_,_ = train(model, train_data, val_data, optimizer, criterion, 
                       batch_size=1, n_epochs=n_epochs)
-        
+        end = time.time()
+        print('Elapsed time: ' + str(end-start))
+        print()
         test_auc = test(model, test_data)
         results_no_sampl[r] = test_auc
         print(f"Test: {test_auc:.3f}")
@@ -291,9 +295,12 @@ for r in range(n_realizations):
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
+        start = time.time()
         _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
                       batch_size=1, n_epochs=n_epochs)
-        
+        end = time.time()
+        print('Elapsed time: ' + str(end-start))
+        print()
         test_auc = test(model, test_data)
         results_w_samp[r] = test_auc
         print(f"Test: {test_auc:.3f}")
@@ -335,9 +342,12 @@ for r in range(n_realizations):
         model = model.to(device)
         optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
         criterion = torch.nn.NLLLoss()
+        start = time.time()
         _,_,model,_,_,_,_ = train(model, train_data_new, val_data_new, optimizer, criterion, 
                       batch_size=1, n_epochs=n_epochs)
-        
+        end = time.time()
+        print('Elapsed time: ' + str(end-start))
+        print()
         test_auc = test(model, test_data)
         results_random_samp[r] = test_auc
         print(f"Test: {test_auc:.3f}")
